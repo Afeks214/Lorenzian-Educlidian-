@@ -1,0 +1,704 @@
+name: Matrix Testing Across Environments
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 4 * * *'  # Daily at 4 AM UTC
+  workflow_dispatch:
+    inputs:
+      environment_scope:
+        description: 'Environment testing scope'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+          - minimal
+          - standard
+          - comprehensive
+      python_versions:
+        description: 'Python versions to test'
+        required: false
+        default: '3.11,3.12'
+        type: string
+
+env:
+  ENVIRONMENT_SCOPE: ${{ github.event.inputs.environment_scope || 'standard' }}
+  PYTHON_VERSIONS: ${{ github.event.inputs.python_versions || '3.11,3.12' }}
+  MAX_PARALLEL_MATRIX: 20
+  CACHE_VERSION: v4
+
+jobs:
+  generate-matrix:
+    name: Generate Test Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      python-versions: ${{ steps.python.outputs.versions }}
+      os-matrix: ${{ steps.os.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate Python versions matrix
+        id: python
+        run: |
+          # Parse Python versions from input
+          IFS=',' read -ra VERSIONS <<< "${{ env.PYTHON_VERSIONS }}"
+          
+          # Create JSON array
+          PYTHON_JSON=$(printf '"%s",' "${VERSIONS[@]}" | sed 's/,$//')
+          PYTHON_MATRIX="[${PYTHON_JSON}]"
+          
+          echo "versions=$PYTHON_MATRIX" >> $GITHUB_OUTPUT
+          echo "Python versions: $PYTHON_MATRIX"
+
+      - name: Generate OS matrix
+        id: os
+        run: |
+          # Define OS matrix based on scope
+          case "${{ env.ENVIRONMENT_SCOPE }}" in
+            "minimal")
+              OS_MATRIX='["ubuntu-latest"]'
+              ;;
+            "standard")
+              OS_MATRIX='["ubuntu-latest", "macos-latest"]'
+              ;;
+            "comprehensive")
+              OS_MATRIX='["ubuntu-latest", "macos-latest", "windows-latest"]'
+              ;;
+          esac
+          
+          echo "matrix=$OS_MATRIX" >> $GITHUB_OUTPUT
+          echo "OS matrix: $OS_MATRIX"
+
+      - name: Generate full test matrix
+        id: matrix
+        run: |
+          # Create comprehensive test matrix
+          cat > matrix_generator.py << 'EOF'
+          import json
+          import sys
+          
+          # Python versions
+          python_versions = ${{ steps.python.outputs.versions }}
+          
+          # Operating systems
+          os_list = ${{ steps.os.outputs.matrix }}
+          
+          # Test categories
+          test_categories = [
+              "unit",
+              "integration", 
+              "performance",
+              "security",
+              "risk",
+              "tactical",
+              "strategic",
+              "execution",
+              "xai"
+          ]
+          
+          # Environment types
+          env_types = ["development", "staging", "production"]
+          
+          # Generate matrix combinations
+          matrix_include = []
+          
+          for python_ver in python_versions:
+              for os in os_list:
+                  for category in test_categories:
+                      for env_type in env_types:
+                          matrix_include.append({
+                              "python-version": python_ver,
+                              "os": os,
+                              "test-category": category,
+                              "environment": env_type,
+                              "cache-key": f"{python_ver}-{os}-{category}-{env_type}"
+                          })
+          
+          # Limit matrix size for performance
+          max_combinations = 50
+          if len(matrix_include) > max_combinations:
+              # Prioritize critical combinations
+              priority_combinations = [
+                  combo for combo in matrix_include 
+                  if combo["test-category"] in ["unit", "integration"] 
+                  and combo["environment"] in ["development", "production"]
+              ]
+              
+              # Add performance tests for key environments
+              performance_combinations = [
+                  combo for combo in matrix_include 
+                  if combo["test-category"] == "performance"
+                  and combo["environment"] == "production"
+              ]
+              
+              matrix_include = priority_combinations + performance_combinations
+          
+          matrix = {"include": matrix_include}
+          
+          print(json.dumps(matrix, indent=2))
+          
+          with open("test_matrix.json", "w") as f:
+              json.dump(matrix, f, indent=2)
+          EOF
+          
+          python matrix_generator.py > test_matrix.json
+          
+          # Output matrix for GitHub Actions
+          MATRIX_JSON=$(cat test_matrix.json)
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          
+          # Show matrix summary
+          echo "Generated test matrix with $(jq '.include | length' test_matrix.json) combinations"
+
+      - name: Upload matrix configuration
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-matrix-config
+          path: test_matrix.json
+          retention-days: 7
+
+  matrix-testing:
+    name: Matrix Testing
+    runs-on: ${{ matrix.os }}
+    needs: generate-matrix
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: ${{ fromJson(env.MAX_PARALLEL_MATRIX) }}
+    
+    # Environment-specific services
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: testpass123
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements*.txt
+            pyproject.toml
+
+      - name: Cache dependencies by environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.pytest_cache
+            .tox
+            node_modules
+          key: ${{ matrix.cache-key }}-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements*.txt', 'package.json') }}
+          restore-keys: |
+            ${{ matrix.cache-key }}-${{ env.CACHE_VERSION }}-
+            ${{ matrix.python-version }}-${{ matrix.os }}-
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libhdf5-dev \
+            libnetcdf-dev \
+            redis-tools \
+            postgresql-client \
+            curl
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install hdf5 netcdf redis postgresql
+
+      - name: Install system dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install redis-64 postgresql
+        shell: cmd
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          
+          # Environment-specific dependencies
+          if [ "${{ matrix.environment }}" == "production" ]; then
+            pip install -r requirements-prod.txt
+          fi
+          
+          # Test framework dependencies
+          pip install pytest-xdist pytest-benchmark pytest-mock pytest-asyncio pytest-timeout
+
+      - name: Configure test environment
+        run: |
+          # Set environment variables
+          echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
+          echo "TEST_ENVIRONMENT=${{ matrix.environment }}" >> $GITHUB_ENV
+          echo "OS_TYPE=${{ matrix.os }}" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+          echo "DATABASE_URL=postgresql://postgres:testpass123@localhost:5432/testdb" >> $GITHUB_ENV
+          
+          # Create environment-specific config
+          mkdir -p test-config
+          cat > test-config/env-config.json << EOF
+          {
+            "environment": "${{ matrix.environment }}",
+            "python_version": "${{ matrix.python-version }}",
+            "os": "${{ matrix.os }}",
+            "test_category": "${{ matrix.test-category }}",
+            "redis_url": "redis://localhost:6379/0",
+            "database_url": "postgresql://postgres:testpass123@localhost:5432/testdb"
+          }
+          EOF
+
+      - name: Environment-specific setup
+        run: |
+          case "${{ matrix.environment }}" in
+            "development")
+              echo "Setting up development environment"
+              export DEBUG=True
+              export LOG_LEVEL=DEBUG
+              ;;
+            "staging")
+              echo "Setting up staging environment"
+              export DEBUG=False
+              export LOG_LEVEL=INFO
+              ;;
+            "production")
+              echo "Setting up production environment"
+              export DEBUG=False
+              export LOG_LEVEL=WARNING
+              export PERFORMANCE_MONITORING=True
+              ;;
+          esac
+
+      - name: Wait for services (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          # Wait for Redis
+          timeout 30s bash -c 'until redis-cli ping; do sleep 1; done'
+          
+          # Wait for PostgreSQL
+          timeout 30s bash -c 'until pg_isready -h localhost -p 5432; do sleep 1; done'
+
+      - name: Run Unit Tests
+        if: matrix.test-category == 'unit'
+        run: |
+          pytest tests/unit/ -v \
+            --cov=src --cov-report=xml --cov-report=html \
+            --junit-xml=test-results/junit-unit-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=300 \
+            -n auto --dist=loadfile \
+            --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Run Integration Tests
+        if: matrix.test-category == 'integration'
+        run: |
+          pytest tests/integration/ -v \
+            --junit-xml=test-results/junit-integration-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=600 \
+            -n auto --dist=loadfile \
+            --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Run Performance Tests
+        if: matrix.test-category == 'performance'
+        run: |
+          pytest tests/performance/ -v \
+            --benchmark-only \
+            --benchmark-json=test-results/benchmark-${{ matrix.python-version }}-${{ matrix.os }}.json \
+            --benchmark-max-time=120 \
+            --benchmark-min-rounds=3 \
+            --junit-xml=test-results/junit-performance-${{ matrix.python-version }}-${{ matrix.os }}.xml
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: true
+
+      - name: Run Security Tests
+        if: matrix.test-category == 'security'
+        run: |
+          pytest tests/security/ -v \
+            --junit-xml=test-results/junit-security-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=900 \
+            -n auto --dist=loadfile
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: true
+
+      - name: Run Risk System Tests
+        if: matrix.test-category == 'risk'
+        run: |
+          pytest tests/risk/ -v \
+            --junit-xml=test-results/junit-risk-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=600 \
+            -n auto --dist=loadfile
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Run Tactical System Tests
+        if: matrix.test-category == 'tactical'
+        run: |
+          pytest tests/tactical/ -v \
+            --junit-xml=test-results/junit-tactical-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=300 \
+            -n auto --dist=loadfile
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Run Strategic System Tests
+        if: matrix.test-category == 'strategic'
+        run: |
+          pytest tests/strategic/ -v \
+            --junit-xml=test-results/junit-strategic-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=600 \
+            -n auto --dist=loadfile
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Run Execution System Tests
+        if: matrix.test-category == 'execution'
+        run: |
+          pytest tests/execution/ -v \
+            --junit-xml=test-results/junit-execution-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=600 \
+            -n auto --dist=loadfile
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Run XAI System Tests
+        if: matrix.test-category == 'xai'
+        run: |
+          pytest tests/xai/ -v \
+            --junit-xml=test-results/junit-xai-${{ matrix.python-version }}-${{ matrix.os }}.xml \
+            --timeout=600 \
+            -n auto --dist=loadfile
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        continue-on-error: false
+
+      - name: Collect test metrics
+        if: always()
+        run: |
+          # Create test metrics summary
+          mkdir -p test-results
+          
+          echo "# Test Metrics Summary" > test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "## Test Configuration" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "- **Python Version**: ${{ matrix.python-version }}" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "- **Operating System**: ${{ matrix.os }}" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "- **Test Category**: ${{ matrix.test-category }}" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "- **Environment**: ${{ matrix.environment }}" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "- **Timestamp**: $(date -u)" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          echo "" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          
+          # Parse test results if JUnit XML exists
+          JUNIT_FILE="test-results/junit-${{ matrix.test-category }}-${{ matrix.python-version }}-${{ matrix.os }}.xml"
+          if [ -f "$JUNIT_FILE" ]; then
+            TESTS=$(grep -o 'tests="[0-9]*"' "$JUNIT_FILE" | cut -d'"' -f2 || echo "0")
+            FAILURES=$(grep -o 'failures="[0-9]*"' "$JUNIT_FILE" | cut -d'"' -f2 || echo "0")
+            ERRORS=$(grep -o 'errors="[0-9]*"' "$JUNIT_FILE" | cut -d'"' -f2 || echo "0")
+            TIME=$(grep -o 'time="[0-9.]*"' "$JUNIT_FILE" | head -1 | cut -d'"' -f2 || echo "0")
+            
+            echo "## Test Results" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+            echo "- **Total Tests**: $TESTS" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+            echo "- **Failures**: $FAILURES" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+            echo "- **Errors**: $ERRORS" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+            echo "- **Execution Time**: ${TIME}s" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+            echo "- **Success Rate**: $(echo "scale=2; ($TESTS - $FAILURES - $ERRORS) * 100 / $TESTS" | bc)%" >> test-results/metrics-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}.md
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-test-results-${{ matrix.python-version }}-${{ matrix.os }}-${{ matrix.test-category }}-${{ matrix.environment }}
+          path: |
+            test-results/
+            htmlcov/
+            test-config/
+          retention-days: 30
+
+      - name: Upload coverage for unit tests
+        if: matrix.test-category == 'unit'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: ${{ matrix.python-version }}-${{ matrix.os }}
+          name: codecov-${{ matrix.python-version }}-${{ matrix.os }}
+          fail_ci_if_error: false
+
+  matrix-analysis:
+    name: Matrix Test Analysis
+    runs-on: ubuntu-latest
+    needs: matrix-testing
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install analysis tools
+        run: |
+          pip install pandas matplotlib seaborn jinja2
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: ./matrix-results
+
+      - name: Analyze matrix results
+        run: |
+          cat > analyze_matrix.py << 'EOF'
+          import os
+          import json
+          import xml.etree.ElementTree as ET
+          import pandas as pd
+          import matplotlib.pyplot as plt
+          import seaborn as sns
+          from pathlib import Path
+          
+          def parse_junit_xml(file_path):
+              """Parse JUnit XML file and extract test metrics"""
+              try:
+                  tree = ET.parse(file_path)
+                  root = tree.getroot()
+                  
+                  # Get testsuite attributes
+                  testsuite = root.find('testsuite') if root.tag != 'testsuite' else root
+                  
+                  return {
+                      'tests': int(testsuite.get('tests', 0)),
+                      'failures': int(testsuite.get('failures', 0)),
+                      'errors': int(testsuite.get('errors', 0)),
+                      'time': float(testsuite.get('time', 0))
+                  }
+              except Exception as e:
+                  print(f"Error parsing {file_path}: {e}")
+                  return {'tests': 0, 'failures': 0, 'errors': 0, 'time': 0}
+          
+          def analyze_results():
+              """Analyze matrix test results"""
+              results = []
+              
+              # Find all JUnit XML files
+              for root, dirs, files in os.walk('./matrix-results'):
+                  for file in files:
+                      if file.startswith('junit-') and file.endswith('.xml'):
+                          file_path = os.path.join(root, file)
+                          
+                          # Extract metadata from filename and path
+                          parts = file.replace('junit-', '').replace('.xml', '').split('-')
+                          if len(parts) >= 3:
+                              test_category = parts[0]
+                              python_version = parts[1]
+                              os_type = parts[2]
+                              
+                              # Parse artifact directory for environment
+                              artifact_dir = Path(root).name
+                              environment = 'development'  # default
+                              if 'staging' in artifact_dir:
+                                  environment = 'staging'
+                              elif 'production' in artifact_dir:
+                                  environment = 'production'
+                              
+                              # Parse test results
+                              metrics = parse_junit_xml(file_path)
+                              
+                              results.append({
+                                  'test_category': test_category,
+                                  'python_version': python_version,
+                                  'os_type': os_type,
+                                  'environment': environment,
+                                  'tests': metrics['tests'],
+                                  'failures': metrics['failures'],
+                                  'errors': metrics['errors'],
+                                  'time': metrics['time'],
+                                  'success_rate': (metrics['tests'] - metrics['failures'] - metrics['errors']) / max(metrics['tests'], 1) * 100
+                              })
+              
+              return pd.DataFrame(results)
+          
+          # Analyze results
+          df = analyze_results()
+          
+          if not df.empty:
+              print("Matrix Test Analysis Results:")
+              print(f"Total test combinations: {len(df)}")
+              print(f"Total tests executed: {df['tests'].sum()}")
+              print(f"Total failures: {df['failures'].sum()}")
+              print(f"Total errors: {df['errors'].sum()}")
+              print(f"Average success rate: {df['success_rate'].mean():.2f}%")
+              
+              # Generate summary by dimensions
+              print("\nSummary by Python Version:")
+              print(df.groupby('python_version')[['tests', 'failures', 'errors', 'success_rate']].sum())
+              
+              print("\nSummary by Operating System:")
+              print(df.groupby('os_type')[['tests', 'failures', 'errors', 'success_rate']].sum())
+              
+              print("\nSummary by Test Category:")
+              print(df.groupby('test_category')[['tests', 'failures', 'errors', 'success_rate']].sum())
+              
+              print("\nSummary by Environment:")
+              print(df.groupby('environment')[['tests', 'failures', 'errors', 'success_rate']].sum())
+              
+              # Save detailed results
+              df.to_csv('matrix_analysis_results.csv', index=False)
+              
+              # Generate visualizations
+              plt.figure(figsize=(15, 10))
+              
+              # Success rate by category and Python version
+              plt.subplot(2, 2, 1)
+              pivot_data = df.pivot_table(values='success_rate', index='test_category', columns='python_version', aggfunc='mean')
+              sns.heatmap(pivot_data, annot=True, fmt='.1f', cmap='RdYlGn')
+              plt.title('Success Rate by Category and Python Version')
+              
+              # Execution time by OS and category
+              plt.subplot(2, 2, 2)
+              pivot_time = df.pivot_table(values='time', index='test_category', columns='os_type', aggfunc='mean')
+              sns.heatmap(pivot_time, annot=True, fmt='.1f', cmap='YlOrRd')
+              plt.title('Execution Time by Category and OS')
+              
+              # Test count distribution
+              plt.subplot(2, 2, 3)
+              df.groupby('test_category')['tests'].sum().plot(kind='bar')
+              plt.title('Test Count by Category')
+              plt.xticks(rotation=45)
+              
+              # Failure rate by environment
+              plt.subplot(2, 2, 4)
+              failure_rate = df.groupby('environment').apply(lambda x: x['failures'].sum() / x['tests'].sum() * 100)
+              failure_rate.plot(kind='bar', color='red', alpha=0.7)
+              plt.title('Failure Rate by Environment')
+              plt.ylabel('Failure Rate (%)')
+              plt.xticks(rotation=45)
+              
+              plt.tight_layout()
+              plt.savefig('matrix_analysis_visualization.png', dpi=300, bbox_inches='tight')
+              
+              print("\nAnalysis complete. Results saved to matrix_analysis_results.csv")
+          else:
+              print("No test results found for analysis")
+          EOF
+          
+          python analyze_matrix.py
+
+      - name: Generate comprehensive matrix report
+        run: |
+          echo "# Matrix Testing Comprehensive Report" > matrix-report.md
+          echo "" >> matrix-report.md
+          echo "## Test Matrix Configuration" >> matrix-report.md
+          echo "- **Environment Scope**: ${{ env.ENVIRONMENT_SCOPE }}" >> matrix-report.md
+          echo "- **Python Versions**: ${{ env.PYTHON_VERSIONS }}" >> matrix-report.md
+          echo "- **Generated**: $(date -u)" >> matrix-report.md
+          echo "" >> matrix-report.md
+          
+          # Add analysis results if available
+          if [ -f "matrix_analysis_results.csv" ]; then
+            echo "## Test Execution Summary" >> matrix-report.md
+            echo "Test results have been analyzed and saved to matrix_analysis_results.csv" >> matrix-report.md
+            echo "" >> matrix-report.md
+            
+            # Add key metrics
+            TOTAL_COMBINATIONS=$(wc -l < matrix_analysis_results.csv)
+            echo "- **Total Test Combinations**: $((TOTAL_COMBINATIONS - 1))" >> matrix-report.md
+            
+            # Calculate overall metrics
+            python << 'EOF'
+          import pandas as pd
+          
+          try:
+              df = pd.read_csv('matrix_analysis_results.csv')
+              
+              total_tests = df['tests'].sum()
+              total_failures = df['failures'].sum()
+              total_errors = df['errors'].sum()
+              avg_success_rate = df['success_rate'].mean()
+              total_time = df['time'].sum()
+              
+              print(f"- **Total Tests Executed**: {total_tests}")
+              print(f"- **Total Failures**: {total_failures}")
+              print(f"- **Total Errors**: {total_errors}")
+              print(f"- **Average Success Rate**: {avg_success_rate:.2f}%")
+              print(f"- **Total Execution Time**: {total_time:.2f}s")
+              
+              # Identify problematic combinations
+              problematic = df[(df['failures'] > 0) | (df['errors'] > 0)]
+              if not problematic.empty:
+                  print(f"- **Problematic Combinations**: {len(problematic)}")
+                  print()
+                  print("### Problematic Test Combinations")
+                  for _, row in problematic.iterrows():
+                      print(f"- {row['test_category']} on {row['os_type']} with Python {row['python_version']}: {row['failures']} failures, {row['errors']} errors")
+          except Exception as e:
+              print(f"Error analyzing results: {e}")
+          EOF
+          fi >> matrix-report.md
+
+      - name: Upload matrix analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-analysis-results
+          path: |
+            matrix-report.md
+            matrix_analysis_results.csv
+            matrix_analysis_visualization.png
+          retention-days: 30
+
+      - name: Matrix testing summary
+        run: |
+          echo "🧪 Matrix Testing Complete"
+          echo "Environment Scope: ${{ env.ENVIRONMENT_SCOPE }}"
+          echo "Python Versions: ${{ env.PYTHON_VERSIONS }}"
+          
+          if [ -f "matrix_analysis_results.csv" ]; then
+            TOTAL_COMBINATIONS=$(wc -l < matrix_analysis_results.csv)
+            echo "Total combinations tested: $((TOTAL_COMBINATIONS - 1))"
+          fi
+          
+          echo "Matrix analysis report generated and uploaded"

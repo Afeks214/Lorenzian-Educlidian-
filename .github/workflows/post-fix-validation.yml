@@ -1,0 +1,354 @@
+name: Post-Fix Validation Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Validation category to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - security
+          - performance
+          - concurrency
+          - error_handling
+          - infrastructure
+      fail_on_regression:
+        description: 'Fail immediately if regression detected'
+        required: false
+        default: true
+        type: boolean
+      min_pass_rate:
+        description: 'Minimum pass rate (0.0-1.0)'
+        required: false
+        default: '0.95'
+        type: string
+
+jobs:
+  validate-security-fixes:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.category == 'security' || github.event.inputs.category == 'all' || github.event.inputs.category == ''
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run security validation tests
+      run: |
+        python -m pytest tests/post_fix_validation/security/ -v \
+          --tb=short \
+          --maxfail=5 \
+          --timeout=300 \
+          --junitxml=security-test-results.xml
+    
+    - name: Upload security test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-test-results
+        path: security-test-results.xml
+
+  validate-performance-fixes:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.category == 'performance' || github.event.inputs.category == 'all' || github.event.inputs.category == ''
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Run performance validation tests
+      run: |
+        python -m pytest tests/post_fix_validation/performance/ -v \
+          --tb=short \
+          --maxfail=5 \
+          --timeout=600 \
+          --junitxml=performance-test-results.xml
+    
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-test-results
+        path: performance-test-results.xml
+
+  validate-concurrency-fixes:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.category == 'concurrency' || github.event.inputs.category == 'all' || github.event.inputs.category == ''
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Start Redis for distributed locking tests
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y redis-server
+        sudo systemctl start redis-server
+    
+    - name: Run concurrency validation tests
+      run: |
+        python -m pytest tests/post_fix_validation/concurrency/ -v \
+          --tb=short \
+          --maxfail=5 \
+          --timeout=300 \
+          --junitxml=concurrency-test-results.xml
+    
+    - name: Upload concurrency test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: concurrency-test-results
+        path: concurrency-test-results.xml
+
+  comprehensive-validation:
+    runs-on: ubuntu-latest
+    needs: [validate-security-fixes, validate-performance-fixes, validate-concurrency-fixes]
+    if: always()
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Start Redis
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y redis-server
+        sudo systemctl start redis-server
+    
+    - name: Run comprehensive validation
+      run: |
+        python tests/post_fix_validation/run_validation.py \
+          --report-format json \
+          --output-dir ./validation_reports \
+          --min-pass-rate ${{ github.event.inputs.min_pass_rate || '0.95' }} \
+          ${{ github.event.inputs.fail_on_regression == 'true' && '--fail-on-regression' || '' }}
+    
+    - name: Generate HTML report
+      run: |
+        python tests/post_fix_validation/run_validation.py \
+          --report-format html \
+          --output-dir ./validation_reports
+    
+    - name: Upload validation reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: validation-reports
+        path: validation_reports/
+    
+    - name: Create validation summary
+      run: |
+        echo "## Post-Fix Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        # Extract results from JSON report
+        if [ -f validation_reports/validation_report_*.json ]; then
+          REPORT_FILE=$(ls validation_reports/validation_report_*.json | head -1)
+          TOTAL_TESTS=$(jq '.summary.total_tests' "$REPORT_FILE")
+          PASSED_TESTS=$(jq '.summary.passed_tests' "$REPORT_FILE")
+          FAILED_TESTS=$(jq '.summary.failed_tests' "$REPORT_FILE")
+          PASS_RATE=$(jq '.summary.pass_rate' "$REPORT_FILE")
+          
+          echo "- **Total Tests**: $TOTAL_TESTS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Passed**: $PASSED_TESTS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failed**: $FAILED_TESTS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pass Rate**: $(echo "$PASS_RATE * 100" | bc -l)%" >> $GITHUB_STEP_SUMMARY
+          
+          # Add recommendations if any
+          RECOMMENDATIONS=$(jq -r '.recommendations[]' "$REPORT_FILE" 2>/dev/null || echo "")
+          if [ -n "$RECOMMENDATIONS" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Recommendations" >> $GITHUB_STEP_SUMMARY
+            echo "$RECOMMENDATIONS" | while read -r rec; do
+              echo "- $rec" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+        fi
+    
+    - name: Comment PR with validation results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Find the latest validation report
+          const reportDir = 'validation_reports';
+          const files = fs.readdirSync(reportDir).filter(f => f.startsWith('validation_report_') && f.endsWith('.json'));
+          
+          if (files.length === 0) {
+            console.log('No validation report found');
+            return;
+          }
+          
+          const reportFile = path.join(reportDir, files[0]);
+          const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+          
+          const comment = `## 🔍 Post-Fix Validation Results
+          
+          **Total Tests**: ${report.summary.total_tests}
+          **Passed**: ${report.summary.passed_tests} ✅
+          **Failed**: ${report.summary.failed_tests} ❌
+          **Pass Rate**: ${(report.summary.pass_rate * 100).toFixed(1)}%
+          
+          ### Categories
+          ${Object.entries(report.results_by_category).map(([category, results]) => {
+            const passed = results.filter(r => r.status === 'passed').length;
+            const total = results.length;
+            return `- **${category}**: ${passed}/${total} (${(passed/total*100).toFixed(1)}%)`;
+          }).join('\n')}
+          
+          ${report.recommendations.length > 0 ? `### Recommendations\n${report.recommendations.map(r => `- ${r}`).join('\n')}` : ''}
+          
+          *Validation completed at ${new Date().toISOString()}*`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+  regression-check:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-validation]
+    if: always()
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download validation reports
+      uses: actions/download-artifact@v4
+      with:
+        name: validation-reports
+        path: ./validation_reports
+    
+    - name: Check for regressions
+      run: |
+        echo "Checking for performance regressions..."
+        
+        # Extract regression information from report
+        if [ -f validation_reports/validation_report_*.json ]; then
+          REPORT_FILE=$(ls validation_reports/validation_report_*.json | head -1)
+          REGRESSIONS=$(jq -r '.regressions_detected[]' "$REPORT_FILE" 2>/dev/null || echo "")
+          
+          if [ -n "$REGRESSIONS" ]; then
+            echo "❌ Regressions detected:"
+            echo "$REGRESSIONS"
+            exit 1
+          else
+            echo "✅ No regressions detected"
+          fi
+        else
+          echo "⚠️  No validation report found"
+          exit 1
+        fi
+    
+    - name: Fail on critical issues
+      run: |
+        if [ -f validation_reports/validation_report_*.json ]; then
+          REPORT_FILE=$(ls validation_reports/validation_report_*.json | head -1)
+          PASS_RATE=$(jq '.summary.pass_rate' "$REPORT_FILE")
+          MIN_PASS_RATE=${{ github.event.inputs.min_pass_rate || '0.95' }}
+          
+          # Compare pass rates using bc for floating point comparison
+          if [ $(echo "$PASS_RATE < $MIN_PASS_RATE" | bc -l) -eq 1 ]; then
+            echo "❌ Pass rate $PASS_RATE below minimum $MIN_PASS_RATE"
+            exit 1
+          fi
+          
+          FAILED_TESTS=$(jq '.summary.failed_tests' "$REPORT_FILE")
+          if [ "$FAILED_TESTS" -gt 0 ]; then
+            echo "❌ $FAILED_TESTS tests failed"
+            exit 1
+          fi
+          
+          echo "✅ All validation criteria met"
+        fi
+
+  publish-results:
+    runs-on: ubuntu-latest
+    needs: [comprehensive-validation, regression-check]
+    if: always()
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download validation reports
+      uses: actions/download-artifact@v4
+      with:
+        name: validation-reports
+        path: ./validation_reports
+    
+    - name: Deploy validation dashboard
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Would deploy validation dashboard to GitHub Pages"
+        # In a real scenario, this would deploy the HTML report to GitHub Pages
+        # or another hosting service for visualization
+    
+    - name: Archive validation artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: validation-archive-${{ github.sha }}
+        path: |
+          validation_reports/
+          *.log
+        retention-days: 30
+    
+    - name: Send notification
+      if: failure()
+      run: |
+        echo "Validation failed - would send notification to team"
+        # In a real scenario, this would send notifications via Slack, email, etc.
+        # Example: curl -X POST $SLACK_WEBHOOK_URL -d '{"text":"Post-fix validation failed!"}'

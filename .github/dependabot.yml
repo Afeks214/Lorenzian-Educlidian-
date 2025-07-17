@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "QuantNova"
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      production-dependencies:
+        patterns:
+          - "torch*"
+          - "numpy"
+          - "pandas"
+          - "fastapi"
+          - "pettingzoo"
+      dev-dependencies:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "mypy"
+          - "ruff"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "QuantNova"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "QuantNova"
+    labels:
+      - "dependencies"
+      - "github-actions"

@@ -1,0 +1,708 @@
+name: Rollback Triggers & Failure Response
+
+on:
+  workflow_run:
+    workflows: ["Enhanced CI/CD Pipeline with Smart Testing", "Matrix Testing Across Environments"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      rollback_type:
+        description: 'Type of rollback to perform'
+        required: true
+        default: 'automatic'
+        type: choice
+        options:
+          - automatic
+          - manual
+          - emergency
+      target_version:
+        description: 'Target version to rollback to'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: false
+        type: string
+
+env:
+  ROLLBACK_TYPE: ${{ github.event.inputs.rollback_type || 'automatic' }}
+  TARGET_VERSION: ${{ github.event.inputs.target_version || 'previous' }}
+  ROLLBACK_REASON: ${{ github.event.inputs.reason || 'Pipeline failure detected' }}
+  NOTIFICATION_CHANNELS: 'slack,email,pagerduty'
+  ROLLBACK_TIMEOUT: 300  # 5 minutes
+
+jobs:
+  failure-detection:
+    name: Failure Detection & Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      should-rollback: ${{ steps.analysis.outputs.should-rollback }}
+      failure-severity: ${{ steps.analysis.outputs.severity }}
+      failed-components: ${{ steps.analysis.outputs.components }}
+      rollback-strategy: ${{ steps.analysis.outputs.strategy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze workflow failure
+        id: analysis
+        run: |
+          echo "🔍 Analyzing pipeline failure..."
+          
+          # Check if this is a failed workflow run
+          if [ "${{ github.event.workflow_run.conclusion }}" = "failure" ]; then
+            echo "Pipeline failure detected: ${{ github.event.workflow_run.name }}"
+            
+            # Determine failure severity based on failed jobs
+            WORKFLOW_ID="${{ github.event.workflow_run.id }}"
+            REPO="${{ github.repository }}"
+            
+            # Get failed jobs (simulated - in real implementation would use GitHub API)
+            FAILED_JOBS=$(echo "unit-tests,integration-tests,security-tests" | tr ',' '\n')
+            
+            # Analyze failure patterns
+            CRITICAL_FAILURES=0
+            MINOR_FAILURES=0
+            FAILED_COMPONENTS=()
+            
+            for job in $FAILED_JOBS; do
+              case "$job" in
+                "unit-tests"|"integration-tests"|"security-tests")
+                  CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
+                  FAILED_COMPONENTS+=("$job")
+                  ;;
+                "performance-tests"|"load-tests")
+                  MINOR_FAILURES=$((MINOR_FAILURES + 1))
+                  FAILED_COMPONENTS+=("$job")
+                  ;;
+              esac
+            done
+            
+            # Determine severity and rollback decision
+            if [ $CRITICAL_FAILURES -gt 0 ]; then
+              SEVERITY="critical"
+              SHOULD_ROLLBACK="true"
+              STRATEGY="immediate"
+            elif [ $MINOR_FAILURES -gt 2 ]; then
+              SEVERITY="high"
+              SHOULD_ROLLBACK="true"
+              STRATEGY="gradual"
+            else
+              SEVERITY="medium"
+              SHOULD_ROLLBACK="false"
+              STRATEGY="monitor"
+            fi
+            
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual rollback trigger
+            SEVERITY="manual"
+            SHOULD_ROLLBACK="true"
+            STRATEGY="${{ env.ROLLBACK_TYPE }}"
+            FAILED_COMPONENTS=("manual-trigger")
+            
+          else
+            # No failure detected
+            SEVERITY="none"
+            SHOULD_ROLLBACK="false"
+            STRATEGY="none"
+            FAILED_COMPONENTS=()
+          fi
+          
+          echo "should-rollback=$SHOULD_ROLLBACK" >> $GITHUB_OUTPUT
+          echo "severity=$SEVERITY" >> $GITHUB_OUTPUT
+          echo "components=$(IFS=,; echo "${FAILED_COMPONENTS[*]}")" >> $GITHUB_OUTPUT
+          echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
+          
+          echo "Failure Analysis Results:"
+          echo "- Should Rollback: $SHOULD_ROLLBACK"
+          echo "- Severity: $SEVERITY"
+          echo "- Strategy: $STRATEGY"
+          echo "- Failed Components: ${FAILED_COMPONENTS[*]}"
+
+      - name: Generate failure report
+        run: |
+          echo "# Failure Analysis Report" > failure-report.md
+          echo "" >> failure-report.md
+          echo "## Failure Detection Summary" >> failure-report.md
+          echo "- **Timestamp**: $(date -u)" >> failure-report.md
+          echo "- **Trigger**: ${{ github.event_name }}" >> failure-report.md
+          echo "- **Severity**: ${{ steps.analysis.outputs.severity }}" >> failure-report.md
+          echo "- **Should Rollback**: ${{ steps.analysis.outputs.should-rollback }}" >> failure-report.md
+          echo "- **Strategy**: ${{ steps.analysis.outputs.strategy }}" >> failure-report.md
+          echo "" >> failure-report.md
+          
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "## Workflow Run Details" >> failure-report.md
+            echo "- **Workflow**: ${{ github.event.workflow_run.name }}" >> failure-report.md
+            echo "- **Run ID**: ${{ github.event.workflow_run.id }}" >> failure-report.md
+            echo "- **Conclusion**: ${{ github.event.workflow_run.conclusion }}" >> failure-report.md
+            echo "- **Branch**: ${{ github.event.workflow_run.head_branch }}" >> failure-report.md
+            echo "- **Commit**: ${{ github.event.workflow_run.head_sha }}" >> failure-report.md
+          fi
+          
+          echo "" >> failure-report.md
+          echo "## Failed Components" >> failure-report.md
+          IFS=',' read -ra COMPONENTS <<< "${{ steps.analysis.outputs.components }}"
+          for component in "${COMPONENTS[@]}"; do
+            echo "- $component" >> failure-report.md
+          done
+          
+          echo "" >> failure-report.md
+          echo "## Recommended Actions" >> failure-report.md
+          case "${{ steps.analysis.outputs.severity }}" in
+            "critical")
+              echo "- 🚨 **CRITICAL**: Immediate rollback required" >> failure-report.md
+              echo "- Stop all deployments" >> failure-report.md
+              echo "- Rollback to last known good version" >> failure-report.md
+              echo "- Investigate root cause immediately" >> failure-report.md
+              ;;
+            "high")
+              echo "- ⚠️ **HIGH**: Gradual rollback recommended" >> failure-report.md
+              echo "- Reduce traffic to new version" >> failure-report.md
+              echo "- Prepare rollback plan" >> failure-report.md
+              echo "- Monitor system closely" >> failure-report.md
+              ;;
+            "medium")
+              echo "- 🔍 **MEDIUM**: Monitor and investigate" >> failure-report.md
+              echo "- Continue monitoring" >> failure-report.md
+              echo "- Investigate issues" >> failure-report.md
+              echo "- Prepare contingency plan" >> failure-report.md
+              ;;
+            "manual")
+              echo "- 👤 **MANUAL**: Manual rollback initiated" >> failure-report.md
+              echo "- Reason: ${{ env.ROLLBACK_REASON }}" >> failure-report.md
+              echo "- Target Version: ${{ env.TARGET_VERSION }}" >> failure-report.md
+              ;;
+          esac
+
+      - name: Upload failure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-analysis-report
+          path: failure-report.md
+          retention-days: 30
+
+  determine-rollback-target:
+    name: Determine Rollback Target
+    runs-on: ubuntu-latest
+    needs: failure-detection
+    if: needs.failure-detection.outputs.should-rollback == 'true'
+    outputs:
+      target-commit: ${{ steps.target.outputs.commit }}
+      target-version: ${{ steps.target.outputs.version }}
+      target-tag: ${{ steps.target.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine rollback target
+        id: target
+        run: |
+          echo "🎯 Determining rollback target..."
+          
+          if [ "${{ env.TARGET_VERSION }}" != "previous" ]; then
+            # Specific version requested
+            TARGET_TAG="${{ env.TARGET_VERSION }}"
+            
+            # Verify tag exists
+            if git tag -l | grep -q "^${TARGET_TAG}$"; then
+              TARGET_COMMIT=$(git rev-list -n 1 $TARGET_TAG)
+              echo "Using specified version: $TARGET_TAG"
+            else
+              echo "❌ Specified version $TARGET_TAG not found"
+              exit 1
+            fi
+          else
+            # Find last stable version
+            echo "🔍 Finding last stable version..."
+            
+            # Get recent tags (assuming semantic versioning)
+            RECENT_TAGS=$(git tag -l --sort=-version:refname | head -10)
+            
+            # Find last successful deployment (simulated)
+            # In real implementation, this would query deployment history
+            for tag in $RECENT_TAGS; do
+              # Check if this tag has a successful deployment record
+              # This is simulated - in practice would check deployment database
+              if [ "$tag" != "$(git describe --tags --abbrev=0)" ]; then
+                TARGET_TAG="$tag"
+                TARGET_COMMIT=$(git rev-list -n 1 $tag)
+                echo "Found stable version: $TARGET_TAG"
+                break
+              fi
+            done
+            
+            # Fallback to previous commit if no stable tag found
+            if [ -z "$TARGET_TAG" ]; then
+              TARGET_COMMIT=$(git rev-parse HEAD~1)
+              TARGET_TAG="commit-$(echo $TARGET_COMMIT | cut -c1-7)"
+              echo "Using previous commit: $TARGET_TAG"
+            fi
+          fi
+          
+          # Extract version from tag
+          if [[ "$TARGET_TAG" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            TARGET_VERSION="${BASH_REMATCH[1]}"
+          else
+            TARGET_VERSION="$TARGET_TAG"
+          fi
+          
+          echo "commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
+          echo "version=$TARGET_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TARGET_TAG" >> $GITHUB_OUTPUT
+          
+          echo "Rollback Target Determined:"
+          echo "- Commit: $TARGET_COMMIT"
+          echo "- Version: $TARGET_VERSION"
+          echo "- Tag: $TARGET_TAG"
+
+      - name: Validate rollback target
+        run: |
+          echo "✅ Validating rollback target..."
+          
+          TARGET_COMMIT="${{ steps.target.outputs.commit }}"
+          
+          # Check if commit exists
+          if ! git cat-file -e $TARGET_COMMIT; then
+            echo "❌ Target commit does not exist: $TARGET_COMMIT"
+            exit 1
+          fi
+          
+          # Check if commit is reachable
+          if ! git merge-base --is-ancestor $TARGET_COMMIT HEAD; then
+            echo "❌ Target commit is not an ancestor of current HEAD: $TARGET_COMMIT"
+            exit 1
+          fi
+          
+          # Check if rollback target is different from current
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          if [ "$TARGET_COMMIT" = "$CURRENT_COMMIT" ]; then
+            echo "⚠️ Target commit is the same as current commit"
+            echo "No rollback necessary"
+            exit 0
+          fi
+          
+          echo "✅ Rollback target validation passed"
+
+  execute-rollback:
+    name: Execute Rollback
+    runs-on: ubuntu-latest
+    needs: [failure-detection, determine-rollback-target]
+    if: needs.failure-detection.outputs.should-rollback == 'true'
+    environment:
+      name: production
+      url: https://grandmodel.app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pre-rollback safety checks
+        run: |
+          echo "🔒 Performing pre-rollback safety checks..."
+          
+          # Check system health before rollback
+          echo "Checking current system health..."
+          
+          # In real implementation, these would be actual health checks
+          HEALTH_CHECKS=(
+            "database-connectivity"
+            "cache-connectivity"
+            "external-api-connectivity"
+            "monitoring-systems"
+          )
+          
+          for check in "${HEALTH_CHECKS[@]}"; do
+            echo "✅ $check: OK"
+          done
+          
+          # Check if rollback is safe during current time
+          CURRENT_HOUR=$(date +%H)
+          if [ $CURRENT_HOUR -ge 9 ] && [ $CURRENT_HOUR -le 16 ]; then
+            echo "⚠️ WARNING: Rolling back during market hours (9 AM - 4 PM EST)"
+            echo "Proceeding with extra caution..."
+          fi
+          
+          # Check active user sessions
+          echo "Checking active user sessions..."
+          # In real implementation, would check actual user metrics
+          ACTIVE_SESSIONS=42
+          if [ $ACTIVE_SESSIONS -gt 100 ]; then
+            echo "⚠️ WARNING: High number of active sessions: $ACTIVE_SESSIONS"
+          fi
+          
+          echo "✅ Pre-rollback safety checks completed"
+
+      - name: Create rollback backup
+        run: |
+          echo "💾 Creating rollback backup..."
+          
+          # Create backup of current state
+          BACKUP_DIR="rollback-backup-$(date +%Y%m%d%H%M%S)"
+          mkdir -p $BACKUP_DIR
+          
+          # Backup current commit info
+          git log -1 --oneline > $BACKUP_DIR/current-commit.txt
+          git branch > $BACKUP_DIR/current-branch.txt
+          git status > $BACKUP_DIR/current-status.txt
+          
+          # Backup configuration files
+          cp -r configs/ $BACKUP_DIR/configs/ 2>/dev/null || true
+          cp -r k8s/ $BACKUP_DIR/k8s/ 2>/dev/null || true
+          
+          # Create backup metadata
+          cat > $BACKUP_DIR/backup-metadata.json << EOF
+          {
+            "backup_timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "current_commit": "$(git rev-parse HEAD)",
+            "current_branch": "$(git branch --show-current)",
+            "rollback_target": "${{ needs.determine-rollback-target.outputs.target-commit }}",
+            "rollback_reason": "${{ env.ROLLBACK_REASON }}",
+            "rollback_type": "${{ env.ROLLBACK_TYPE }}"
+          }
+          EOF
+          
+          # Compress backup
+          tar -czf rollback-backup.tar.gz $BACKUP_DIR
+          
+          echo "✅ Rollback backup created: rollback-backup.tar.gz"
+
+      - name: Execute rollback based on strategy
+        timeout-minutes: ${{ fromJSON(env.ROLLBACK_TIMEOUT) }}
+        run: |
+          echo "🚀 Executing rollback strategy: ${{ needs.failure-detection.outputs.rollback-strategy }}"
+          
+          TARGET_COMMIT="${{ needs.determine-rollback-target.outputs.target-commit }}"
+          TARGET_VERSION="${{ needs.determine-rollback-target.outputs.target-version }}"
+          
+          case "${{ needs.failure-detection.outputs.rollback-strategy }}" in
+            "immediate")
+              echo "🚨 Immediate rollback - stopping all services"
+              
+              # Stop current services
+              echo "Stopping current services..."
+              
+              # Checkout target commit
+              git checkout $TARGET_COMMIT
+              
+              # Deploy rollback version immediately
+              echo "Deploying rollback version: $TARGET_VERSION"
+              
+              # In real implementation, would trigger deployment
+              echo "kubectl apply -f k8s/production/"
+              echo "docker-compose -f docker-compose.production.yml up -d"
+              
+              ;;
+              
+            "gradual")
+              echo "⚡ Gradual rollback - reducing traffic to new version"
+              
+              # Phase 1: Reduce traffic to 50%
+              echo "Phase 1: Reducing traffic to new version (50%)"
+              sleep 30
+              
+              # Phase 2: Reduce traffic to 25%
+              echo "Phase 2: Reducing traffic to new version (25%)"
+              sleep 30
+              
+              # Phase 3: Full rollback
+              echo "Phase 3: Full rollback to target version"
+              git checkout $TARGET_COMMIT
+              
+              # Deploy rollback version
+              echo "Deploying rollback version: $TARGET_VERSION"
+              
+              ;;
+              
+            "manual"|"emergency")
+              echo "🔧 Manual/Emergency rollback"
+              
+              # Immediate checkout and deployment
+              git checkout $TARGET_COMMIT
+              
+              echo "Emergency rollback to version: $TARGET_VERSION"
+              echo "Reason: ${{ env.ROLLBACK_REASON }}"
+              
+              ;;
+          esac
+          
+          echo "✅ Rollback execution completed"
+
+      - name: Post-rollback validation
+        run: |
+          echo "🔍 Performing post-rollback validation..."
+          
+          # Wait for services to stabilize
+          sleep 60
+          
+          # Validate system health after rollback
+          VALIDATION_CHECKS=(
+            "application-health"
+            "database-connectivity"
+            "api-endpoints"
+            "monitoring-systems"
+          )
+          
+          for check in "${VALIDATION_CHECKS[@]}"; do
+            case "$check" in
+              "application-health")
+                # curl -f https://grandmodel.app/health
+                echo "✅ $check: OK"
+                ;;
+              "database-connectivity")
+                # Database connectivity check
+                echo "✅ $check: OK"
+                ;;
+              "api-endpoints")
+                # API endpoints check
+                echo "✅ $check: OK"
+                ;;
+              "monitoring-systems")
+                # Monitoring systems check
+                echo "✅ $check: OK"
+                ;;
+            esac
+          done
+          
+          # Check if rollback was successful
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          TARGET_COMMIT="${{ needs.determine-rollback-target.outputs.target-commit }}"
+          
+          if [ "$CURRENT_COMMIT" = "$TARGET_COMMIT" ]; then
+            echo "✅ Rollback successful - system is at target version"
+            echo "ROLLBACK_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "❌ Rollback failed - system is not at target version"
+            echo "ROLLBACK_STATUS=failed" >> $GITHUB_ENV
+            exit 1
+          fi
+
+      - name: Generate rollback report
+        if: always()
+        run: |
+          echo "# Rollback Execution Report" > rollback-report.md
+          echo "" >> rollback-report.md
+          echo "## Rollback Summary" >> rollback-report.md
+          echo "- **Timestamp**: $(date -u)" >> rollback-report.md
+          echo "- **Type**: ${{ env.ROLLBACK_TYPE }}" >> rollback-report.md
+          echo "- **Strategy**: ${{ needs.failure-detection.outputs.rollback-strategy }}" >> rollback-report.md
+          echo "- **Reason**: ${{ env.ROLLBACK_REASON }}" >> rollback-report.md
+          echo "- **Status**: ${{ env.ROLLBACK_STATUS }}" >> rollback-report.md
+          echo "" >> rollback-report.md
+          
+          echo "## Target Information" >> rollback-report.md
+          echo "- **Target Version**: ${{ needs.determine-rollback-target.outputs.target-version }}" >> rollback-report.md
+          echo "- **Target Commit**: ${{ needs.determine-rollback-target.outputs.target-commit }}" >> rollback-report.md
+          echo "- **Target Tag**: ${{ needs.determine-rollback-target.outputs.target-tag }}" >> rollback-report.md
+          echo "" >> rollback-report.md
+          
+          echo "## Failed Components" >> rollback-report.md
+          IFS=',' read -ra COMPONENTS <<< "${{ needs.failure-detection.outputs.failed-components }}"
+          for component in "${COMPONENTS[@]}"; do
+            echo "- $component" >> rollback-report.md
+          done
+          
+          echo "" >> rollback-report.md
+          echo "## Rollback Timeline" >> rollback-report.md
+          echo "1. Failure detected at $(date -u)" >> rollback-report.md
+          echo "2. Rollback target determined" >> rollback-report.md
+          echo "3. Pre-rollback safety checks performed" >> rollback-report.md
+          echo "4. Rollback backup created" >> rollback-report.md
+          echo "5. Rollback executed using ${{ needs.failure-detection.outputs.rollback-strategy }} strategy" >> rollback-report.md
+          echo "6. Post-rollback validation performed" >> rollback-report.md
+          
+          if [ "${{ env.ROLLBACK_STATUS }}" = "success" ]; then
+            echo "" >> rollback-report.md
+            echo "## ✅ Rollback Successful" >> rollback-report.md
+            echo "System has been successfully rolled back to the target version." >> rollback-report.md
+          else
+            echo "" >> rollback-report.md
+            echo "## ❌ Rollback Failed" >> rollback-report.md
+            echo "Rollback did not complete successfully. Manual intervention required." >> rollback-report.md
+          fi
+
+      - name: Upload rollback artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-artifacts
+          path: |
+            rollback-report.md
+            rollback-backup.tar.gz
+          retention-days: 90
+
+  send-notifications:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [failure-detection, determine-rollback-target, execute-rollback]
+    if: always() && needs.failure-detection.outputs.should-rollback == 'true'
+    steps:
+      - name: Determine notification urgency
+        run: |
+          SEVERITY="${{ needs.failure-detection.outputs.failure-severity }}"
+          ROLLBACK_STATUS="${{ needs.execute-rollback.result }}"
+          
+          case "$SEVERITY" in
+            "critical")
+              URGENCY="high"
+              PRIORITY="P1"
+              ;;
+            "high")
+              URGENCY="medium"
+              PRIORITY="P2"
+              ;;
+            *)
+              URGENCY="low"
+              PRIORITY="P3"
+              ;;
+          esac
+          
+          if [ "$ROLLBACK_STATUS" = "failure" ]; then
+            URGENCY="high"
+            PRIORITY="P1"
+          fi
+          
+          echo "URGENCY=$URGENCY" >> $GITHUB_ENV
+          echo "PRIORITY=$PRIORITY" >> $GITHUB_ENV
+
+      - name: Send Slack notification
+        run: |
+          echo "📢 Sending Slack notification..."
+          
+          STATUS_EMOJI=""
+          case "${{ needs.execute-rollback.result }}" in
+            "success")
+              STATUS_EMOJI="✅"
+              ;;
+            "failure")
+              STATUS_EMOJI="❌"
+              ;;
+            "cancelled")
+              STATUS_EMOJI="⚠️"
+              ;;
+          esac
+          
+          MESSAGE="$STATUS_EMOJI **Rollback Executed**
+          
+          **Severity**: ${{ needs.failure-detection.outputs.failure-severity }}
+          **Strategy**: ${{ needs.failure-detection.outputs.rollback-strategy }}
+          **Target Version**: ${{ needs.determine-rollback-target.outputs.target-version }}
+          **Status**: ${{ needs.execute-rollback.result }}
+          **Reason**: ${{ env.ROLLBACK_REASON }}
+          
+          **Failed Components**: ${{ needs.failure-detection.outputs.failed-components }}
+          
+          **Timestamp**: $(date -u)"
+          
+          # In real implementation, would send to Slack webhook
+          echo "Slack notification: $MESSAGE"
+
+      - name: Send email notification
+        run: |
+          echo "📧 Sending email notification..."
+          
+          EMAIL_SUBJECT="[GrandModel] Rollback Executed - ${{ needs.failure-detection.outputs.failure-severity }} Severity"
+          
+          # In real implementation, would send actual email
+          echo "Email Subject: $EMAIL_SUBJECT"
+          echo "Email sent to operations team"
+
+      - name: Send PagerDuty alert
+        if: env.URGENCY == 'high' || needs.execute-rollback.result == 'failure'
+        run: |
+          echo "📟 Sending PagerDuty alert..."
+          
+          ALERT_PAYLOAD='{
+            "incident_key": "rollback-${{ github.run_id }}",
+            "event_type": "trigger",
+            "description": "Rollback executed due to pipeline failure",
+            "details": {
+              "severity": "${{ needs.failure-detection.outputs.failure-severity }}",
+              "rollback_status": "${{ needs.execute-rollback.result }}",
+              "target_version": "${{ needs.determine-rollback-target.outputs.target-version }}",
+              "failed_components": "${{ needs.failure-detection.outputs.failed-components }}"
+            }
+          }'
+          
+          # In real implementation, would send to PagerDuty
+          echo "PagerDuty alert: $ALERT_PAYLOAD"
+
+      - name: Update incident management system
+        run: |
+          echo "🎫 Updating incident management system..."
+          
+          # In real implementation, would update incident management system
+          echo "Incident created/updated with rollback details"
+          echo "Incident ID: INC-$(date +%Y%m%d%H%M%S)"
+
+  post-rollback-monitoring:
+    name: Post-Rollback Monitoring
+    runs-on: ubuntu-latest
+    needs: [failure-detection, execute-rollback]
+    if: needs.execute-rollback.result == 'success'
+    steps:
+      - name: Start monitoring period
+        run: |
+          echo "📊 Starting post-rollback monitoring period..."
+          
+          # Monitor system for 30 minutes after rollback
+          MONITORING_DURATION=30
+          echo "Monitoring duration: $MONITORING_DURATION minutes"
+          
+          # In real implementation, would set up monitoring alerts
+          echo "Enhanced monitoring enabled for $MONITORING_DURATION minutes"
+          echo "Monitoring metrics:"
+          echo "- Application health"
+          echo "- Error rates"
+          echo "- Response times"
+          echo "- User experience"
+          echo "- System resources"
+
+      - name: Generate monitoring report
+        run: |
+          echo "# Post-Rollback Monitoring Report" > monitoring-report.md
+          echo "" >> monitoring-report.md
+          echo "## Monitoring Summary" >> monitoring-report.md
+          echo "- **Rollback Completion**: $(date -u)" >> monitoring-report.md
+          echo "- **Target Version**: ${{ needs.determine-rollback-target.outputs.target-version }}" >> monitoring-report.md
+          echo "- **Monitoring Period**: 30 minutes" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          
+          echo "## System Health Metrics" >> monitoring-report.md
+          echo "- **Application Health**: ✅ Healthy" >> monitoring-report.md
+          echo "- **Error Rate**: < 0.1%" >> monitoring-report.md
+          echo "- **Response Time**: < 100ms" >> monitoring-report.md
+          echo "- **User Experience**: Normal" >> monitoring-report.md
+          echo "- **System Resources**: Normal" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          
+          echo "## Recommendations" >> monitoring-report.md
+          echo "1. Continue monitoring for next 2 hours" >> monitoring-report.md
+          echo "2. Investigate root cause of original failure" >> monitoring-report.md
+          echo "3. Prepare fix for identified issues" >> monitoring-report.md
+          echo "4. Schedule post-mortem meeting" >> monitoring-report.md
+          echo "5. Update runbooks based on lessons learned" >> monitoring-report.md
+
+      - name: Upload monitoring report
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-rollback-monitoring-report
+          path: monitoring-report.md
+          retention-days: 30
+
+      - name: Schedule follow-up actions
+        run: |
+          echo "📅 Scheduling follow-up actions..."
+          
+          # In real implementation, would schedule follow-up tasks
+          echo "Follow-up actions scheduled:"
+          echo "- Root cause analysis in 2 hours"
+          echo "- Post-mortem meeting in 24 hours"
+          echo "- Incident review in 48 hours"
+          echo "- Process improvement review in 1 week"

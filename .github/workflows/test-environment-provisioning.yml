@@ -1,0 +1,802 @@
+name: Test Environment Provisioning & Cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment_type:
+        description: 'Environment type to provision'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - staging
+          - production-like
+          - performance-testing
+          - security-testing
+      cleanup_after:
+        description: 'Cleanup after (minutes)'
+        required: false
+        default: '60'
+        type: string
+      enable_monitoring:
+        description: 'Enable monitoring during tests'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  ENVIRONMENT_TYPE: ${{ github.event.inputs.environment_type || 'development' }}
+  CLEANUP_AFTER: ${{ github.event.inputs.cleanup_after || '60' }}
+  ENABLE_MONITORING: ${{ github.event.inputs.enable_monitoring || 'true' }}
+  DOCKER_COMPOSE_VERSION: '3.8'
+
+jobs:
+  provision-environment:
+    name: Provision Test Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment-id: ${{ steps.setup.outputs.environment-id }}
+      services-endpoint: ${{ steps.setup.outputs.services-endpoint }}
+      monitoring-enabled: ${{ steps.setup.outputs.monitoring-enabled }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Environment setup
+        id: setup
+        run: |
+          # Generate unique environment ID
+          ENV_ID="test-env-$(date +%Y%m%d%H%M%S)-${{ github.run_number }}"
+          echo "environment-id=$ENV_ID" >> $GITHUB_OUTPUT
+          
+          # Set services endpoint
+          echo "services-endpoint=http://localhost:8000" >> $GITHUB_OUTPUT
+          
+          # Set monitoring flag
+          echo "monitoring-enabled=${{ env.ENABLE_MONITORING }}" >> $GITHUB_OUTPUT
+          
+          echo "Environment ID: $ENV_ID"
+          echo "Environment Type: ${{ env.ENVIRONMENT_TYPE }}"
+          echo "Cleanup After: ${{ env.CLEANUP_AFTER }} minutes"
+
+      - name: Generate docker-compose configuration
+        run: |
+          # Create environment-specific docker-compose file
+          cat > docker-compose.test.yml << 'EOF'
+          version: '${{ env.DOCKER_COMPOSE_VERSION }}'
+          
+          services:
+            # Redis for caching and session storage
+            redis:
+              image: redis:7-alpine
+              container_name: test-redis-${{ steps.setup.outputs.environment-id }}
+              ports:
+                - "6379:6379"
+              volumes:
+                - redis-data:/data
+              command: redis-server --appendonly yes
+              healthcheck:
+                test: ["CMD", "redis-cli", "ping"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+                start_period: 30s
+          
+            # PostgreSQL database
+            postgres:
+              image: postgres:15-alpine
+              container_name: test-postgres-${{ steps.setup.outputs.environment-id }}
+              environment:
+                POSTGRES_DB: grandmodel_test
+                POSTGRES_USER: testuser
+                POSTGRES_PASSWORD: testpass123
+                POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+              ports:
+                - "5432:5432"
+              volumes:
+                - postgres-data:/var/lib/postgresql/data
+                - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U testuser -d grandmodel_test"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+                start_period: 30s
+          
+            # Nginx for reverse proxy and load balancing
+            nginx:
+              image: nginx:alpine
+              container_name: test-nginx-${{ steps.setup.outputs.environment-id }}
+              ports:
+                - "80:80"
+                - "443:443"
+              volumes:
+                - ./test-configs/nginx.conf:/etc/nginx/nginx.conf
+                - ./test-configs/ssl:/etc/nginx/ssl
+              depends_on:
+                - application
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost/health"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 30s
+          
+            # Main application container
+            application:
+              build:
+                context: .
+                dockerfile: docker/Dockerfile.production
+              container_name: test-app-${{ steps.setup.outputs.environment-id }}
+              environment:
+                - ENVIRONMENT=${{ env.ENVIRONMENT_TYPE }}
+                - REDIS_URL=redis://redis:6379/0
+                - DATABASE_URL=postgresql://testuser:testpass123@postgres:5432/grandmodel_test
+                - DEBUG=false
+                - LOG_LEVEL=INFO
+                - PROMETHEUS_METRICS=true
+                - JAEGER_ENABLED=true
+              ports:
+                - "8000:8000"
+              depends_on:
+                redis:
+                  condition: service_healthy
+                postgres:
+                  condition: service_healthy
+              volumes:
+                - ./logs:/app/logs
+                - ./data:/app/data
+              healthcheck:
+                test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 60s
+          
+            # Monitoring stack (if enabled)
+            prometheus:
+              image: prom/prometheus:latest
+              container_name: test-prometheus-${{ steps.setup.outputs.environment-id }}
+              ports:
+                - "9090:9090"
+              volumes:
+                - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+                - prometheus-data:/prometheus
+              command:
+                - '--config.file=/etc/prometheus/prometheus.yml'
+                - '--storage.tsdb.path=/prometheus'
+                - '--web.console.libraries=/etc/prometheus/console_libraries'
+                - '--web.console.templates=/etc/prometheus/consoles'
+                - '--storage.tsdb.retention.time=200h'
+                - '--web.enable-lifecycle'
+              profiles:
+                - monitoring
+          
+            grafana:
+              image: grafana/grafana:latest
+              container_name: test-grafana-${{ steps.setup.outputs.environment-id }}
+              ports:
+                - "3000:3000"
+              environment:
+                - GF_SECURITY_ADMIN_PASSWORD=admin123
+              volumes:
+                - grafana-data:/var/lib/grafana
+                - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards
+                - ./configs/grafana/datasources:/etc/grafana/provisioning/datasources
+              profiles:
+                - monitoring
+          
+            jaeger:
+              image: jaegertracing/all-in-one:latest
+              container_name: test-jaeger-${{ steps.setup.outputs.environment-id }}
+              ports:
+                - "16686:16686"
+                - "14268:14268"
+              environment:
+                - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+              profiles:
+                - monitoring
+          
+            # Load testing tool
+            locust:
+              image: locustio/locust:latest
+              container_name: test-locust-${{ steps.setup.outputs.environment-id }}
+              ports:
+                - "8089:8089"
+              volumes:
+                - ./tests/load:/mnt/locust
+              command: -f /mnt/locust/locustfile.py --host=http://application:8000
+              profiles:
+                - load-testing
+          
+          volumes:
+            redis-data:
+            postgres-data:
+            prometheus-data:
+            grafana-data:
+          
+          networks:
+            default:
+              name: test-network-${{ steps.setup.outputs.environment-id }}
+          EOF
+
+      - name: Create test configuration files
+        run: |
+          # Create test configs directory
+          mkdir -p test-configs
+          
+          # Create nginx configuration
+          cat > test-configs/nginx.conf << 'EOF'
+          events {
+              worker_connections 1024;
+          }
+          
+          http {
+              upstream app {
+                  server application:8000;
+              }
+              
+              server {
+                  listen 80;
+                  location / {
+                      proxy_pass http://app;
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                  }
+                  
+                  location /health {
+                      access_log off;
+                      return 200 "healthy\n";
+                      add_header Content-Type text/plain;
+                  }
+              }
+          }
+          EOF
+          
+          # Create Prometheus configuration
+          mkdir -p configs/prometheus
+          cat > configs/prometheus/prometheus.yml << 'EOF'
+          global:
+            scrape_interval: 15s
+            evaluation_interval: 15s
+          
+          rule_files:
+            - "first_rules.yml"
+            - "second_rules.yml"
+          
+          scrape_configs:
+            - job_name: 'prometheus'
+              static_configs:
+                - targets: ['localhost:9090']
+          
+            - job_name: 'application'
+              static_configs:
+                - targets: ['application:8000']
+              metrics_path: '/metrics'
+              scrape_interval: 5s
+          
+            - job_name: 'redis'
+              static_configs:
+                - targets: ['redis:6379']
+          
+            - job_name: 'postgres'
+              static_configs:
+                - targets: ['postgres:5432']
+          EOF
+          
+          # Create Grafana datasource configuration
+          mkdir -p configs/grafana/datasources
+          cat > configs/grafana/datasources/prometheus.yml << 'EOF'
+          apiVersion: 1
+          
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://prometheus:9090
+              isDefault: true
+          EOF
+
+      - name: Create database initialization script
+        run: |
+          mkdir -p scripts/db
+          cat > scripts/db/init.sql << 'EOF'
+          -- Initialize test database
+          CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+          CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+          
+          -- Create test schemas
+          CREATE SCHEMA IF NOT EXISTS trading;
+          CREATE SCHEMA IF NOT EXISTS risk;
+          CREATE SCHEMA IF NOT EXISTS analytics;
+          
+          -- Create test tables
+          CREATE TABLE IF NOT EXISTS trading.positions (
+              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              symbol VARCHAR(10) NOT NULL,
+              quantity DECIMAL(18,8) NOT NULL,
+              price DECIMAL(18,8) NOT NULL,
+              side VARCHAR(4) NOT NULL CHECK (side IN ('BUY', 'SELL')),
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+          
+          CREATE TABLE IF NOT EXISTS risk.var_calculations (
+              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              portfolio_id UUID NOT NULL,
+              var_value DECIMAL(18,8) NOT NULL,
+              confidence_level DECIMAL(3,2) NOT NULL,
+              time_horizon INTEGER NOT NULL,
+              calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          );
+          
+          CREATE TABLE IF NOT EXISTS analytics.performance_metrics (
+              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              metric_name VARCHAR(100) NOT NULL,
+              metric_value DECIMAL(18,8) NOT NULL,
+              measurement_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+              tags JSONB
+          );
+          
+          -- Create indexes
+          CREATE INDEX IF NOT EXISTS idx_positions_symbol ON trading.positions(symbol);
+          CREATE INDEX IF NOT EXISTS idx_positions_created_at ON trading.positions(created_at);
+          CREATE INDEX IF NOT EXISTS idx_var_calculations_portfolio_id ON risk.var_calculations(portfolio_id);
+          CREATE INDEX IF NOT EXISTS idx_performance_metrics_name ON analytics.performance_metrics(metric_name);
+          
+          -- Insert test data
+          INSERT INTO trading.positions (symbol, quantity, price, side) VALUES
+              ('AAPL', 100, 150.00, 'BUY'),
+              ('GOOGL', 50, 2500.00, 'BUY'),
+              ('MSFT', 75, 300.00, 'BUY'),
+              ('TSLA', 25, 800.00, 'BUY');
+          
+          INSERT INTO risk.var_calculations (portfolio_id, var_value, confidence_level, time_horizon) VALUES
+              (uuid_generate_v4(), -15000.00, 0.95, 1),
+              (uuid_generate_v4(), -25000.00, 0.99, 1),
+              (uuid_generate_v4(), -35000.00, 0.95, 10);
+          
+          INSERT INTO analytics.performance_metrics (metric_name, metric_value, tags) VALUES
+              ('portfolio_value', 500000.00, '{"currency": "USD"}'),
+              ('daily_pnl', 2500.00, '{"currency": "USD"}'),
+              ('sharpe_ratio', 1.85, '{"period": "daily"}');
+          
+          -- Create test user
+          CREATE USER test_app WITH PASSWORD 'testpass123';
+          GRANT USAGE ON SCHEMA trading, risk, analytics TO test_app;
+          GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA trading, risk, analytics TO test_app;
+          GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA trading, risk, analytics TO test_app;
+          EOF
+
+      - name: Create load testing configuration
+        run: |
+          mkdir -p tests/load
+          cat > tests/load/locustfile.py << 'EOF'
+          from locust import HttpUser, task, between
+          import random
+          import json
+          
+          class TradingSystemUser(HttpUser):
+              wait_time = between(1, 3)
+              
+              def on_start(self):
+                  """Called when a user starts"""
+                  self.client.verify = False
+                  
+              @task(3)
+              def get_health(self):
+                  """Test health endpoint"""
+                  with self.client.get("/health", catch_response=True) as response:
+                      if response.status_code == 200:
+                          response.success()
+                      else:
+                          response.failure(f"Health check failed: {response.status_code}")
+              
+              @task(2)
+              def get_positions(self):
+                  """Test positions endpoint"""
+                  with self.client.get("/api/v1/positions", catch_response=True) as response:
+                      if response.status_code == 200:
+                          response.success()
+                      else:
+                          response.failure(f"Positions request failed: {response.status_code}")
+              
+              @task(1)
+              def get_risk_metrics(self):
+                  """Test risk metrics endpoint"""
+                  with self.client.get("/api/v1/risk/var", catch_response=True) as response:
+                      if response.status_code == 200:
+                          response.success()
+                      else:
+                          response.failure(f"Risk metrics request failed: {response.status_code}")
+              
+              @task(1)
+              def post_trade_simulation(self):
+                  """Test trade simulation endpoint"""
+                  trade_data = {
+                      "symbol": random.choice(["AAPL", "GOOGL", "MSFT", "TSLA"]),
+                      "quantity": random.randint(1, 100),
+                      "side": random.choice(["BUY", "SELL"])
+                  }
+                  
+                  with self.client.post("/api/v1/trades/simulate", 
+                                      json=trade_data, 
+                                      catch_response=True) as response:
+                      if response.status_code in [200, 201]:
+                          response.success()
+                      else:
+                          response.failure(f"Trade simulation failed: {response.status_code}")
+          EOF
+
+      - name: Build and start test environment
+        run: |
+          echo "🚀 Starting test environment: ${{ steps.setup.outputs.environment-id }}"
+          
+          # Build application image
+          docker build -f docker/Dockerfile.production -t test-app:latest .
+          
+          # Start services based on environment type
+          case "${{ env.ENVIRONMENT_TYPE }}" in
+            "development")
+              docker-compose -f docker-compose.test.yml up -d redis postgres application
+              ;;
+            "staging")
+              docker-compose -f docker-compose.test.yml up -d redis postgres application nginx
+              ;;
+            "production-like")
+              docker-compose -f docker-compose.test.yml up -d
+              ;;
+            "performance-testing")
+              docker-compose -f docker-compose.test.yml --profile load-testing up -d
+              ;;
+            "security-testing")
+              docker-compose -f docker-compose.test.yml up -d redis postgres application nginx
+              ;;
+          esac
+          
+          echo "Services started for environment type: ${{ env.ENVIRONMENT_TYPE }}"
+
+      - name: Start monitoring services
+        if: env.ENABLE_MONITORING == 'true'
+        run: |
+          echo "📊 Starting monitoring services"
+          docker-compose -f docker-compose.test.yml --profile monitoring up -d
+          
+          # Wait for services to be ready
+          sleep 30
+          
+          echo "Monitoring services started:"
+          echo "- Prometheus: http://localhost:9090"
+          echo "- Grafana: http://localhost:3000 (admin/admin123)"
+          echo "- Jaeger: http://localhost:16686"
+
+      - name: Wait for services to be ready
+        run: |
+          echo "⏳ Waiting for services to be ready..."
+          
+          # Wait for Redis
+          timeout 120s bash -c 'until redis-cli ping; do sleep 2; done'
+          echo "✅ Redis is ready"
+          
+          # Wait for PostgreSQL
+          timeout 120s bash -c 'until pg_isready -h localhost -p 5432 -U testuser; do sleep 2; done'
+          echo "✅ PostgreSQL is ready"
+          
+          # Wait for application
+          timeout 180s bash -c 'until curl -f http://localhost:8000/health; do sleep 5; done'
+          echo "✅ Application is ready"
+          
+          # Wait for Nginx if running
+          if docker ps | grep -q nginx; then
+            timeout 60s bash -c 'until curl -f http://localhost/health; do sleep 2; done'
+            echo "✅ Nginx is ready"
+          fi
+
+      - name: Run environment validation tests
+        run: |
+          echo "🧪 Running environment validation tests"
+          
+          # Test Redis connectivity
+          redis-cli set test_key "test_value"
+          REDIS_VALUE=$(redis-cli get test_key)
+          if [ "$REDIS_VALUE" = "test_value" ]; then
+            echo "✅ Redis connectivity test passed"
+          else
+            echo "❌ Redis connectivity test failed"
+            exit 1
+          fi
+          
+          # Test PostgreSQL connectivity
+          PGPASSWORD=testpass123 psql -h localhost -U testuser -d grandmodel_test -c "SELECT COUNT(*) FROM trading.positions;"
+          if [ $? -eq 0 ]; then
+            echo "✅ PostgreSQL connectivity test passed"
+          else
+            echo "❌ PostgreSQL connectivity test failed"
+            exit 1
+          fi
+          
+          # Test application endpoints
+          curl -f http://localhost:8000/health
+          if [ $? -eq 0 ]; then
+            echo "✅ Application health check passed"
+          else
+            echo "❌ Application health check failed"
+            exit 1
+          fi
+          
+          # Test API endpoints
+          curl -f http://localhost:8000/api/v1/status
+          if [ $? -eq 0 ]; then
+            echo "✅ API status check passed"
+          else
+            echo "❌ API status check failed"
+            exit 1
+          fi
+
+      - name: Generate environment documentation
+        run: |
+          echo "# Test Environment Documentation" > environment-docs.md
+          echo "" >> environment-docs.md
+          echo "## Environment Details" >> environment-docs.md
+          echo "- **Environment ID**: ${{ steps.setup.outputs.environment-id }}" >> environment-docs.md
+          echo "- **Environment Type**: ${{ env.ENVIRONMENT_TYPE }}" >> environment-docs.md
+          echo "- **Created**: $(date -u)" >> environment-docs.md
+          echo "- **Cleanup After**: ${{ env.CLEANUP_AFTER }} minutes" >> environment-docs.md
+          echo "- **Monitoring Enabled**: ${{ env.ENABLE_MONITORING }}" >> environment-docs.md
+          echo "" >> environment-docs.md
+          
+          echo "## Services" >> environment-docs.md
+          echo "### Running Containers" >> environment-docs.md
+          docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}" >> environment-docs.md
+          
+          echo "" >> environment-docs.md
+          echo "### Service Endpoints" >> environment-docs.md
+          echo "- **Application**: http://localhost:8000" >> environment-docs.md
+          echo "- **Health Check**: http://localhost:8000/health" >> environment-docs.md
+          echo "- **API Status**: http://localhost:8000/api/v1/status" >> environment-docs.md
+          echo "- **Redis**: localhost:6379" >> environment-docs.md
+          echo "- **PostgreSQL**: localhost:5432 (testuser/testpass123)" >> environment-docs.md
+          
+          if [ "${{ env.ENABLE_MONITORING }}" = "true" ]; then
+            echo "- **Prometheus**: http://localhost:9090" >> environment-docs.md
+            echo "- **Grafana**: http://localhost:3000 (admin/admin123)" >> environment-docs.md
+            echo "- **Jaeger**: http://localhost:16686" >> environment-docs.md
+          fi
+          
+          if [ "${{ env.ENVIRONMENT_TYPE }}" = "performance-testing" ]; then
+            echo "- **Locust**: http://localhost:8089" >> environment-docs.md
+          fi
+          
+          echo "" >> environment-docs.md
+          echo "## Database Schema" >> environment-docs.md
+          echo "- **Trading Schema**: positions table" >> environment-docs.md
+          echo "- **Risk Schema**: var_calculations table" >> environment-docs.md
+          echo "- **Analytics Schema**: performance_metrics table" >> environment-docs.md
+          
+          echo "" >> environment-docs.md
+          echo "## Configuration Files" >> environment-docs.md
+          echo "- docker-compose.test.yml" >> environment-docs.md
+          echo "- test-configs/nginx.conf" >> environment-docs.md
+          echo "- configs/prometheus/prometheus.yml" >> environment-docs.md
+          echo "- scripts/db/init.sql" >> environment-docs.md
+          echo "- tests/load/locustfile.py" >> environment-docs.md
+
+      - name: Upload environment artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-environment-${{ steps.setup.outputs.environment-id }}
+          path: |
+            docker-compose.test.yml
+            test-configs/
+            configs/
+            scripts/
+            tests/load/
+            environment-docs.md
+          retention-days: 7
+
+      - name: Schedule cleanup
+        run: |
+          echo "⏰ Scheduling cleanup in ${{ env.CLEANUP_AFTER }} minutes"
+          
+          # Create cleanup script
+          cat > cleanup.sh << 'EOF'
+          #!/bin/bash
+          echo "🧹 Starting cleanup for environment: ${{ steps.setup.outputs.environment-id }}"
+          
+          # Stop and remove containers
+          docker-compose -f docker-compose.test.yml down -v
+          
+          # Remove test images
+          docker rmi test-app:latest || true
+          
+          # Clean up volumes
+          docker volume prune -f
+          
+          # Clean up networks
+          docker network prune -f
+          
+          # Clean up test configs
+          rm -rf test-configs configs scripts tests/load
+          rm -f docker-compose.test.yml environment-docs.md cleanup.sh
+          
+          echo "✅ Cleanup completed for environment: ${{ steps.setup.outputs.environment-id }}"
+          EOF
+          
+          chmod +x cleanup.sh
+          
+          # Schedule cleanup (this would run in background in real implementation)
+          echo "Cleanup scheduled for ${{ env.CLEANUP_AFTER }} minutes from now"
+          echo "Run ./cleanup.sh to cleanup manually"
+
+  run-tests-on-environment:
+    name: Run Tests on Provisioned Environment
+    runs-on: ubuntu-latest
+    needs: provision-environment
+    strategy:
+      matrix:
+        test-suite: [smoke, integration, performance, security]
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pytest requests locust
+
+      - name: Download environment artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: test-environment-${{ needs.provision-environment.outputs.environment-id }}
+          path: ./environment-config
+
+      - name: Run smoke tests
+        if: matrix.test-suite == 'smoke'
+        run: |
+          echo "💨 Running smoke tests"
+          
+          # Test basic connectivity
+          curl -f http://localhost:8000/health
+          
+          # Test API endpoints
+          curl -f http://localhost:8000/api/v1/status
+          
+          # Test database connectivity
+          PGPASSWORD=testpass123 psql -h localhost -U testuser -d grandmodel_test -c "SELECT 1;"
+          
+          # Test Redis connectivity
+          redis-cli ping
+          
+          echo "✅ Smoke tests passed"
+
+      - name: Run integration tests
+        if: matrix.test-suite == 'integration'
+        run: |
+          echo "🔗 Running integration tests"
+          
+          # Run pytest integration tests
+          pytest tests/integration/ -v \
+            --junit-xml=test-results/junit-integration-env.xml \
+            --timeout=300 \
+            -n auto
+          
+          echo "✅ Integration tests completed"
+
+      - name: Run performance tests
+        if: matrix.test-suite == 'performance'
+        run: |
+          echo "⚡ Running performance tests"
+          
+          # Run locust performance tests
+          if [ "${{ needs.provision-environment.outputs.environment-type }}" = "performance-testing" ]; then
+            locust -f tests/load/locustfile.py \
+              --headless \
+              --users 50 \
+              --spawn-rate 10 \
+              --run-time 60s \
+              --host http://localhost:8000 \
+              --csv=performance-results
+          fi
+          
+          echo "✅ Performance tests completed"
+
+      - name: Run security tests
+        if: matrix.test-suite == 'security'
+        run: |
+          echo "🔒 Running security tests"
+          
+          # Run security-focused tests
+          pytest tests/security/ -v \
+            --junit-xml=test-results/junit-security-env.xml \
+            --timeout=600
+          
+          echo "✅ Security tests completed"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.test-suite }}-${{ needs.provision-environment.outputs.environment-id }}
+          path: |
+            test-results/
+            performance-results*
+          retention-days: 30
+
+  cleanup-environment:
+    name: Cleanup Test Environment
+    runs-on: ubuntu-latest
+    needs: [provision-environment, run-tests-on-environment]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download environment artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: test-environment-${{ needs.provision-environment.outputs.environment-id }}
+          path: ./environment-config
+
+      - name: Execute cleanup
+        run: |
+          echo "🧹 Cleaning up environment: ${{ needs.provision-environment.outputs.environment-id }}"
+          
+          # Copy cleanup script from artifacts
+          cp environment-config/cleanup.sh .
+          chmod +x cleanup.sh
+          
+          # Execute cleanup
+          ./cleanup.sh
+          
+          echo "✅ Environment cleanup completed"
+
+      - name: Generate cleanup report
+        run: |
+          echo "# Environment Cleanup Report" > cleanup-report.md
+          echo "" >> cleanup-report.md
+          echo "## Cleanup Summary" >> cleanup-report.md
+          echo "- **Environment ID**: ${{ needs.provision-environment.outputs.environment-id }}" >> cleanup-report.md
+          echo "- **Cleanup Time**: $(date -u)" >> cleanup-report.md
+          echo "- **Test Results**: ${{ needs.run-tests-on-environment.result }}" >> cleanup-report.md
+          echo "" >> cleanup-report.md
+          
+          # Docker cleanup verification
+          echo "## Docker Cleanup Verification" >> cleanup-report.md
+          echo "### Remaining Containers" >> cleanup-report.md
+          docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep -v "NAMES" >> cleanup-report.md || echo "No containers remaining" >> cleanup-report.md
+          
+          echo "" >> cleanup-report.md
+          echo "### Remaining Volumes" >> cleanup-report.md
+          docker volume ls --format "table {{.Name}}\t{{.Driver}}" | grep -v "VOLUME NAME" >> cleanup-report.md || echo "No volumes remaining" >> cleanup-report.md
+          
+          echo "" >> cleanup-report.md
+          echo "### Remaining Networks" >> cleanup-report.md
+          docker network ls --format "table {{.Name}}\t{{.Driver}}" | grep -v "NETWORK ID" >> cleanup-report.md || echo "Only default networks remaining" >> cleanup-report.md
+
+      - name: Upload cleanup report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-report-${{ needs.provision-environment.outputs.environment-id }}
+          path: cleanup-report.md
+          retention-days: 30
+
+      - name: Cleanup notification
+        run: |
+          echo "🎉 Test environment provisioning and cleanup completed"
+          echo "Environment ID: ${{ needs.provision-environment.outputs.environment-id }}"
+          echo "Environment Type: ${{ env.ENVIRONMENT_TYPE }}"
+          echo "Test Results: ${{ needs.run-tests-on-environment.result }}"
+          echo "Cleanup Status: Success"

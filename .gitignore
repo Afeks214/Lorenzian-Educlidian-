@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+venv_test/
+env/
+ENV/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Data (keep structure, ignore content)
+data/historical/*
+data/live/*
+data/processed/*
+!data/*/.gitkeep
+
+# Models
+models/checkpoints/*
+models/artifacts/*
+!models/*/.gitkeep
+
+# Docker volumes
+docker/volumes/
+
+# Redis
+dump.rdb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.bak
+~*
+
+# Claude specific
+.claude/
+sast_env/

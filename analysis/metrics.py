@@ -104,12 +104,20 @@ def calculate_returns(prices: np.ndarray) -> np.ndarray:
         Array of returns
     """
     if len(prices) < 2:
+<<<<<<< HEAD
         return np.array([0.0])[:0]  # Return empty array with correct type
+=======
+        return np.array([])
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
         
     returns = np.diff(prices) / prices[:-1]
     return returns
 
 
+<<<<<<< HEAD
+=======
+@lru_cache(maxsize=128)
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
 def calculate_sharpe_ratio(
     returns: np.ndarray, 
     risk_free_rate: float = 0.0,
@@ -186,11 +194,16 @@ def calculate_max_drawdown(equity_curve: np.ndarray) -> Tuple[float, int, int]:
     if len(equity_curve) == 0:
         return 0.0, 0, 0
         
+<<<<<<< HEAD
     # Calculate running maximum manually for numba compatibility
     running_max = np.zeros_like(equity_curve)
     running_max[0] = equity_curve[0]
     for i in range(1, len(equity_curve)):
         running_max[i] = max(running_max[i-1], equity_curve[i])
+=======
+    # Calculate running maximum
+    running_max = np.maximum.accumulate(equity_curve)
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
     
     # Calculate drawdown
     drawdown = (equity_curve - running_max) / running_max
@@ -489,11 +502,15 @@ def calculate_ulcer_index(
         return 0.0
         
     # Calculate running maximum
+<<<<<<< HEAD
     # Calculate running maximum manually for numba compatibility
     running_max = np.zeros_like(equity_curve)
     running_max[0] = equity_curve[0]
     for i in range(1, len(equity_curve)):
         running_max[i] = max(running_max[i-1], equity_curve[i])
+=======
+    running_max = np.maximum.accumulate(equity_curve)
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
     
     # Calculate drawdown percentage
     drawdown_pct = (equity_curve - running_max) / running_max * 100
@@ -528,11 +545,15 @@ def calculate_burke_ratio(
     annual_return = np.mean(returns) * periods_per_year
     
     # Calculate running maximum
+<<<<<<< HEAD
     # Calculate running maximum manually for numba compatibility
     running_max = np.zeros_like(equity_curve)
     running_max[0] = equity_curve[0]
     for i in range(1, len(equity_curve)):
         running_max[i] = max(running_max[i-1], equity_curve[i])
+=======
+    running_max = np.maximum.accumulate(equity_curve)
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
     
     # Calculate drawdown percentage
     drawdown_pct = (equity_curve - running_max) / running_max * 100
@@ -573,11 +594,15 @@ def calculate_sterling_ratio(
     annual_return = np.mean(returns) * periods_per_year
     
     # Calculate running maximum
+<<<<<<< HEAD
     # Calculate running maximum manually for numba compatibility
     running_max = np.zeros_like(equity_curve)
     running_max[0] = equity_curve[0]
     for i in range(1, len(equity_curve)):
         running_max[i] = max(running_max[i-1], equity_curve[i])
+=======
+    running_max = np.maximum.accumulate(equity_curve)
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
     
     # Calculate drawdown
     drawdown = (equity_curve - running_max) / running_max
@@ -645,11 +670,15 @@ def calculate_pain_index(equity_curve: np.ndarray) -> float:
         return 0.0
         
     # Calculate running maximum
+<<<<<<< HEAD
     # Calculate running maximum manually for numba compatibility
     running_max = np.zeros_like(equity_curve)
     running_max[0] = equity_curve[0]
     for i in range(1, len(equity_curve)):
         running_max[i] = max(running_max[i-1], equity_curve[i])
+=======
+    running_max = np.maximum.accumulate(equity_curve)
+>>>>>>> 5d16eb51764e3a7b5b5b1da0fee55c73e7d3fce8
     
     # Calculate drawdown
     drawdown = (equity_curve - running_max) / running_max
