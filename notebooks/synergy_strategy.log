@@ -1,0 +1,174 @@
+2025-07-09 22:04:25,729 - __main__ - INFO - Environment Setup
+2025-07-09 22:04:25,733 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-09 22:04:25,734 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-09 22:04:25,735 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-09 22:04:25,735 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-09 22:04:25,736 - __main__ - INFO - Numba version: 0.61.2
+2025-07-09 22:04:25,737 - __main__ - INFO - Numba threads: 2
+2025-07-09 22:04:26,729 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-09 22:04:28,067 - __main__ - INFO - Successfully loaded 215,002 rows in 1.34 seconds
+2025-07-09 22:04:28,071 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-09 22:04:28,073 - __main__ - INFO - Average data quality: 1.000
+2025-07-09 22:04:28,079 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-09 22:04:28,282 - __main__ - ERROR - Unexpected error loading data: Missing required columns: {'Low'}
+2025-07-09 22:04:28,283 - __main__ - ERROR - Data loading failed: Failed to load data: Missing required columns: {'Low'}
+2025-07-10 06:35:48,210 - __main__ - INFO - Environment Setup
+2025-07-10 06:35:48,214 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 06:35:48,215 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 06:35:48,216 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 06:35:48,217 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 06:35:48,217 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 06:35:48,218 - __main__ - INFO - Numba threads: 2
+2025-07-10 06:35:48,700 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 06:35:50,041 - __main__ - INFO - Successfully loaded 215,002 rows in 1.34 seconds
+2025-07-10 06:35:50,042 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-10 06:35:50,044 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 06:35:50,049 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 06:35:50,246 - __main__ - ERROR - Unexpected error loading data: Missing required columns: {'Low'}
+2025-07-10 06:35:50,247 - __main__ - ERROR - Data loading failed: Failed to load data: Missing required columns: {'Low'}
+2025-07-10 07:59:07,889 - __main__ - INFO - Environment Setup
+2025-07-10 07:59:07,890 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 07:59:07,891 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 07:59:07,892 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 07:59:07,892 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 07:59:07,893 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 07:59:07,894 - __main__ - INFO - Numba threads: 2
+2025-07-10 07:59:30,190 - __main__ - INFO - Environment Setup
+2025-07-10 07:59:30,191 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 07:59:30,193 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 07:59:30,193 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 07:59:30,194 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 07:59:30,196 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 07:59:30,196 - __main__ - INFO - Numba threads: 2
+2025-07-10 07:59:30,802 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 07:59:32,070 - __main__ - INFO - Successfully loaded 215,002 rows in 1.27 seconds
+2025-07-10 07:59:32,071 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-10 07:59:32,072 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 07:59:32,076 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 07:59:32,283 - __main__ - ERROR - Unexpected error loading data: Missing required columns: {'Low'}
+2025-07-10 07:59:32,286 - __main__ - ERROR - Data loading failed: Failed to load data: Missing required columns: {'Low'}
+2025-07-10 08:13:14,938 - __main__ - INFO - Environment Setup
+2025-07-10 08:13:14,939 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 08:13:14,940 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 08:13:14,940 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 08:13:14,941 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 08:13:14,942 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 08:13:14,943 - __main__ - INFO - Numba threads: 2
+2025-07-10 08:13:15,040 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 08:13:16,127 - __main__ - INFO - Standardizing column names...
+2025-07-10 08:13:16,129 - __main__ - INFO - Renamed columns: ['Open', 'High', 'Low', 'Close', 'Volume'] -> ['Open', 'High', 'Low', 'Close', 'Volume']
+2025-07-10 08:13:16,164 - __main__ - INFO - Successfully loaded 215,002 rows in 1.12 seconds
+2025-07-10 08:13:16,165 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-10 08:13:16,165 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 08:13:16,169 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 08:13:16,365 - __main__ - INFO - Standardizing column names...
+2025-07-10 08:13:16,366 - __main__ - INFO - Renamed columns: ['Open', 'High', 'Close', 'Volume'] -> ['Open', 'High', 'Close', 'Volume']
+2025-07-10 08:13:16,367 - __main__ - ERROR - Unexpected error loading data: Missing required columns: {'Low'}
+2025-07-10 08:13:16,367 - __main__ - ERROR - Data loading failed: Failed to load data: Missing required columns: {'Low'}
+2025-07-10 08:21:52,450 - __main__ - INFO - Environment Setup
+2025-07-10 08:21:52,451 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 08:21:52,452 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 08:21:52,453 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 08:21:52,453 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 08:21:52,455 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 08:21:52,456 - __main__ - INFO - Numba threads: 2
+2025-07-10 08:21:52,554 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 08:21:52,861 - __main__ - INFO - Standardized column names.
+2025-07-10 08:21:53,792 - __main__ - INFO - Successfully loaded 215,002 rows in 1.24 seconds
+2025-07-10 08:21:53,792 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-10 08:21:53,793 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 08:21:53,797 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 08:21:53,845 - __main__ - INFO - Standardized column names.
+2025-07-10 08:21:53,986 - __main__ - ERROR - Unexpected error loading data: Missing required columns: {'Low'}
+2025-07-10 08:21:53,986 - __main__ - ERROR - Data loading failed: Failed to load data: Missing required columns: {'Low'}
+2025-07-10 08:27:06,010 - __main__ - INFO - Environment Setup
+2025-07-10 08:27:06,012 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 08:27:06,013 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 08:27:06,014 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 08:27:06,015 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 08:27:06,016 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 08:27:06,016 - __main__ - INFO - Numba threads: 2
+2025-07-10 08:27:06,106 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 08:27:07,650 - __main__ - INFO - Successfully read file with utf-8 encoding
+2025-07-10 08:27:07,651 - __main__ - INFO - Original columns: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
+2025-07-10 08:27:07,664 - __main__ - INFO - Renamed columns: {'Timestamp': 'Timestamp', 'Open': 'Open', 'High': 'High', 'Low': 'Low', 'Close': 'Close', 'Volume': 'Volume'}
+2025-07-10 08:27:08,353 - __main__ - INFO - Successfully loaded 215,002 rows in 2.25 seconds
+2025-07-10 08:27:08,353 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-10 08:27:08,354 - __main__ - INFO - Final columns: ['Open', 'High', 'Low', 'Close', 'Volume', 'Returns', 'LogReturns', 'HL_Range', 'OC_Range', 'DataQuality']
+2025-07-10 08:27:08,355 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 08:27:08,359 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 08:27:08,535 - __main__ - INFO - Successfully read file with utf-8 encoding
+2025-07-10 08:27:08,536 - __main__ - INFO - Original columns: ['Timestamp', 'Open', 'High', 'Llow', 'Close', 'Volume']
+2025-07-10 08:27:08,539 - __main__ - INFO - Renamed columns: {'Timestamp': 'Timestamp', 'Open': 'Open', 'High': 'High', 'Close': 'Close', 'Volume': 'Volume'}
+2025-07-10 08:27:08,645 - __main__ - WARNING - 'Low' column missing - creating from available price data
+2025-07-10 08:27:08,667 - __main__ - INFO - Successfully loaded 35,925 rows in 0.31 seconds
+2025-07-10 08:27:08,667 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:30:00
+2025-07-10 08:27:08,668 - __main__ - INFO - Final columns: ['Open', 'High', 'Llow', 'Close', 'Volume', 'Low', 'Returns', 'LogReturns', 'HL_Range', 'OC_Range', 'DataQuality']
+2025-07-10 08:27:08,669 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 08:27:08,676 - __main__ - INFO - Saved data checkpoint to ./results/data_checkpoint.pkl
+2025-07-10 08:27:08,704 - __main__ - INFO - Starting indicator calculations
+2025-07-10 08:28:22,858 - __main__ - INFO - Indicators calculated in 74.153 seconds
+2025-07-10 08:28:22,859 - __main__ - INFO - MA5 valid values: 35921/35925
+2025-07-10 08:28:22,860 - __main__ - INFO - MA20 valid values: 35906/35925
+2025-07-10 08:28:22,860 - __main__ - INFO - RSI5 range: [0.5, 99.0]
+2025-07-10 08:28:22,861 - __main__ - INFO - RSI20 range: [8.4, 92.1]
+2025-07-10 08:28:22,862 - __main__ - INFO - ATR 30m valid: 35911/35925
+2025-07-10 08:28:22,862 - __main__ - INFO - ATR 5m valid: 214983/214997
+2025-07-10 08:28:22,877 - __main__ - INFO - FVGs detected - Total: 26894, Bull: 13474, Bear: 13420
+2025-07-10 08:28:22,878 - __main__ - INFO - FVG zones - Bull: 92,575, Bear: 90,039
+2025-07-10 08:28:57,725 - __main__ - INFO - Starting NW-RQK calculation
+2025-07-10 08:29:21,144 - __main__ - INFO - NW-RQK calculated in 23.417 seconds
+2025-07-10 08:29:36,425 - __main__ - ERROR - Error running backtest: 'Annualized Return [%]'
+2025-07-10 08:29:36,767 - __main__ - INFO - Creating performance visualizations
+2025-07-10 08:30:10,646 - __main__ - INFO - Starting bootstrap analysis
+2025-07-10 08:30:11,203 - __main__ - ERROR - Error in statistical validation: Failed in nopython mode pipeline (step: nopython frontend)
+[1m[1m[1mUnknown attribute 'accumulate' of type Function(<ufunc 'maximum'>)
+[1m
+File "../../../../tmp/ipykernel_21333/1343235858.py", line 40:[0m
+[1m<source missing, REPL/exec in use?>[0m
+[0m
+[0m[1mDuring: typing of get attribute at /tmp/ipykernel_21333/1343235858.py (40)[0m
+[1m
+File "../../../../tmp/ipykernel_21333/1343235858.py", line 40:[0m
+[1m<source missing, REPL/exec in use?>[0m
+
+[0m[1mDuring: Pass nopython_type_inference[0m
+2025-07-10 08:42:20,766 - __main__ - INFO - Environment Setup
+2025-07-10 08:42:20,769 - __main__ - INFO - Python version: 3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]
+2025-07-10 08:42:20,770 - __main__ - INFO - NumPy version: 2.2.6
+2025-07-10 08:42:20,771 - __main__ - INFO - Pandas version: 2.3.0
+2025-07-10 08:42:20,771 - __main__ - INFO - VectorBT version: 0.28.0
+2025-07-10 08:42:20,773 - __main__ - INFO - Numba version: 0.61.2
+2025-07-10 08:42:20,773 - __main__ - INFO - Numba threads: 2
+2025-07-10 08:42:20,827 - __main__ - INFO - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 08:42:23,168 - __main__ - INFO - Successfully read file with utf-8 encoding
+2025-07-10 08:42:23,169 - __main__ - INFO - Original columns: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
+2025-07-10 08:42:23,183 - __main__ - INFO - Renamed columns: {'Timestamp': 'Timestamp', 'Open': 'Open', 'High': 'High', 'Low': 'Low', 'Close': 'Close', 'Volume': 'Volume'}
+2025-07-10 08:42:23,955 - __main__ - INFO - Successfully loaded 215,002 rows in 3.13 seconds
+2025-07-10 08:42:23,957 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:55:00
+2025-07-10 08:42:23,957 - __main__ - INFO - Final columns: ['Open', 'High', 'Low', 'Close', 'Volume', 'Returns', 'LogReturns', 'HL_Range', 'OC_Range', 'DataQuality']
+2025-07-10 08:42:23,958 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 08:42:23,962 - __main__ - INFO - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 08:42:24,218 - __main__ - INFO - Successfully read file with utf-8 encoding
+2025-07-10 08:42:24,219 - __main__ - INFO - Original columns: ['Timestamp', 'Open', 'High', 'Llow', 'Close', 'Volume']
+2025-07-10 08:42:24,221 - __main__ - INFO - Renamed columns: {'Timestamp': 'Timestamp', 'Open': 'Open', 'High': 'High', 'Close': 'Close', 'Volume': 'Volume'}
+2025-07-10 08:42:24,346 - __main__ - WARNING - 'Low' column missing - creating from available price data
+2025-07-10 08:42:24,370 - __main__ - INFO - Successfully loaded 35,925 rows in 0.41 seconds
+2025-07-10 08:42:24,370 - __main__ - INFO - Date range: 2020-06-29 01:00:00 to 2025-06-30 23:30:00
+2025-07-10 08:42:24,372 - __main__ - INFO - Final columns: ['Open', 'High', 'Llow', 'Close', 'Volume', 'Low', 'Returns', 'LogReturns', 'HL_Range', 'OC_Range', 'DataQuality']
+2025-07-10 08:42:24,373 - __main__ - INFO - Average data quality: 1.000
+2025-07-10 08:42:24,383 - __main__ - INFO - Saved data checkpoint to ./results/data_checkpoint.pkl
+2025-07-10 08:42:24,434 - __main__ - INFO - Starting indicator calculations
+2025-07-10 08:43:37,920 - __main__ - INFO - Indicators calculated in 73.485 seconds
+2025-07-10 08:43:37,930 - __main__ - INFO - MA5 valid values: 35921/35925
+2025-07-10 08:43:37,932 - __main__ - INFO - MA20 valid values: 35906/35925
+2025-07-10 08:43:37,936 - __main__ - INFO - RSI5 range: [0.5, 99.0]
+2025-07-10 08:43:37,944 - __main__ - INFO - RSI20 range: [8.4, 92.1]
+2025-07-10 08:43:37,949 - __main__ - INFO - ATR 30m valid: 35911/35925
+2025-07-10 08:43:37,955 - __main__ - INFO - ATR 5m valid: 214983/214997
+2025-07-10 08:43:38,024 - __main__ - INFO - FVGs detected - Total: 26894, Bull: 13474, Bear: 13420
+2025-07-10 08:43:38,030 - __main__ - INFO - FVG zones - Bull: 92,575, Bear: 90,039
+2025-07-10 08:44:11,083 - __main__ - INFO - Starting NW-RQK calculation
+2025-07-10 08:44:33,571 - __main__ - INFO - NW-RQK calculated in 22.487 seconds
+2025-07-10 08:44:35,261 - __main__ - ERROR - Error running backtest: 'Annualized Return [%]'
+2025-07-10 08:44:35,285 - __main__ - INFO - Creating performance visualizations

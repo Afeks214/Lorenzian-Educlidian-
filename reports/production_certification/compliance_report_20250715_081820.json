@@ -1,0 +1,73 @@
+{
+  "compliance_summary": {
+    "finra_compliance": "CONDITIONAL",
+    "sec_compliance": "CONDITIONAL",
+    "gdpr_compliance": "CONDITIONAL"
+  },
+  "compliance_details": {
+    "finra_compliance": {
+      "status": "CONDITIONAL",
+      "score": 90.85484052392714,
+      "metrics": {
+        "finra_compliance_score": 90.85484052392714,
+        "trade_reporting_compliance": true,
+        "best_execution_compliance": true,
+        "audit_trail_completeness": 95.12448590292762,
+        "supervision_requirements_met": true
+      },
+      "issues": [
+        "FINRA compliance score 90.9% below target 95%"
+      ],
+      "recommendations": [
+        "Address FINRA compliance gaps",
+        "Improve audit trail completeness"
+      ]
+    },
+    "sec_compliance": {
+      "status": "CONDITIONAL",
+      "score": 90.83827145491426,
+      "metrics": {
+        "sec_compliance_score": 90.83827145491426,
+        "investment_adviser_compliance": true,
+        "fiduciary_duty_compliance": true,
+        "disclosure_requirements_met": true,
+        "record_keeping_compliance": 99.06358051060644
+      },
+      "issues": [
+        "SEC compliance score 90.8% below target 95%"
+      ],
+      "recommendations": [
+        "Address SEC compliance gaps"
+      ]
+    },
+    "gdpr_compliance": {
+      "status": "CONDITIONAL",
+      "score": 92.94305849184076,
+      "metrics": {
+        "gdpr_compliance_score": 92.94305849184076,
+        "data_protection_compliance": true,
+        "privacy_by_design": true,
+        "consent_management": true,
+        "data_breach_procedures": true,
+        "dpo_appointed": true
+      },
+      "issues": [
+        "GDPR compliance score 92.9% below target 95%"
+      ],
+      "recommendations": [
+        "Address GDPR compliance gaps"
+      ]
+    }
+  },
+  "regulatory_gaps": [
+    "FINRA compliance score 90.9% below target 95%",
+    "SEC compliance score 90.8% below target 95%",
+    "GDPR compliance score 92.9% below target 95%"
+  ],
+  "remediation_actions": [
+    "Address FINRA compliance gaps",
+    "Improve audit trail completeness",
+    "Address SEC compliance gaps",
+    "Address GDPR compliance gaps"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "test_results": {
+    "extreme_values": {
+      "test_passed": true,
+      "patterns_detected": 325,
+      "has_infinite_values": false,
+      "extreme_pattern_rate": 

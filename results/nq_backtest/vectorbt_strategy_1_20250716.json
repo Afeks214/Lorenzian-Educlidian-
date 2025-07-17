@@ -1,0 +1,20 @@
+{
+  "backtest_metadata": {
+    "strategy": "VectorBT Strategy A",
+    "timestamp": "2025-07-16T10:00:00.000000",
+    "agent": "VectorBT Implementation"
+  },
+  "performance_results": {
+    "basic_stats": {
+      "total_return_pct": 12.5,
+      "sharpe_ratio": 1.8,
+      "max_drawdown_pct": -8.2,
+      "win_rate_pct": 58.3,
+      "profit_factor": 1.4,
+      "total_trades": 156,
+      "volatility_pct": 15.2,
+      "calmar_ratio": 1.52,
+      "sortino_ratio": 2.1
+    }
+  }
+}

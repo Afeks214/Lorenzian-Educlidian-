@@ -1,0 +1,244 @@
+# GrandModel Kubernetes RBAC - Agent 5 Security Configuration
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grandmodel-sa
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent5
+automountServiceAccountToken: false
+
+---
+# ClusterRole for GrandModel services
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grandmodel-cluster-role
+  labels:
+    app: grandmodel
+    managed-by: agent5
+rules:
+# Pod management
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/status"]
+  verbs: ["get"]
+# Service discovery
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# ConfigMap access
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+# Secret access (limited)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+  resourceNames: ["grandmodel-secrets"]
+# Metrics access
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+# Custom metrics access
+- apiGroups: ["custom.metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+# Events (for debugging)
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
+
+---
+# Role for namespace-specific operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: grandmodel
+  name: grandmodel-role
+  labels:
+    app: grandmodel
+    managed-by: agent5
+rules:
+# Full access to namespace resources
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Deployment management
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# HPA management
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Ingress management
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses", "networkpolicies"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grandmodel-cluster-binding
+  labels:
+    app: grandmodel
+    managed-by: agent5
+subjects:
+- kind: ServiceAccount
+  name: grandmodel-sa
+  namespace: grandmodel
+roleRef:
+  kind: ClusterRole
+  name: grandmodel-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grandmodel-binding
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent5
+subjects:
+- kind: ServiceAccount
+  name: grandmodel-sa
+  namespace: grandmodel
+roleRef:
+  kind: Role
+  name: grandmodel-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Service Account for monitoring
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grandmodel-monitoring-sa
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: monitoring
+    managed-by: agent5
+
+---
+# ClusterRole for monitoring
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grandmodel-monitoring-role
+  labels:
+    app: grandmodel
+    component: monitoring
+rules:
+# Metrics collection
+- apiGroups: [""]
+  resources: ["nodes", "nodes/metrics", "services", "endpoints", "pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+
+---
+# ClusterRoleBinding for monitoring
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grandmodel-monitoring-binding
+  labels:
+    app: grandmodel
+    component: monitoring
+subjects:
+- kind: ServiceAccount
+  name: grandmodel-monitoring-sa
+  namespace: grandmodel
+roleRef:
+  kind: ClusterRole
+  name: grandmodel-monitoring-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Pod Security Policy (if PSP is enabled)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: grandmodel-psp
+  labels:
+    app: grandmodel
+    managed-by: agent5
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  readOnlyRootFilesystem: false
+
+---
+# ClusterRole for PSP
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grandmodel-psp-role
+  labels:
+    app: grandmodel
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs: ['use']
+  resourceNames:
+  - grandmodel-psp
+
+---
+# RoleBinding for PSP
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: grandmodel-psp-binding
+  namespace: grandmodel
+roleRef:
+  kind: ClusterRole
+  name: grandmodel-psp-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: grandmodel-sa
+  namespace: grandmodel
+- kind: ServiceAccount
+  name: grandmodel-monitoring-sa
+  namespace: grandmodel

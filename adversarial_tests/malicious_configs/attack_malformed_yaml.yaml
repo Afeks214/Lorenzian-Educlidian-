@@ -1,0 +1,27 @@
+
+# Malformed YAML attack
+environment:
+  matrix_shape: [48, 13
+  max_timesteps: 1000}  # Mismatched brackets
+  
+agents:
+  mlmi_expert:
+    learning_rate: 3e-4
+    hidden_dims: [256, 128, 64]]  # Extra bracket
+    
+training:
+  batch_size: 256
+  gamma: 0.99
+  episodes: "unclosed string
+  
+# Unescaped special characters
+rewards:
+  alpha: 1.0 @ invalid
+  beta: 0.2 # comment: in value
+  gamma: -0.3 | pipe character
+  
+# Invalid indentation
+ensemble:
+weights: [0.4, 0.35, 0.25]  # Wrong indentation
+  confidence_threshold: 0.65
+    learning_rate: 1e-3  # Too much indentation

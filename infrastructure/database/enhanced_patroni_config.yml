@@ -1,0 +1,354 @@
+# Enhanced Patroni Configuration for High-Frequency Trading
+# AGENT 14: DATABASE OPTIMIZATION SPECIALIST
+# Target: Sub-second failover with automatic recovery
+
+scope: grandmodel-cluster
+namespace: /trading
+name: postgresql-primary
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: patroni-primary:8008
+  # REST API security
+  authentication:
+    username: patroni_admin
+    password: patroni_secure_password
+  # SSL configuration
+  certfile: /etc/ssl/certs/patroni.crt
+  keyfile: /etc/ssl/private/patroni.key
+  # Monitoring endpoints
+  allowlist:
+    - 127.0.0.1/32
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+
+etcd3:
+  hosts: etcd-cluster:2379
+  # Etcd optimizations for faster consensus
+  protocol: https
+  cacert: /etc/ssl/certs/etcd-ca.crt
+  cert: /etc/ssl/certs/etcd-client.crt
+  key: /etc/ssl/private/etcd-client.key
+  # Connection pooling
+  pool_size: 10
+  pool_recycle: 3600
+  # Faster timeouts
+  ttl: 8
+  timeout: 5
+  retry_timeout: 8
+
+bootstrap:
+  dcs:
+    # Ultra-fast failover settings
+    ttl: 8
+    loop_wait: 1
+    retry_timeout: 8
+    maximum_lag_on_failover: 1048576  # 1MB
+    master_start_timeout: 15
+    # Synchronous replication for consistency
+    synchronous_mode: true
+    synchronous_mode_strict: false
+    synchronous_node_count: 1
+    # Fast leader election
+    check_timeline: true
+    use_pg_rewind: true
+    remove_data_directory_on_rewind_failure: true
+    remove_data_directory_on_diverged_timelines: true
+    # Aggressive failover settings
+    failover_timeout: 10
+    switchover_timeout: 10
+    # Etcd optimizations
+    etcd_hosts_fallback_to_srv: false
+    
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      # Replication slots for guaranteed WAL retention
+      create_replica_methods:
+        - basebackup
+        - wal_e
+        - barman
+      
+      parameters:
+        # High-frequency trading optimizations
+        max_connections: 1000
+        superuser_reserved_connections: 10
+        shared_buffers: 2GB
+        effective_cache_size: 6GB
+        maintenance_work_mem: 256MB
+        checkpoint_completion_target: 0.7
+        wal_buffers: 64MB
+        default_statistics_target: 100
+        random_page_cost: 1.1
+        effective_io_concurrency: 200
+        work_mem: 8MB
+        min_wal_size: 2GB
+        max_wal_size: 8GB
+        max_worker_processes: 16
+        max_parallel_workers_per_gather: 4
+        max_parallel_workers: 16
+        max_parallel_maintenance_workers: 4
+        
+        # WAL and replication settings
+        wal_level: replica
+        max_wal_senders: 10
+        max_replication_slots: 10
+        hot_standby: on
+        hot_standby_feedback: on
+        wal_receiver_timeout: 30s
+        wal_sender_timeout: 30s
+        
+        # Checkpointing optimization
+        checkpoint_timeout: 5min
+        checkpoint_warning: 30s
+        checkpoint_flush_after: 256kB
+        
+        # Background writer optimization
+        bgwriter_delay: 10ms
+        bgwriter_lru_maxpages: 1000
+        bgwriter_lru_multiplier: 10.0
+        bgwriter_flush_after: 512kB
+        
+        # WAL writer optimization
+        wal_writer_delay: 10ms
+        wal_writer_flush_after: 1MB
+        
+        # Vacuum optimization
+        autovacuum_max_workers: 6
+        autovacuum_naptime: 10s
+        autovacuum_vacuum_threshold: 25
+        autovacuum_analyze_threshold: 10
+        autovacuum_vacuum_scale_factor: 0.1
+        autovacuum_analyze_scale_factor: 0.05
+        
+        # Lock management
+        max_locks_per_transaction: 256
+        max_pred_locks_per_transaction: 256
+        deadlock_timeout: 500ms
+        
+        # Statement timeout for trading
+        statement_timeout: 10s
+        idle_in_transaction_session_timeout: 60s
+        lock_timeout: 2s
+        
+        # Logging optimized for monitoring
+        log_destination: stderr,csvlog
+        logging_collector: on
+        log_directory: /var/log/postgresql
+        log_filename: postgresql-%Y-%m-%d_%H%M%S.log
+        log_file_mode: 0600
+        log_truncate_on_rotation: on
+        log_rotation_age: 1h
+        log_rotation_size: 100MB
+        log_min_duration_statement: 10ms
+        log_line_prefix: '%t [%p]: user=%u,db=%d,app=%a,client=%h,txid=%x '
+        log_checkpoints: on
+        log_connections: on
+        log_disconnections: on
+        log_lock_waits: on
+        log_temp_files: 0
+        log_autovacuum_min_duration: 0
+        log_error_verbosity: verbose
+        
+        # Query optimization
+        random_page_cost: 1.1
+        seq_page_cost: 1.0
+        cpu_tuple_cost: 0.01
+        cpu_index_tuple_cost: 0.005
+        cpu_operator_cost: 0.0025
+        
+        # Connection optimization
+        tcp_keepalives_idle: 30
+        tcp_keepalives_interval: 10
+        tcp_keepalives_count: 3
+        tcp_user_timeout: 30000
+        
+        # Archive settings with compression
+        archive_mode: on
+        archive_command: 'test ! -f /var/lib/postgresql/wal-archive/%f && gzip -c %p > /var/lib/postgresql/wal-archive/%f.gz'
+        archive_timeout: 10s
+        
+        # Monitoring and statistics
+        track_activities: on
+        track_counts: on
+        track_io_timing: on
+        track_functions: all
+        track_activity_query_size: 2048
+        stats_temp_directory: /var/run/postgresql/stats_temp
+        
+        # Security settings
+        ssl: on
+        ssl_cert_file: /etc/ssl/certs/server.crt
+        ssl_key_file: /etc/ssl/private/server.key
+        ssl_ca_file: /etc/ssl/certs/ca.crt
+        ssl_ciphers: 'HIGH:MEDIUM:+3DES:!aNULL'
+        ssl_prefer_server_ciphers: on
+        password_encryption: scram-sha-256
+        
+        # Huge pages for performance
+        huge_pages: try
+        shared_memory_type: mmap
+        
+        # JIT compilation
+        jit: on
+        jit_above_cost: 100000
+        jit_optimize_above_cost: 500000
+        jit_inline_above_cost: 500000
+        
+      # Advanced pg_hba configuration
+      pg_hba:
+        - hostssl replication replicator 0.0.0.0/0 scram-sha-256
+        - hostssl all all 0.0.0.0/0 scram-sha-256
+        - local all all peer
+        - host all all 127.0.0.1/32 scram-sha-256
+        - host all all ::1/128 scram-sha-256
+        
+      # User management
+      users:
+        admin:
+          password: admin_secure_password
+          options:
+            - createrole
+            - createdb
+            - bypassrls
+        replicator:
+          password: replication_secure_password
+          options:
+            - replication
+        grandmodel_user:
+          password: grandmodel_secure_password
+          options:
+            - createdb
+        monitoring_user:
+          password: monitoring_secure_password
+          options: []
+
+  # Initialization with optimizations
+  initdb:
+    - encoding: UTF8
+    - locale: C
+    - data-checksums
+    - wal-segsize: 64
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: patroni-primary:5432
+  data_dir: /var/lib/postgresql/data/pgdata
+  bin_dir: /usr/lib/postgresql/15/bin
+  config_dir: /etc/postgresql/15/main
+  pgpass: /var/lib/postgresql/.pgpass
+  
+  authentication:
+    replication:
+      username: replicator
+      password: replication_secure_password
+    superuser:
+      username: postgres
+      password: postgres_secure_password
+      
+  parameters:
+    unix_socket_directories: '/var/run/postgresql'
+    port: 5432
+    
+  # Optimized basebackup
+  create_replica_methods:
+    - basebackup
+  basebackup:
+    checkpoint: 'fast'
+    max-rate: '500M'
+    verbose: true
+    progress: true
+    wal-method: stream
+    
+  # Custom scripts for lifecycle management
+  callbacks:
+    on_start: /usr/local/bin/on_start.sh
+    on_stop: /usr/local/bin/on_stop.sh
+    on_restart: /usr/local/bin/on_restart.sh
+    on_role_change: /usr/local/bin/on_role_change.sh
+    on_reload: /usr/local/bin/on_reload.sh
+
+# Watchdog for hardware-level failover
+watchdog:
+  mode: automatic
+  device: /dev/watchdog
+  safety_margin: 2
+  timeout: 10
+
+# Node tags for intelligent routing
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false
+  priority: 100
+  datacenter: primary
+  availability_zone: zone-1
+
+# Standby cluster configuration
+standby_cluster:
+  host: postgres-primary
+  port: 5432
+  create_replica_methods:
+    - basebackup
+    - wal_e
+  restore_command: 'wal-e wal-fetch "%f" "%p"'
+  recovery_min_apply_delay: 0
+
+# Logging configuration
+log:
+  level: INFO
+  format: '%(asctime)s %(levelname)s: %(message)s'
+  file_num: 10
+  file_size: 50MB
+  dir: /var/log/patroni
+  loggers:
+    urllib3.connectionpool:
+      level: WARNING
+    kazoo.client:
+      level: WARNING
+
+# Failover configuration
+failover:
+  candidate_tags:
+    - nofailover: false
+    - priority: ">= 90"
+  maximum_lag_on_failover: 1048576
+  
+# Synchronous replication
+synchronous_mode: true
+synchronous_mode_strict: false
+synchronous_node_count: 1
+
+# Advanced features
+use_pg_rewind: true
+remove_data_directory_on_rewind_failure: true
+remove_data_directory_on_diverged_timelines: true
+
+# Maintenance mode settings
+maintenance_mode: false
+pause: false
+
+# Custom configuration directory
+include_dir: /etc/patroni/conf.d
+
+# Environment-specific overrides
+slots:
+  # Physical replication slots
+  standby_slot:
+    type: physical
+    database: postgres
+  # Logical replication slots for analytics
+  analytics_slot:
+    type: logical
+    database: grandmodel
+    plugin: pgoutput
+
+# Backup integration
+backup:
+  command: '/usr/local/bin/backup.sh'
+  schedule: '0 2 * * *'
+  retention: 7
+  compression: true
+  encryption: true

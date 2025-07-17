@@ -1,0 +1,350 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Settings Configuration Schema",
+  "description": "Schema for main settings configuration",
+  "properties": {
+    "system": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "System name"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "System version in semver format"
+        },
+        "mode": {
+          "enum": ["live", "paper", "backtest"],
+          "description": "System operating mode"
+        },
+        "environment": {
+          "enum": ["production", "staging", "development", "testing"],
+          "description": "Environment type"
+        },
+        "ssl_enabled": {
+          "type": "boolean",
+          "description": "Whether SSL is enabled"
+        },
+        "backup_enabled": {
+          "type": "boolean",
+          "description": "Whether backups are enabled"
+        },
+        "debug": {
+          "type": "boolean",
+          "description": "Whether debug mode is enabled"
+        },
+        "log_level": {
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "description": "Logging level"
+        }
+      },
+      "required": ["name", "version", "mode", "environment"],
+      "additionalProperties": false
+    },
+    "timeframes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1440
+      },
+      "description": "Trading timeframes in minutes"
+    },
+    "symbols": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{1,4}$"
+      },
+      "description": "Trading symbols"
+    },
+    "data_handler": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": ["rithmic", "ib", "backtest"],
+          "description": "Data handler type"
+        },
+        "backtest_file": {
+          "type": "string",
+          "description": "Path to backtest data file"
+        },
+        "replay_speed": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Replay speed (0 = fastest)"
+        },
+        "live_settings": {
+          "type": "object",
+          "properties": {
+            "user": {"type": "string"},
+            "password": {"type": "string"},
+            "system": {"type": "string"},
+            "gateway": {"type": "string"}
+          },
+          "description": "Live trading settings"
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+    "database": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Database host"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Database port"
+        },
+        "name": {
+          "type": "string",
+          "description": "Database name"
+        },
+        "username": {
+          "type": "string",
+          "description": "Database username"
+        },
+        "password": {
+          "type": "string",
+          "description": "Database password"
+        },
+        "ssl_mode": {
+          "enum": ["disable", "require", "verify-ca", "verify-full"],
+          "description": "SSL mode"
+        },
+        "connection_pool": {
+          "type": "object",
+          "properties": {
+            "min_connections": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_connections": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "required": ["host", "port", "name"],
+      "additionalProperties": false
+    },
+    "redis": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Redis host"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Redis port"
+        },
+        "password": {
+          "type": "string",
+          "description": "Redis password"
+        },
+        "ssl": {
+          "type": "boolean",
+          "description": "Whether to use SSL"
+        },
+        "cluster_enabled": {
+          "type": "boolean",
+          "description": "Whether cluster is enabled"
+        }
+      },
+      "required": ["host", "port"],
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "jwt_secret_key": {
+          "type": "string",
+          "minLength": 32,
+          "description": "JWT secret key"
+        },
+        "api_rate_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "API rate limit per minute"
+        },
+        "cors_origins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "CORS allowed origins"
+        },
+        "encryption_key": {
+          "type": "string",
+          "minLength": 32,
+          "description": "Encryption key"
+        }
+      },
+      "required": ["jwt_secret_key"],
+      "additionalProperties": false
+    },
+    "monitoring": {
+      "type": "object",
+      "properties": {
+        "prometheus_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Prometheus port"
+        },
+        "enable_profiling": {
+          "type": "boolean",
+          "description": "Whether to enable profiling"
+        },
+        "metrics_interval": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Metrics collection interval in seconds"
+        },
+        "health_check_interval": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Health check interval in seconds"
+        }
+      },
+      "additionalProperties": false
+    },
+    "risk_management": {
+      "type": "object",
+      "properties": {
+        "max_position_size": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum position size"
+        },
+        "max_daily_loss": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Maximum daily loss"
+        },
+        "max_drawdown_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Maximum drawdown percentage"
+        },
+        "stop_loss_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Stop loss percentage"
+        },
+        "position_sizing_method": {
+          "enum": ["fixed", "kelly", "risk_parity"],
+          "description": "Position sizing method"
+        },
+        "var_confidence": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 0.999,
+          "description": "VaR confidence level"
+        }
+      },
+      "required": ["max_position_size", "max_daily_loss"],
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "order_type": {
+          "enum": ["market", "limit"],
+          "description": "Default order type"
+        },
+        "slippage_ticks": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Expected slippage in ticks"
+        },
+        "commission_per_contract": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Commission per contract"
+        },
+        "max_order_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum order size"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Order timeout in seconds"
+        }
+      },
+      "required": ["order_type"],
+      "additionalProperties": false
+    },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "description": "Logging level"
+        },
+        "format": {
+          "enum": ["json", "pretty"],
+          "description": "Log format"
+        },
+        "handlers": {
+          "type": "array",
+          "items": {
+            "enum": ["console", "file", "elasticsearch", "syslog"]
+          },
+          "description": "Log handlers"
+        },
+        "file": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Log file path"
+            },
+            "max_size": {
+              "type": "string",
+              "description": "Maximum log file size"
+            },
+            "backup_count": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of backup files"
+            }
+          }
+        },
+        "elasticsearch": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "Elasticsearch host"
+            },
+            "index": {
+              "type": "string",
+              "description": "Elasticsearch index"
+            }
+          }
+        }
+      },
+      "required": ["level", "format", "handlers"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["system", "data_handler", "risk_management", "execution"],
+  "additionalProperties": false
+}

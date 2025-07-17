@@ -1,0 +1,42 @@
+{
+  "execution_summary": {
+    "timestamp": "2025-07-17T07:47:46.141869",
+    "total_execution_time": 2.575223207473755,
+    "execution_breakdown": {
+      "data_preparation": 0.004692554473876953,
+      "signal_generation": 2.393446683883667,
+      "position_sizing": 0.00036334991455078125,
+      "backtest_execution": 0.17672061920166016,
+      "report_generation": 2.1696090698242188e-05
+    }
+  },
+  "portfolio_performance": {
+    "total_return": -0.09259227306517034,
+    "annualized_return": -0.7821202060030031,
+    "sharpe_ratio": -1.6015880116141106,
+    "sortino_ratio": -2.252714391571748,
+    "calmar_ratio": -2.631832816276859,
+    "max_drawdown": -0.26422686101124027,
+    "volatility": 0.5165086052890957,
+    "final_value": 90740.77269348297
+  },
+  "trade_statistics": {
+    "total_trades": 307,
+    "win_rate": 0.34201954397394135,
+    "profit_factor": 0.4612149281211284,
+    "avg_trade_return": -0.09798545653073949,
+    "trade_frequency": 0.03573091247672253
+  },
+  "risk_metrics": {
+    "value_at_risk_95": -0.002967460911760249,
+    "conditional_var_95": -0.005014433657949541,
+    "skewness": 0.050272830265480725,
+    "kurtosis": 9.802599353151571,
+    "max_drawdown_pct": -0.26422686101124027
+  },
+  "execution_costs": {
+    "transaction_cost_pct": 0.0002,
+    "slippage_pct": 0.0001,
+    "estimated_total_costs": 5571.483443379854
+  }
+}

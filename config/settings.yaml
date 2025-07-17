@@ -1,0 +1,479 @@
+system:
+  name: "AlgoSpace Trading System"
+  version: "0.1.0"
+  mode: "backtest"  # "live", "paper", or "backtest"
+  environment: ${ENVIRONMENT:development}
+  
+# Timeframes for multi-timeframe analysis
+timeframes:
+  - 5   # 5-minute bars
+  - 30  # 30-minute bars
+  
+# Trading symbols
+symbols:
+  - "ES"   # E-mini S&P 500
+  - "NQ"   # E-mini NASDAQ-100
+  
+# Data configuration
+data_handler:
+  type: "backtest"  # "rithmic", "ib", "backtest"
+  backtest_file: "data/historical/ES - 5 min.csv"
+  replay_speed: 1.0  # 1.0 = real-time, 0 = as fast as possible
+  config:
+    lookback_days: 60
+    cache_enabled: true
+    cache_path: "./data/cache/"
+    
+# Lookback windows for agents
+lookback_windows:
+  N_30m: 100
+  N_5m: 100
+  N_regime: 100
+    
+# Indicators configuration
+indicators:
+  mlmi:
+    enabled: true
+    periods: [14, 21, 50]
+    sensitivity: 0.7
+  nwrqk:
+    enabled: true
+    threshold: 0.8
+  fvg:
+    enabled: true
+    threshold: 0.001
+    lookback_period: 10
+    body_multiplier: 1.5
+    max_age: 50
+    mitigation:
+      penetration_weight: 0.4
+      speed_weight: 0.3
+      volume_weight: 0.2
+      age_weight: 0.1
+      min_penetration: 0.5
+      volume_lookback: 20
+    gap_size:
+      max_percentage: 0.05
+      min_percentage: 0.001
+  lvn:
+    enabled: true
+    volume_profile_days: 20
+  mmd:
+    enabled: true
+    signature_degree: 3
+    window_size: 20
+    
+# SynergyDetector configuration
+synergy_detector:
+  # Time and sequence parameters
+  time_window_bars: 10         # Maximum bars between signals for valid synergy
+  cooldown_bars: 5             # Bars to wait before next detection
+  bar_duration_minutes: 5      # Duration of each bar in minutes
+  required_signals: 3          # Number of signals required for complete synergy
+  
+  # Signal activation thresholds
+  mlmi_threshold: 0.5          # Minimum MLMI signal strength (0.5 = 50% deviation from neutral)
+  mlmi_neutral_line: 50        # MLMI neutral line value
+  mlmi_scaling_factor: 50      # Scaling factor for MLMI threshold calculation
+  mlmi_max_strength: 1.0       # Maximum signal strength cap
+  
+  nwrqk_threshold: 0.3         # Minimum NW-RQK slope magnitude for signal
+  nwrqk_max_slope: 2.0         # Maximum reasonable slope for normalization
+  nwrqk_max_strength: 1.0      # Maximum signal strength cap
+  
+  fvg_min_size: 0.001          # Minimum FVG gap size (0.1% of price)
+  fvg_max_gap_pct: 0.01        # Maximum gap percentage for normalization (1%)
+  fvg_max_strength: 1.0        # Maximum signal strength cap
+  
+  # Performance monitoring
+  processing_time_warning_ms: 1.0  # Processing time threshold for warnings
+  
+  # Default fallback values for missing features
+  defaults:
+    current_price: 0.0
+    volatility: 0.0
+    volume_ratio: 1.0
+    volume_momentum: 0.0
+    mlmi_value: 50
+    nwrqk_slope: 0.0
+    nwrqk_value: 0.0
+
+# Matrix Assemblers configuration
+matrix_assemblers:
+  30m:
+    window_size: 48  # 24 hours of 30-minute bars
+    warmup_period: 48
+    features:
+      - mlmi_value
+      - mlmi_signal
+      - nwrqk_value
+      - nwrqk_slope
+      - lvn_distance_points
+      - lvn_nearest_strength
+      - time_hour_sin
+      - time_hour_cos
+    feature_configs:
+      mlmi_value:
+        ema_alpha: 0.02
+      nwrqk_slope:
+        ema_alpha: 0.05
+      lvn_distance_points:
+        ema_alpha: 0.01
+  5m:
+    window_size: 60  # 5 hours of 5-minute bars
+    warmup_period: 20
+    features:
+      - fvg_bullish_active
+      - fvg_bearish_active
+      - fvg_nearest_level
+      - fvg_mitigation_signal
+      - price_momentum_5
+      - volume_ratio
+      - fvg_gap_size_pct
+    feature_configs:
+      price_momentum_5:
+        ema_alpha: 0.1
+      volume_ratio:
+        ema_alpha: 0.05
+      fvg_gap_size_pct:
+        ema_alpha: 0.1
+      fvg_mitigation_strength:
+        ema_alpha: 0.05
+  regime:
+    window_size: 96  # 48 hours of 30-minute bars
+    warmup_period: 30
+    features:
+      - volatility_30
+      - volume_profile_skew
+      - price_acceleration
+      - momentum_divergence
+      - regime_strength
+    feature_configs:
+      volatility_30:
+        ema_alpha: 0.05
+      volume_profile_skew:
+        ema_alpha: 0.02
+      price_acceleration:
+        ema_alpha: 0.1
+    
+# MARL Agents configuration
+agents:
+  agent_30m:
+    enabled: true
+    model_path: "./models/agent_30m.pth"
+    action_space: ["long", "short", "neutral"]
+  agent_5m:
+    enabled: true
+    model_path: "./models/agent_5m.pth"
+    action_space: ["enter", "exit", "hold"]
+  agent_regime:
+    enabled: true
+    model_path: "./models/agent_regime.pth"
+    regimes: ["trending", "ranging", "volatile"]
+  agent_risk:
+    enabled: true
+    model_path: "./models/agent_risk.pth"
+    
+# Risk Management
+risk_management:
+  max_position_size: ${MAX_POSITION_SIZE:100000}
+  max_daily_loss: ${MAX_DAILY_LOSS:5000}
+  max_drawdown_percent: ${MAX_DRAWDOWN_PERCENT:10}
+  stop_loss_percent: 2.0
+  position_sizing_method: "kelly"
+  
+# Execution configuration
+execution:
+  order_type: "limit"  # "market", "limit"
+  slippage_ticks: 1
+  commission_per_contract: 2.5
+  
+# Backtesting specific
+backtesting:
+  start_date: ${BACKTEST_START_DATE:"2022-01-01"}
+  end_date: ${BACKTEST_END_DATE:"2023-12-31"}
+  initial_capital: ${BACKTEST_INITIAL_CAPITAL:100000}
+  
+# Logging configuration
+logging:
+  level: ${LOG_LEVEL:INFO}
+  format: ${LOG_FORMAT:json}
+  handlers:
+    - console
+    - file
+    
+# Performance monitoring
+monitoring:
+  prometheus_port: ${PROMETHEUS_PORT:9090}
+  enable_profiling: false
+  metrics_interval: 60  # seconds
+
+# RDE (Regime Detection Engine) configuration
+rde:
+  input_dim: 155  # Number of MMD features
+  d_model: 256    # Transformer internal dimension
+  latent_dim: 8   # Regime vector dimension
+  n_heads: 8      # Attention heads
+  n_layers: 3     # Transformer layers
+  dropout: 0.1    # Dropout probability
+  device: cpu     # CPU for production stability
+  sequence_length: 24  # Expected sequence length (12 hours)
+
+# RDE Communication Layer configuration
+rde_communication:
+  input_dim: 8       # RDE output dimension
+  hidden_dim: 32     # LSTM hidden dimension
+  output_dim: 16     # Final embedding dimension
+  num_layers: 2      # Number of LSTM layers
+  device: cpu        # CPU for production stability
+  
+  # Training configuration
+  learning_rate: 1e-4
+  batch_size: 64
+  sequence_length: 32
+  n_epochs: 100
+  
+  # Loss weights
+  loss_weights:
+    temporal_consistency: 0.3
+    uncertainty_calibration: 0.4
+    regime_prediction: 0.3
+    contrastive: 0.1
+    
+  # Early stopping
+  early_stopping:
+    patience: 20
+    min_delta: 0.001
+
+# M-RMS (Multi-Agent Risk Management Subsystem) configuration
+m_rms:
+  synergy_dim: 30         # Synergy feature vector dimension
+  account_dim: 10         # Account state vector dimension  
+  device: cpu             # CPU for production stability
+  point_value: 5.0        # MES point value
+  max_position_size: 5    # Maximum contracts per trade
+  hidden_dim: 128         # Value head hidden dimension
+  position_agent_hidden: 128
+  sl_agent_hidden: 64
+  pt_agent_hidden: 64
+  dropout_rate: 0.2
+  max_outcome_history: 20
+  # Communication layer configuration
+  communication:
+    risk_vector_dim: 4        # Input from MRMS
+    outcome_dim: 3            # Trade outcome vector
+    hidden_dim: 16            # LSTM hidden size
+    output_dim: 8             # Risk embedding dimension
+    memory_size: 20           # Recent trades to remember
+
+# MRMS Communication Layer configuration
+mrms_communication:
+  risk_vector_dim: 4        # Input from MRMS
+  outcome_dim: 3            # Trade outcome vector
+  hidden_dim: 16            # LSTM hidden size
+  output_dim: 8             # Risk embedding dimension
+  memory_size: 20           # Recent trades to remember
+  
+  # Training configuration
+  learning_rate: 1e-4
+  batch_size: 32
+  sequence_length: 10
+  
+  # Loss weights
+  loss_weights:
+    risk: 0.3
+    outcome: 0.3
+    uncertainty: 0.2
+    temporal: 0.2
+    
+  # Adaptation parameters
+  risk_adaptation:
+    max_reduction: 0.5      # Max position size reduction
+    uncertainty_threshold: 0.3
+    streak_penalty: 0.1     # Per consecutive loss
+
+# Main MARL Core configuration - Advanced Shared Policy Implementation
+main_marl_core:
+  # Device configuration
+  device: "cpu"  # or "cuda" for GPU
+  
+  # Embedder configurations
+  embedders:
+    structure:
+      output_dim: 64
+      d_model: 128
+      n_heads: 4
+      n_layers: 3
+      d_ff: 512
+      dropout: 0.2
+      
+    tactical:
+      output_dim: 48
+      hidden_dim: 128          # LSTM hidden size
+      n_layers: 3              # Number of BiLSTM layers
+      dropout: 0.2
+      attention_scales: [5, 15, 30]  # Multi-scale attention windows
+      momentum_features: true  # Enable momentum feature extraction
+      
+    regime:
+      output_dim: 16
+      hidden_dim: 32
+      
+    lvn:
+      input_dim: 5
+      output_dim: 8
+      hidden_dim: 16
+      
+  # Shared policy network - Advanced transformer-based implementation
+  policy:
+    state_dim: 512  # Total unified state dimension
+    hidden_dim: 512
+    n_heads: 8
+    n_layers: 6
+    dropout_rate: 0.2
+    
+  # MC Dropout settings
+  mc_dropout:
+    n_samples: 50
+    confidence_threshold: 0.65
+    temperature: 1.0
+    
+  # Decision gate - Two-gate system
+  decision_gate:
+    input_dim: 640  # state (512) + risk (128)
+    hidden_dim: 256
+    risk_threshold: 0.3
+    confidence_threshold: 0.7
+    
+  # Performance monitoring
+  monitoring:
+    metrics_window: 1000
+    log_frequency: 100
+    
+  # Training configuration
+  training:
+    learning_rate: 3e-4
+    gamma: 0.99
+    gae_lambda: 0.95
+    clip_ratio: 0.2
+    value_clip: 0.5
+    entropy_coef: 0.01
+    max_grad_norm: 0.5
+    batch_size: 256
+    n_epochs: 10
+    n_minibatches: 4
+    training_steps: 1000000
+    
+  # Reward configuration
+  rewards:
+    miss_penalty: -0.02
+    correct_pass_reward: 0.01
+    false_qualify_penalty: -0.05
+    max_reward_cap: 4.0
+    
+  # Model paths
+  pretrained_weights_path: "models/main_marl_core_v1.pt"
+  checkpoint_dir: "checkpoints/main_marl/"
+  model_paths:
+    structure_embedder: "./models/structure_embedder.pth"
+    tactical_embedder: "./models/tactical_embedder.pth"
+    regime_embedder: "./models/regime_embedder.pth"
+    rde_communication: "./models/rde_communication.pth"
+    lvn_embedder: "./models/lvn_embedder.pth"
+    shared_policy: "./models/shared_policy.pth"
+    decision_gate: "./models/decision_gate.pth"
+
+# Legacy main_core configuration (kept for backward compatibility)
+main_core:
+  device: cpu  # CPU for production stability
+  embedders:
+    structure:
+      output_dim: 64
+      # Transformer-specific parameters
+      d_model: 128        # Internal transformer dimension
+      n_heads: 4          # Number of attention heads
+      n_layers: 3         # Number of transformer layers
+      d_ff: 512          # Feed-forward dimension
+      dropout: 0.2
+      max_seq_len: 48
+    tactical:
+      input_dim: 7             # Updated to match new architecture
+      hidden_dim: 128          # Updated to match new architecture
+      output_dim: 48           # Updated to match new architecture
+      n_layers: 3              # Number of BiLSTM layers
+      dropout: 0.2
+      attention_scales: [5, 15, 30]  # Multi-scale attention windows
+    regime:
+      output_dim: 16
+      hidden_dim: 32
+    lvn:
+      input_dim: 5
+      output_dim: 8
+      hidden_dim: 16
+  shared_policy:
+    hidden_dims: [256, 128, 64]
+    dropout: 0.2
+  mc_dropout:
+    n_passes: 50
+    confidence_threshold: 0.65
+  decision_gate:
+    hidden_dim: 64
+    dropout: 0.1
+  model_paths:
+    structure_embedder: "./models/structure_embedder.pth"
+    tactical_embedder: "./models/tactical_embedder.pth"
+    regime_embedder: "./models/regime_embedder.pth"
+    lvn_embedder: "./models/lvn_embedder.pth"
+    shared_policy: "./models/shared_policy.pth"
+    decision_gate: "./models/decision_gate.pth"
+
+# Model paths
+models:
+  rde_path: "./models/hybrid_regime_engine.pth"
+  mrms_path: "./models/m_rms_model.pth"
+# Data configuration (REQUIRED)
+data:
+  tick_buffer_size: 1000
+  bar_buffer_size: 100
+  max_memory_mb: 2048
+  cleanup_interval: 60
+  backtest_file: "data/historical/ES - 5 min.csv"
+  
+  # Thread safety
+  use_locks: true
+  max_concurrent_operations: 10
+  
+  # Recovery settings
+  enable_recovery: true
+  recovery_timeout: 30
+  max_recovery_attempts: 3
+
+# 4 Specialized MARL Systems Configuration
+
+# 1. Strategic MARL (30-minute)
+strategic_marl:
+  enabled: false  # Temporarily disabled for testing
+  confidence_threshold: 0.7
+  max_inference_latency_ms: 10
+  timeframe: 30  # minutes
+  
+# 2. Tactical MARL (5-minute)
+tactical_marl:
+  enabled: true
+  confidence_threshold: 0.6
+  max_inference_latency_ms: 5
+  timeframe: 5  # minutes
+  
+# 3. Risk Management MARL
+risk_marl:
+  enabled: true
+  max_position_risk: 0.02
+  var_confidence: 0.95
+  monitoring_interval: 1  # seconds
+  
+# 4. Execution MARL
+execution_marl:
+  enabled: false  # Temporarily disabled due to dependency issues
+  max_latency_us: 500  # microseconds
+  min_fill_rate: 0.998
+  max_slippage_bps: 2

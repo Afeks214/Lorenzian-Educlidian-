@@ -1,0 +1,533 @@
+{
+  "execution_summary": {
+    "total_trades_executed": 43,
+    "failed_trades": 0,
+    "execution_success_rate": 1.0,
+    "trading_win_rate": 0.5813953488372093,
+    "total_net_pnl": 177738.93550133114,
+    "total_execution_costs": 5335.389498670769,
+    "avg_cost_per_trade": 124.078825550483,
+    "avg_execution_time_ms": 324.4980028837237
+  },
+  "strategy_performance": {
+    "Synergy_1": {
+      "trades": 13,
+      "win_rate": 0.6153846153846154,
+      "total_pnl": 61369.65595159317,
+      "avg_pnl_per_trade": 4720.742765507167,
+      "total_costs": 1734.9690484073542,
+      "avg_cost_per_trade": 133.45915756979647
+    },
+    "Synergy_2": {
+      "trades": 10,
+      "win_rate": 0.7,
+      "total_pnl": 62868.44798996358,
+      "avg_pnl_per_trade": 6286.844798996358,
+      "total_costs": 1114.5020100366214,
+      "avg_cost_per_trade": 111.45020100366214
+    },
+    "MARL_Agent": {
+      "trades": 15,
+      "win_rate": 0.4666666666666667,
+      "total_pnl": 29834.894402823476,
+      "avg_pnl_per_trade": 1988.9929601882318,
+      "total_costs": 1893.5555971775555,
+      "avg_cost_per_trade": 126.23703981183704
+    },
+    "Combined_Strategy": {
+      "trades": 5,
+      "win_rate": 0.6,
+      "total_pnl": 23665.937156950997,
+      "avg_pnl_per_trade": 4733.187431390199,
+      "total_costs": 592.362843049237,
+      "avg_cost_per_trade": 118.4725686098474
+    }
+  },
+  "execution_quality": {
+    "avg_slippage_cost": 122.45882555048301,
+    "avg_execution_latency": 324.4980028837237,
+    "cost_efficiency": 33.313207132414995,
+    "execution_success_rate": 1.0
+  },
+  "nq_futures_specs": {
+    "commission_per_round_turn": 0.5,
+    "point_value": 20.0,
+    "tick_size": 0.25,
+    "realistic_slippage": "0.5-1.0 points dynamic"
+  },
+  "individual_trades": [
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 20152.0,
+      "exit_price": 19952.7075,
+      "quantity": 3,
+      "net_pnl": 11803.6984409684,
+      "total_costs": 153.8515590315734,
+      "execution_time_ms": 239.6624500015605,
+      "slippage_cost": 152.2315590315734
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 20692.0,
+      "exit_price": 20897.1525,
+      "quantity": 3,
+      "net_pnl": 12194.92810033528,
+      "total_costs": 114.22189966472801,
+      "execution_time_ms": 330.6922419997136,
+      "slippage_cost": 112.60189966472801
+    },
+    {
+      "success": true,
+      "strategy": "Combined_Strategy",
+      "entry_price": 22389.75,
+      "exit_price": 22611.375,
+      "quantity": 3,
+      "net_pnl": 13143.388538451041,
+      "total_costs": 154.11146154895772,
+      "execution_time_ms": 364.7888760006026,
+      "slippage_cost": 152.49146154895772
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 22387.75,
+      "exit_price": 22609.355,
+      "quantity": 3,
+      "net_pnl": 13142.18826464029,
+      "total_costs": 154.11173535968337,
+      "execution_time_ms": 335.2887870005361,
+      "slippage_cost": 152.49173535968336
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 21813.5,
+      "exit_price": 21597.84,
+      "quantity": 3,
+      "net_pnl": 12785.632665746814,
+      "total_costs": 153.96733425317524,
+      "execution_time_ms": 233.79259200009983,
+      "slippage_cost": 152.34733425317523
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 21764.5,
+      "exit_price": 21980.3775,
+      "quantity": 3,
+      "net_pnl": 12838.31936184389,
+      "total_costs": 114.33063815602986,
+      "execution_time_ms": 303.6668770000688,
+      "slippage_cost": 112.71063815602986
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 21559.0,
+      "exit_price": 21668.55375,
+      "quantity": 3,
+      "net_pnl": -6687.550447038325,
+      "total_costs": 114.32544703837773,
+      "execution_time_ms": 344.6797790002165,
+      "slippage_cost": 112.70544703837773
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 21613.25,
+      "exit_price": 21398.85,
+      "quantity": 3,
+      "net_pnl": 12749.655449159698,
+      "total_costs": 114.34455084038828,
+      "execution_time_ms": 320.1704379989678,
+      "slippage_cost": 112.72455084038828
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 20897.5,
+      "exit_price": 21003.495,
+      "quantity": 3,
+      "net_pnl": -6474.213378098844,
+      "total_costs": 114.51337809890514,
+      "execution_time_ms": 309.68013600067934,
+      "slippage_cost": 112.89337809890513
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 20848.0,
+      "exit_price": 20954.7525,
+      "quantity": 3,
+      "net_pnl": -6559.059207614375,
+      "total_costs": 153.9092076144539,
+      "execution_time_ms": 244.66099799974472,
+      "slippage_cost": 152.2892076144539
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 21264.5,
+      "exit_price": 21476.135,
+      "quantity": 3,
+      "net_pnl": 12613.264414793484,
+      "total_costs": 84.83558520641853,
+      "execution_time_ms": 365.8611859991652,
+      "slippage_cost": 83.21558520641852
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 21500.5,
+      "exit_price": 21609.761249999996,
+      "quantity": 3,
+      "net_pnl": -6669.949102418556,
+      "total_costs": 114.27410241880077,
+      "execution_time_ms": 318.68252500134986,
+      "slippage_cost": 112.65410241880076
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 21513.0,
+      "exit_price": 21299.6025,
+      "quantity": 3,
+      "net_pnl": 12689.51214170537,
+      "total_costs": 114.33785829457592,
+      "execution_time_ms": 341.3052460000472,
+      "slippage_cost": 112.71785829457592
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 21097.0,
+      "exit_price": 21204.746249999997,
+      "quantity": 3,
+      "net_pnl": -6618.611496851822,
+      "total_costs": 153.8364968520322,
+      "execution_time_ms": 344.7053790005157,
+      "slippage_cost": 152.2164968520322
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 20892.0,
+      "exit_price": 20997.9675,
+      "quantity": 3,
+      "net_pnl": -6472.377495082981,
+      "total_costs": 114.32749508305085,
+      "execution_time_ms": 350.7605380000314,
+      "slippage_cost": 112.70749508305084
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 20606.75,
+      "exit_price": 20501.22875,
+      "quantity": 3,
+      "net_pnl": -6485.214653529011,
+      "total_costs": 153.93965352891524,
+      "execution_time_ms": 296.6420079992531,
+      "slippage_cost": 152.31965352891524
+    },
+    {
+      "success": true,
+      "strategy": "Combined_Strategy",
+      "entry_price": 19341.25,
+      "exit_price": 19439.714999999997,
+      "quantity": 3,
+      "net_pnl": -6022.277584214621,
+      "total_costs": 114.37758421483073,
+      "execution_time_ms": 350.75863899874093,
+      "slippage_cost": 112.75758421483073
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 19691.0,
+      "exit_price": 19495.3275,
+      "quantity": 3,
+      "net_pnl": 11655.753449206793,
+      "total_costs": 84.596550793241,
+      "execution_time_ms": 443.611348999184,
+      "slippage_cost": 82.97655079324099
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 19882.0,
+      "exit_price": 19983.168749999997,
+      "quantity": 3,
+      "net_pnl": -6184.404471082251,
+      "total_costs": 114.27947108242577,
+      "execution_time_ms": 290.6370489999972,
+      "slippage_cost": 112.65947108242577
+    },
+    {
+      "success": true,
+      "strategy": "Combined_Strategy",
+      "entry_price": 18917.75,
+      "exit_price": 18730.8,
+      "quantity": 3,
+      "net_pnl": 11062.901581551474,
+      "total_costs": 154.09841844856828,
+      "execution_time_ms": 370.7325380000839,
+      "slippage_cost": 152.47841844856828
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 18892.0,
+      "exit_price": 18705.3075,
+      "quantity": 3,
+      "net_pnl": 11047.464737761762,
+      "total_costs": 154.08526223829833,
+      "execution_time_ms": 259.00996800010034,
+      "slippage_cost": 152.46526223829832
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 18891.5,
+      "exit_price": 18988.469999999998,
+      "quantity": 3,
+      "net_pnl": -5972.283615906036,
+      "total_costs": 154.08361590618492,
+      "execution_time_ms": 315.6809299998713,
+      "slippage_cost": 152.4636159061849
+    },
+    {
+      "success": true,
+      "strategy": "Combined_Strategy",
+      "entry_price": 18128.25,
+      "exit_price": 17947.9575,
+      "quantity": 3,
+      "net_pnl": 10732.584494654095,
+      "total_costs": 84.96550534587878,
+      "execution_time_ms": 298.6444610014587,
+      "slippage_cost": 83.34550534587878
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 16949.25,
+      "exit_price": 17116.2175,
+      "quantity": 3,
+      "net_pnl": 9864.01796124669,
+      "total_costs": 154.0320387532379,
+      "execution_time_ms": 276.6207420008868,
+      "slippage_cost": 152.4120387532379
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 17177.0,
+      "exit_price": 17264.141249999997,
+      "quantity": 3,
+      "net_pnl": -5313.202526941518,
+      "total_costs": 84.72752694170178,
+      "execution_time_ms": 356.7128369995771,
+      "slippage_cost": 83.10752694170178
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 16754.25,
+      "exit_price": 16587.945,
+      "quantity": 3,
+      "net_pnl": 9893.457593919165,
+      "total_costs": 84.84240608085074,
+      "execution_time_ms": 294.64242100038973,
+      "slippage_cost": 83.22240608085073
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 17559.75,
+      "exit_price": 17733.075,
+      "quantity": 3,
+      "net_pnl": 10245.22813834761,
+      "total_costs": 154.27186165243353,
+      "execution_time_ms": 384.9755169994751,
+      "slippage_cost": 152.65186165243352
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 16828.25,
+      "exit_price": 16661.7,
+      "quantity": 3,
+      "net_pnl": 9878.548344113191,
+      "total_costs": 114.45165588676483,
+      "execution_time_ms": 293.6494120003772,
+      "slippage_cost": 112.83165588676482
+    },
+    {
+      "success": true,
+      "strategy": "Combined_Strategy",
+      "entry_price": 17020.5,
+      "exit_price": 16934.4025,
+      "quantity": 3,
+      "net_pnl": -5250.659873490992,
+      "total_costs": 84.80987349100138,
+      "execution_time_ms": 269.6461729992734,
+      "slippage_cost": 83.18987349100138
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 17392.0,
+      "exit_price": 17303.79625,
+      "quantity": 3,
+      "net_pnl": -5377.253215998538,
+      "total_costs": 85.02821599850287,
+      "execution_time_ms": 403.47339999971155,
+      "slippage_cost": 83.40821599850287
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 18068.25,
+      "exit_price": 18161.10375,
+      "quantity": 3,
+      "net_pnl": -5725.280370606103,
+      "total_costs": 154.05537060619915,
+      "execution_time_ms": 464.844408999852,
+      "slippage_cost": 152.43537060619914
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 18225.5,
+      "exit_price": 18045.72,
+      "quantity": 3,
+      "net_pnl": 10632.615610478653,
+      "total_costs": 154.18438952127593,
+      "execution_time_ms": 275.1088279983378,
+      "slippage_cost": 152.56438952127593
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 18275.0,
+      "exit_price": 18094.725,
+      "quantity": 3,
+      "net_pnl": 10662.482808616298,
+      "total_costs": 154.01719138378854,
+      "execution_time_ms": 324.694818998978,
+      "slippage_cost": 152.39719138378854
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 18413.0,
+      "exit_price": 18230.1075,
+      "quantity": 3,
+      "net_pnl": 10888.855912096436,
+      "total_costs": 84.69408790366757,
+      "execution_time_ms": 342.9479000005813,
+      "slippage_cost": 83.07408790366756
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 18822.0,
+      "exit_price": 18917.868749999998,
+      "quantity": 3,
+      "net_pnl": -5866.491365081228,
+      "total_costs": 114.36636508135874,
+      "execution_time_ms": 299.6074709990353,
+      "slippage_cost": 112.74636508135873
+    },
+    {
+      "success": true,
+      "strategy": "MARL_Agent",
+      "entry_price": 19088.0,
+      "exit_price": 19277.1125,
+      "quantity": 3,
+      "net_pnl": 11232.510176343714,
+      "total_costs": 114.23982365624215,
+      "execution_time_ms": 318.56515900108207,
+      "slippage_cost": 112.61982365624215
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 18381.25,
+      "exit_price": 18563.295000000002,
+      "quantity": 3,
+      "net_pnl": 10808.43065306077,
+      "total_costs": 114.26934693934305,
+      "execution_time_ms": 343.3770040010131,
+      "slippage_cost": 112.64934693934305
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 21209.75,
+      "exit_price": 21000.1275,
+      "quantity": 3,
+      "net_pnl": 12423.351572119083,
+      "total_costs": 153.9984278809953,
+      "execution_time_ms": 304.66352099938376,
+      "slippage_cost": 152.3784278809953
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 20781.5,
+      "exit_price": 20574.675,
+      "quantity": 3,
+      "net_pnl": 12324.794384227884,
+      "total_costs": 84.70561577215943,
+      "execution_time_ms": 347.260943000947,
+      "slippage_cost": 83.08561577215943
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 20792.75,
+      "exit_price": 20586.06,
+      "quantity": 3,
+      "net_pnl": 12316.676775067153,
+      "total_costs": 84.72322493276691,
+      "execution_time_ms": 331.4651860000595,
+      "slippage_cost": 83.1032249327669
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_2",
+      "entry_price": 21177.75,
+      "exit_price": 21069.6225,
+      "quantity": 3,
+      "net_pnl": -6641.554372101775,
+      "total_costs": 153.9043721018532,
+      "execution_time_ms": 296.64964199946553,
+      "slippage_cost": 152.2843721018532
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 21434.5,
+      "exit_price": 21543.179999999997,
+      "quantity": 3,
+      "net_pnl": -6635.113189949967,
+      "total_costs": 114.31318995016802,
+      "execution_time_ms": 289.6727719999035,
+      "slippage_cost": 112.69318995016802
+    },
+    {
+      "success": true,
+      "strategy": "Synergy_1",
+      "entry_price": 22158.25,
+      "exit_price": 22045.22,
+      "quantity": 3,
+      "net_pnl": -6935.829703116894,
+      "total_costs": 154.02970311696362,
+      "execution_time_ms": 360.72097699980077,
+      "slippage_cost": 152.4097031169636
+    }
+  ]
+}

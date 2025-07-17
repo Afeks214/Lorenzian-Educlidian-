@@ -1,0 +1,37 @@
+{
+  "timestamp": "20250717_081119",
+  "agent": "AGENT_6_CL_OUT_OF_SAMPLE_TESTING",
+  "mission": "CL Crude Oil Out-of-Sample Testing Framework Validation",
+  "data_quality": {
+    "30min_periods": 59217,
+    "5min_periods": 354748,
+    "data_span_days": 1829,
+    "price_range": {
+      "min": 33.99,
+      "max": 128.9,
+      "mean": 73.99329922150734
+    },
+    "volatility": {
+      "30min": 0.003496359490853418,
+      "5min": 0.0014391116630968698
+    }
+  },
+  "out_of_sample_capacity": {
+    "training_periods_30m": 23686,
+    "testing_periods_30m": 35531,
+    "testing_days": 740,
+    "walk_forward_periods": 6
+  },
+  "oil_market_analysis": {
+    "price_regime": "HIGH",
+    "momentum_signals": 31627,
+    "signal_percentage": 53.4086495432055,
+    "high_volume_periods": 12588
+  },
+  "framework_readiness": {
+    "data_sufficient": false,
+    "walk_forward_possible": true,
+    "multi_timeframe_available": true,
+    "oil_regime_detectable": true
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "timestamp": "2025-07-17T07:50:54.232066",
+  "data_summary": {
+    "sample_size": 1000,
+    "strategy_mean_return": 0.0016776175222234665,
+    "strategy_volatility": 0.018425513275967132,
+    "benchmark_mean_return": 0.001575052270484807,
+    "benchmark_volatility": 0.017945199455303342
+  },
+  "performance_metrics": {
+    "sharpe_ratio": {
+      "value": 1.4453520048237654,
+      "confidence_interval": [
+        0.4141651137846108,
+        2.4479934708970763
+      ],
+      "p_value": 0.004,
+      "significant": true,
+      "trustworthiness_score": 0.7872044366982576
+    },
+    "sortino_ratio": {
+      "value": 2.412714733271905,
+      "confidence_interval": [
+        0.7932034359172698,
+        4.183809330130523
+      ],
+      "p_value": 0.01,
+      "significant": true,
+      "trustworthiness_score": 0.7854544462004837
+    },
+    "calmar_ratio": {
+      "value": 1.659370839946459,
+      "confidence_interval": [
+        0.34584728129057163,
+        3.7440166626589764
+      ],
+      "p_value": 0.004,
+      "significant": true,
+      "trustworthiness_score": 0.6808504996064996
+    },
+    "total_return": {
+      "value": 1.6776175222234664,
+      "confidence_interval": [
+        0.5766067289835437,
+        2.850602384252659
+      ],
+      "p_value": 0.0,
+      "significant": true,
+      "trustworthiness_score": 0.7880285133244773
+    },
+    "volatility": {
+      "value": 0.29249595544156837,
+      "confidence_interval": [
+        0.2774447516066264,
+        0.30597815824707636
+      ],
+      "p_value": 0.0,
+      "significant": true,
+      "trustworthiness_score": 0.9851625866871987
+    },
+    "max_drawdown": {
+      "value": 0.2547710285266639,
+      "confidence_interval": [
+        0.18003292927881978,
+        0.4646096052414857
+      ],
+      "p_value": 0.0,
+      "significant": true,
+      "trustworthiness_score": 0.8151369822550499
+    },
+    "win_rate": {
+      "value": 0.532,
+      "confidence_interval": [
+        0.504,
+        0.565
+      ],
+      "p_value": 0.0,
+      "significant": true,
+      "trustworthiness_score": 0.9821206816005515
+    }
+  },
+  "monte_carlo_results": {
+    "mean_sharpe": 1.4526150787913066,
+    "sharpe_std": 0.5011526298244556,
+    "percentile_5": 0.6340179392995443,
+    "percentile_95": 2.27560812965198,
+    "stability_score": 0.6661547800885109
+  },
+  "stress_test_results": {
+    "high_volatility": {
+      "sharpe_ratio": 1.3839162256575972,
+      "max_drawdown": 0.6265411922445584,
+      "volatility": 0.5986549187469968
+    },
+    "bear_market": {
+      "sharpe_ratio": -15.785655488566467,
+      "max_drawdown": 0.9999999922160743,
+      "volatility": 0.29249595544156837
+    },
+    "flash_crash": {
+      "sharpe_ratio": 1.3482046921599344,
+      "max_drawdown": 0.3158605330561782,
+      "volatility": 0.2948807535771074
+    }
+  },
+  "alpha_beta_analysis": {
+    "alpha": 0.02584644343814215,
+    "alpha_confidence_interval": [
+      -0.22640897431008486,
+      0.2654365811991288
+    ],
+    "alpha_significant": false,
+    "alpha_p_value": 0.902,
+    "beta": 0.6186351085138411,
+    "information_ratio": 0.10030408293452846,
+    "tracking_error": 0.2576808708276902
+  },
+  "trustworthiness_assessment": {
+    "overall_trustworthiness": 0.8326440423906971,
+    "certification_status": "CERTIFIED GOOD",
+    "statistical_significance_rate": 1.0,
+    "robustness_score": 0.6661547800885109,
+    "significant_tests": 7,
+    "total_tests": 7
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "total_tests": 6,
+  "passed_tests": 6,
+  "failed_tests": 0,
+  "success_rate": 1.0,
+  "test_results": {
+    "data_loading": {
+      "name": "data_loading",
+      "passed": true,
+      "details": {
+        "30min_rows": 1000,
+        "30min_columns": 30,
+        "5min_rows": 6000,
+        "5min_columns": 30,
+        "chunk_count": 10,
+        "has_statistics": true
+      },
+      "errors": []
+    },
+    "memory_management": {
+      "name": "memory_management",
+      "passed": true,
+      "details": {
+        "store_success": true,
+        "retrieve_success": true,
+        "memory_report_available": true,
+        "optimization_completed": true
+      },
+      "errors": []
+    },
+    "data_flow_coordination": {
+      "name": "data_flow_coordination",
+      "passed": true,
+      "details": {
+        "stream_created": true,
+        "publish_success": true,
+        "messages_received": 1,
+        "sync_success": true,
+        "coordination_status": {
+          "active_notebooks": 2,
+          "registered_notebooks": 2,
+          "active_streams": 2,
+          "notebook_registry": {},
+          "stream_statistics": {
+            "test_stream": {
+              "stream_id": "test_stream",
+              "stream_type": "market_data",
+              "status": "active",
+              "messages_sent": 1,
+              "messages_received": 1,
+              "buffer_size": 0,
+              "max_buffer_size": 1000,
+              "subscribers": 0,
+              "uptime_seconds": 0.0018534660339355469,
+              "last_message_time": 1752597631.017558,
+              "message_rate": 539.5297144327245
+            },
+            "sync_test_execution_test_risk": {
+              "stream_id": "sync_test_execution_test_risk",
+              "stream_type": "market_data",
+              "status": "active",
+              "messages_sent": 1,
+              "messages_received": 0,
+              "buffer_size": 1,
+              "max_buffer_size": 1000,
+              "subscribers": 0,
+              "uptime_seconds": 0.0003616809844970703,
+              "last_message_time": 1752597631.018302,
+              "message_rate": 2764.8675016479892
+            }
+          },
+          "processor_stats": {
+            "status": "No processing completed yet"
+          },
+          "coordination_uptime": 0
+        }
+      },
+      "errors": []
+    },
+    "performance_monitoring": {
+      "name": "performance_monitoring",
+      "passed": true,
+      "details": {
+        "summary_available": false,
+        "benchmark_suite_created": true,
+        "benchmark_completed": true
+      },
+      "errors": []
+    },
+    "scalability_features": {
+      "name": "scalability_features",
+      "passed": true,
+      "details": {
+        "capabilities": {
+          "processing_mode": "single",
+          "gpu_count": 0,
+          "gpu_available": false,
+          "cpu_count": 2,
+          "memory_total_gb": 7.757411956787109,
+          "distributed_enabled": false,
+          "auto_scaling_enabled": false,
+          "max_workers": 4
+        },
+        "processing_completed": true,
+        "processing_time": 0.013554096221923828,
+        "input_shape": [
+          1000,
+          10
+        ],
+        "output_shape": [
+          1000,
+          1
+        ],
+        "performance_stats": {
+          "system_capabilities": {
+            "processing_mode": "single",
+            "gpu_count": 0,
+            "gpu_available": false,
+            "cpu_count": 2,
+            "memory_total_gb": 7.757411956787109,
+            "distributed_enabled": false,
+            "auto_scaling_enabled": false,
+            "max_workers": 4
+          },
+          "processing_mode": "single",
+          "is_initialized": true
+        }
+      },
+      "errors": []
+    },
+    "integration_workflow": {
+      "name": "integration_workflow",
+      "passed": true,
+      "details": {
+        "data_loaded": true,
+        "workflow_messages": 1,
+        "final_statistics": {
+          "data_loader": {
+            "avg_load_time": 0.01788392663002014,
+            "max_load_time": 0.04618644714355469,
+            "avg_chunk_size": 1625.0,
+            "avg_memory_usage": 0.27132701873779297,
+            "avg_validation_time": 0.004752635955810547,
+            "avg_preprocessing_time": 0.020031392574310303,
+            "total_loads": 8
+          },
+          "memory_manager": {
+            "system_memory": {
+              "total_gb": 7.757411956787109,
+              "available_gb": 1.6930618286132812,
+              "used_gb": 5.717437744140625,
+              "usage_percent": 0.782,
+              "process_memory_gb": 0.3392524719238281,
+              "gpu_memory_gb": 0,
+              "timestamp": 1752597631.2011504
+            },
+            "memory_history": {
+              "current_usage": 0.782,
+              "avg_usage": 0.782,
+              "max_usage": 0.782,
+              "min_usage": 0.782,
+              "measurements": 1,
+              "warning_threshold": 0.8,
+              "critical_threshold": 0.9
+            },
+            "shared_pool": {
+              "objects_count": 2,
+              "current_size_mb": 0.33403778076171875,
+              "max_size_mb": 1024.0,
+              "utilization": 0.00032620877027511597,
+              "hit_rate": 1.0,
+              "evictions": 0,
+              "stores": 2,
+              "persistence_loads": 0,
+              "persistence_saves": 2
+            },
+            "optimization_enabled": true,
+            "auto_cleanup_threshold": 0.8
+          },
+          "coordinator": {
+            "active_notebooks": 2,
+            "registered_notebooks": 2,
+            "active_streams": 1,
+            "notebook_registry": {},
+            "stream_statistics": {
+              "workflow_stream": {
+                "stream_id": "workflow_stream",
+                "stream_type": "market_data",
+                "status": "active",
+                "messages_sent": 1,
+                "messages_received": 1,
+                "buffer_size": 0,
+                "max_buffer_size": 1000,
+                "subscribers": 0,
+                "uptime_seconds": 0.00150299072265625,
+                "last_message_time": 1752597631.2008076,
+                "message_rate": 665.3401015228426
+              }
+            },
+            "processor_stats": {
+              "status": "No processing completed yet"
+            },
+            "coordination_uptime": 0
+          },
+          "performance_monitor": {}
+        }
+      },
+      "errors": []
+    }
+  }
+}

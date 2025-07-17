@@ -1,0 +1,16 @@
+{
+  "execution_times": {
+    "agent_integration": 0.00012302398681640625
+  },
+  "performance_metrics": {},
+  "validation_summary": {
+    "total_tests": 5,
+    "passed_tests": 5,
+    "average_score": 93.0
+  },
+  "backtest_summary": {
+    "total_strategies": 0,
+    "average_return": NaN,
+    "average_sharpe": NaN
+  }
+}

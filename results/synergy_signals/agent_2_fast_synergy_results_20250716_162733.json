@@ -1,0 +1,44 @@
+{
+  "execution_info": {
+    "timestamp": "20250716_162733",
+    "agent": "AGENT_2_FAST_SYNERGY_GENERATOR",
+    "data_period": {
+      "start_date": "2023-09-19 08:30:00",
+      "end_date": "2025-12-06 23:55:00",
+      "total_bars": 100000
+    },
+    "execution_time": {
+      "indicator_calculation": 1.7703070640563965,
+      "signal_generation": 0.6635589599609375,
+      "total_time": 2.433866024017334
+    }
+  },
+  "signal_results": {
+    "TYPE1": {
+      "long_signals": 685,
+      "short_signals": 658,
+      "total_signals": 1343
+    },
+    "TYPE2": {
+      "long_signals": 661,
+      "short_signals": 619,
+      "total_signals": 1280
+    },
+    "TYPE3": {
+      "long_signals": 643,
+      "short_signals": 590,
+      "total_signals": 1233
+    },
+    "TYPE4": {
+      "long_signals": 697,
+      "short_signals": 665,
+      "total_signals": 1362
+    }
+  },
+  "performance_metrics": {
+    "total_signals": 5218,
+    "signals_per_second": 2143.9142288478065,
+    "bars_processed": 100000,
+    "processing_rate": 41086.89591505954
+  }
+}

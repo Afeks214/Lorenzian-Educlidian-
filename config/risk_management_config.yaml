@@ -1,0 +1,273 @@
+# Comprehensive Risk Management Configuration
+# Agent 4 Mission: Risk Management & Position Sizing
+
+# ========================= POSITION SIZING =========================
+position_sizing:
+  # Volatility-based sizing parameters
+  volatility_lookback: 20  # Days for volatility calculation
+  volatility_multiplier: 2.0  # Multiplier for volatility-based sizing
+  base_position_size: 0.02  # Base position size (2% of portfolio)
+  max_position_size: 0.10  # Maximum position size (10% of portfolio)
+  min_position_size: 0.005  # Minimum position size (0.5% of portfolio)
+  
+  # Risk-based position sizing
+  max_risk_per_trade: 0.02  # Maximum 2% risk per trade
+  volatility_adjustment: true  # Enable volatility adjustment
+  correlation_adjustment: true  # Enable correlation adjustment
+  
+  # Kelly Criterion parameters
+  kelly_criterion:
+    enabled: true
+    max_kelly_fraction: 0.25  # Maximum Kelly fraction (25%)
+    lookback_period: 100  # Trades for Kelly calculation
+    confidence_threshold: 0.6  # Minimum confidence for Kelly sizing
+    safety_factor: 0.5  # Safety factor for Kelly sizing
+  
+  # Dynamic sizing based on market conditions
+  market_condition_adjustments:
+    trending_market_multiplier: 1.2  # Increase size in trending markets
+    ranging_market_multiplier: 0.8  # Decrease size in ranging markets
+    high_volatility_multiplier: 0.7  # Decrease size in high volatility
+    low_volatility_multiplier: 1.1  # Increase size in low volatility
+
+# ========================= RISK CONTROLS =========================
+risk_controls:
+  # Stop-loss parameters
+  stop_loss:
+    enabled: true
+    default_percent: 0.02  # 2% stop loss
+    volatility_adjusted: true  # Adjust stop based on volatility
+    max_stop_percent: 0.05  # Maximum stop loss (5%)
+    min_stop_percent: 0.01  # Minimum stop loss (1%)
+    trailing_stop: true  # Enable trailing stops
+    
+  # Take-profit parameters
+  take_profit:
+    enabled: true
+    risk_reward_ratio: 1.5  # Minimum 1.5:1 risk/reward
+    volatility_adjusted: true  # Adjust targets based on volatility
+    partial_profit_levels: [0.5, 0.75]  # Partial profit at 50% and 75% of target
+    trailing_profit: true  # Enable trailing profits
+    
+  # Maximum drawdown protection
+  drawdown_protection:
+    enabled: true
+    max_drawdown_percent: 0.20  # 20% maximum drawdown
+    daily_loss_limit: 0.05  # 5% daily loss limit
+    weekly_loss_limit: 0.10  # 10% weekly loss limit
+    monthly_loss_limit: 0.15  # 15% monthly loss limit
+    
+    # Circuit breakers
+    circuit_breakers:
+      level_1: 0.10  # 10% drawdown - reduce position sizes by 50%
+      level_2: 0.15  # 15% drawdown - reduce position sizes by 75%
+      level_3: 0.20  # 20% drawdown - stop all trading
+      
+  # Correlation-based position limits
+  correlation_limits:
+    enabled: true
+    max_correlation: 0.7  # Maximum correlation between positions
+    correlation_lookback: 60  # Days for correlation calculation
+    max_correlated_positions: 3  # Maximum number of correlated positions
+    correlation_adjustment_factor: 0.5  # Reduce position size by 50% for correlated assets
+
+# ========================= PORTFOLIO MANAGEMENT =========================
+portfolio_management:
+  # Portfolio exposure limits
+  exposure_limits:
+    max_gross_exposure: 2.0  # Maximum gross exposure (200%)
+    max_net_exposure: 1.0  # Maximum net exposure (100%)
+    max_long_exposure: 1.5  # Maximum long exposure (150%)
+    max_short_exposure: 0.5  # Maximum short exposure (50%)
+    
+  # Sector/Asset concentration limits
+  concentration_limits:
+    max_sector_exposure: 0.30  # Maximum 30% exposure to any sector
+    max_single_asset_exposure: 0.15  # Maximum 15% exposure to single asset
+    max_strategy_exposure: 0.40  # Maximum 40% exposure to single strategy
+    
+  # Leverage controls
+  leverage_controls:
+    max_leverage: 3.0  # Maximum leverage ratio
+    margin_call_threshold: 0.80  # Margin call at 80% margin usage
+    forced_liquidation_threshold: 0.90  # Forced liquidation at 90% margin usage
+    leverage_adjustment_frequency: "daily"  # Frequency for leverage adjustments
+    
+  # Portfolio heat calculation
+  portfolio_heat:
+    enabled: true
+    max_heat_threshold: 0.15  # Maximum portfolio heat (15%)
+    heat_calculation_method: "correlation_adjusted"  # Method for heat calculation
+    rebalance_threshold: 0.12  # Rebalance when heat exceeds 12%
+    
+  # Dynamic rebalancing
+  rebalancing:
+    enabled: true
+    frequency: "weekly"  # Rebalancing frequency
+    threshold: 0.05  # Rebalance when allocation deviates by 5%
+    method: "equal_risk"  # Rebalancing method
+
+# ========================= EXECUTION RULES =========================
+execution_rules:
+  # Entry execution logic
+  entry_rules:
+    min_signal_confidence: 0.70  # Minimum signal confidence for entry
+    max_position_correlation: 0.6  # Maximum correlation with existing positions
+    market_hours_only: false  # Allow trading outside market hours
+    volume_threshold: 1000  # Minimum volume threshold
+    spread_threshold: 0.002  # Maximum spread threshold (0.2%)
+    
+  # Exit execution logic
+  exit_rules:
+    forced_exit_conditions:
+      - "max_drawdown_breach"
+      - "margin_call"
+      - "correlation_spike"
+      - "volatility_explosion"
+    profit_taking_method: "scaled"  # Scaled or all-or-nothing
+    stop_loss_method: "market"  # Market or limit orders for stops
+    
+  # Market impact considerations
+  market_impact:
+    enabled: true
+    impact_model: "square_root"  # Square root or linear impact model
+    participation_rate: 0.10  # Maximum 10% participation rate
+    impact_threshold: 0.001  # Maximum acceptable impact (0.1%)
+    
+  # Realistic fill modeling
+  fill_modeling:
+    enabled: true
+    slippage_model: "volatility_based"  # Volatility-based slippage
+    base_slippage: 0.0005  # Base slippage (0.05%)
+    volatility_multiplier: 2.0  # Volatility multiplier for slippage
+    partial_fill_probability: 0.15  # Probability of partial fills
+    
+  # Execution cost estimation
+  cost_estimation:
+    commission_per_share: 0.005  # Commission per share
+    spread_cost_multiplier: 0.5  # Spread cost multiplier
+    market_impact_multiplier: 1.0  # Market impact multiplier
+    opportunity_cost_enabled: true  # Include opportunity cost
+
+# ========================= RISK METRICS =========================
+risk_metrics:
+  # VaR calculation
+  var_calculation:
+    enabled: true
+    confidence_levels: [0.95, 0.99]  # 95% and 99% VaR
+    time_horizons: [1, 5, 10]  # 1-day, 5-day, 10-day VaR
+    method: "historical"  # Historical, parametric, or monte_carlo
+    lookback_period: 252  # Trading days for VaR calculation
+    
+  # Expected Shortfall (CVaR)
+  expected_shortfall:
+    enabled: true
+    confidence_levels: [0.95, 0.99]  # 95% and 99% ES
+    calculation_method: "historical"  # Historical or parametric
+    
+  # Stress testing
+  stress_testing:
+    enabled: true
+    scenarios:
+      - "market_crash_2008"
+      - "covid_crash_2020"
+      - "flash_crash_2010"
+      - "volmageddon_2018"
+    frequency: "weekly"  # Frequency of stress tests
+    
+  # Performance metrics
+  performance_metrics:
+    sharpe_ratio: true
+    sortino_ratio: true
+    calmar_ratio: true
+    maximum_drawdown: true
+    win_loss_ratio: true
+    profit_factor: true
+    
+# ========================= MONITORING & ALERTS =========================
+monitoring:
+  # Real-time monitoring
+  real_time_monitoring:
+    enabled: true
+    update_frequency: 5  # Seconds between updates
+    alert_thresholds:
+      var_breach: 0.95  # Alert when VaR is breached
+      drawdown_warning: 0.10  # Alert at 10% drawdown
+      leverage_warning: 2.5  # Alert at 2.5x leverage
+      correlation_spike: 0.8  # Alert when correlation spikes
+      
+  # Alert system
+  alerts:
+    enabled: true
+    channels: ["email", "sms", "slack"]  # Alert channels
+    severity_levels: ["low", "medium", "high", "critical"]
+    escalation_rules:
+      medium_severity_timeout: 300  # 5 minutes
+      high_severity_timeout: 60  # 1 minute
+      critical_severity_timeout: 10  # 10 seconds
+      
+  # Reporting
+  reporting:
+    daily_risk_report: true
+    weekly_performance_report: true
+    monthly_stress_test_report: true
+    quarterly_risk_review: true
+    
+# ========================= VALIDATION & BACKTESTING =========================
+validation:
+  # Backtesting parameters
+  backtesting:
+    enabled: true
+    start_date: "2020-01-01"
+    end_date: "2023-12-31"
+    initial_capital: 1000000  # $1M starting capital
+    benchmark: "SPY"  # Benchmark for comparison
+    
+  # Walk-forward analysis
+  walk_forward:
+    enabled: true
+    train_period: 252  # Training period (1 year)
+    test_period: 63  # Test period (3 months)
+    step_size: 21  # Step size (1 month)
+    
+  # Monte Carlo simulation
+  monte_carlo:
+    enabled: true
+    num_simulations: 10000
+    confidence_intervals: [0.05, 0.95]  # 90% confidence interval
+    
+  # Model validation
+  model_validation:
+    enabled: true
+    validation_frequency: "monthly"
+    performance_decay_threshold: 0.20  # 20% performance decay
+    recalibration_threshold: 0.15  # 15% performance decay triggers recalibration
+
+# ========================= SYSTEM CONFIGURATION =========================
+system:
+  # Database configuration
+  database:
+    risk_data_retention: 365  # Days to retain risk data
+    performance_data_retention: 1095  # Days to retain performance data
+    backup_frequency: "daily"
+    
+  # Computation settings
+  computation:
+    parallel_processing: true
+    max_workers: 4  # Maximum number of worker threads
+    memory_limit: "8GB"  # Maximum memory usage
+    computation_timeout: 30  # Seconds for computation timeout
+    
+  # API settings
+  api:
+    rate_limiting: true
+    max_requests_per_minute: 1000
+    authentication_required: true
+    
+  # Logging
+  logging:
+    risk_events: true
+    performance_metrics: true
+    execution_details: true
+    log_level: "INFO"
+    log_rotation: "daily"

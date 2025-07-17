@@ -1,0 +1,52 @@
+{
+  "execution_info": {
+    "timestamp": "20250716_162937",
+    "agent": "AGENT_2_FULL_SCALE_SYNERGY_GENERATOR",
+    "mission_status": "COMPLETED",
+    "data_period": {
+      "start_date": "2020-01-07 01:00:00",
+      "end_date": "2025-12-06 23:55:00",
+      "total_bars": 327655,
+      "time_span_days": 2160
+    },
+    "execution_metrics": {
+      "total_execution_time": 2.5608277320861816,
+      "processing_rate_bars_per_second": 127948.86430454087,
+      "signal_generation_rate": 16289.654894519914,
+      "batch_size": 50000,
+      "total_batches": 7
+    }
+  },
+  "signal_results": {
+    "TYPE1": {
+      "long_signals": 5089,
+      "short_signals": 5086,
+      "total_signals": 10175
+    },
+    "TYPE2": {
+      "long_signals": 5107,
+      "short_signals": 4896,
+      "total_signals": 10003
+    },
+    "TYPE3": {
+      "long_signals": 5830,
+      "short_signals": 5410,
+      "total_signals": 11240
+    },
+    "TYPE4": {
+      "long_signals": 5278,
+      "short_signals": 5019,
+      "total_signals": 10297
+    }
+  },
+  "performance_analysis": {
+    "total_signals": 41715,
+    "signals_per_day": 19.3125,
+    "signal_density": 0.12731379041980131,
+    "target_achievement": {
+      "target": 500000,
+      "achieved": false,
+      "percentage": 8.343
+    }
+  }
+}

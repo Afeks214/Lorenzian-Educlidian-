@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-07-17T08:13:25.135498",
+  "cl_specifications": {
+    "contract_size": 1000,
+    "transaction_cost": 0.0005,
+    "slippage": 0.0002,
+    "risk_per_trade": 0.02
+  },
+  "performance_metrics": {
+    "total_return": 0.04978828429632529,
+    "annualized_return": 0.009743612355464393,
+    "sharpe_ratio": -0.5771759827221038,
+    "max_drawdown": -12641.95434199443,
+    "final_value": 104978.82842963253,
+    "total_fees": 4137.698898671484
+  },
+  "trade_statistics": {
+    "total_trades": 10820,
+    "win_rate": 0.5035120147874307,
+    "profit_factor": 1.038012383048608,
+    "avg_trade_duration": 175989.75674676526
+  },
+  "trade_analysis": {
+    "best_trade": 9136.570253756752,
+    "worst_trade": -188.73609732731302,
+    "avg_trade_pnl": 0.4601505018143174,
+    "profitable_trades": 5448,
+    "losing_trades": 5372
+  }
+}

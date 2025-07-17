@@ -1,0 +1,150 @@
+{
+  "processing_speed": {
+    "size_1000": {
+      "total_time": 5.414312839508057,
+      "mlmi_time": 1.7159597873687744,
+      "nwrqk_time": 0.611961841583252,
+      "fvg_time": 1.0614635944366455,
+      "pattern_time": 2.0249276161193848,
+      "bars_per_second": 184.6956446075731,
+      "microseconds_per_bar": 5414.312839508057,
+      "total_signals": 0,
+      "signal_rate": 0.0
+    },
+    "size_2500": {
+      "total_time": 0.0011458396911621094,
+      "mlmi_time": 0.0001480579376220703,
+      "nwrqk_time": 0.0007486343383789062,
+      "fvg_time": 0.00015425682067871094,
+      "pattern_time": 9.489059448242188e-05,
+      "bars_per_second": 2181806.07573866,
+      "microseconds_per_bar": 0.45833587646484375,
+      "total_signals": 0,
+      "signal_rate": 0.0
+    },
+    "size_5000": {
+      "total_time": 0.005899667739868164,
+      "mlmi_time": 0.0004329681396484375,
+      "nwrqk_time": 0.002605915069580078,
+      "fvg_time": 0.002549409866333008,
+      "pattern_time": 0.0003113746643066406,
+      "bars_per_second": 847505.3546170944,
+      "microseconds_per_bar": 1.1799335479736328,
+      "total_signals": 0,
+      "signal_rate": 0.0
+    },
+    "size_10000": {
+      "total_time": 0.006786346435546875,
+      "mlmi_time": 0.0007729530334472656,
+      "nwrqk_time": 0.00503993034362793,
+      "fvg_time": 0.0006144046783447266,
+      "pattern_time": 0.0003590583801269531,
+      "bars_per_second": 1473546.9364811692,
+      "microseconds_per_bar": 0.6786346435546875,
+      "total_signals": 0,
+      "signal_rate": 0.0
+    },
+    "size_20000": {
+      "total_time": 0.008962154388427734,
+      "mlmi_time": 0.0011234283447265625,
+      "nwrqk_time": 0.005936861038208008,
+      "fvg_time": 0.0011894702911376953,
+      "pattern_time": 0.0007123947143554688,
+      "bars_per_second": 2231606.2782654963,
+      "microseconds_per_bar": 0.4481077194213867,
+      "total_signals": 0,
+      "signal_rate": 0.0
+    }
+  },
+  "memory_usage": {
+    "baseline_memory_mb": 200.15625,
+    "after_data_memory_mb": 204.26171875,
+    "after_mlmi_memory_mb": 204.26171875,
+    "after_nwrqk_memory_mb": 204.26171875,
+    "after_fvg_memory_mb": 204.26171875,
+    "peak_memory_mb": 204.26171875,
+    "data_memory_usage_mb": 4.10546875,
+    "total_memory_usage_mb": 4.10546875,
+    "memory_per_bar_kb": 0.08408
+  },
+  "mathematical_accuracy": {
+    "adaptive_thresholds": {
+      "mean": 0.005015859530944228,
+      "std": 0.0025068833440798494,
+      "min": 0.0010330841700605102,
+      "max": 0.010327498928666664,
+      "all_positive": true
+    },
+    "signal_strengths": {
+      "mean": 0.43444977786479305,
+      "std": 0.08847944555248564,
+      "min": 0.23172571977244755,
+      "max": 0.6125210593324926,
+      "all_in_range": true
+    },
+    "bayesian_confidences": {
+      "mean": 0.5061309773983,
+      "std": 0.2719345983570232,
+      "min": 0.028163605833452884,
+      "max": 0.9772731840799006,
+      "all_in_range": true
+    }
+  },
+  "pattern_quality": {
+    "trending": {
+      "total_signals": 0,
+      "signal_rate": 0.0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0,
+      "pattern_distribution": {
+        "pattern_1": 0,
+        "pattern_2": 0,
+        "pattern_3": 0,
+        "pattern_4": 0
+      }
+    },
+    "sideways": {
+      "total_signals": 0,
+      "signal_rate": 0.0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0,
+      "pattern_distribution": {
+        "pattern_1": 0,
+        "pattern_2": 0,
+        "pattern_3": 0,
+        "pattern_4": 0
+      }
+    },
+    "volatile": {
+      "total_signals": 0,
+      "signal_rate": 0.0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0,
+      "pattern_distribution": {
+        "pattern_1": 0,
+        "pattern_2": 0,
+        "pattern_3": 0,
+        "pattern_4": 0
+      }
+    }
+  },
+  "jit_effectiveness": {
+    "first_run_time": 0.0007598400115966797,
+    "second_run_time": 0.0007662773132324219,
+    "compilation_overhead": -6.4373016357421875e-06,
+    "avg_execution_time": 0.0009070634841918945,
+    "std_execution_time": 0.000456026093166808,
+    "min_execution_time": 0.0007219314575195312,
+    "max_execution_time": 0.002273082733154297,
+    "speedup_ratio": 0.8376922065974504
+  },
+  "summary": {
+    "timestamp": "2025-07-17T09:38:04.885685",
+    "total_benchmark_time": 6.288419485092163,
+    "system_info": {
+      "cpu_count": 2,
+      "memory_total_gb": 7.757411956787109,
+      "python_version": "3.12"
+    }
+  }
+}

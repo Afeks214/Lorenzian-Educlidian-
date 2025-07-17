@@ -1,0 +1,257 @@
+{
+  "initial_capital": 100000,
+  "final_capital": 90000.0,
+  "total_return_pct": -10.0,
+  "total_trades": 7,
+  "profitable_trades": 0,
+  "win_rate": 0.0,
+  "trade_log": [
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "SELL",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000,
+      "position_value": -9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "BUY",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": 9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "BUY",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": 9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "SELL",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": -9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "SELL",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": -9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "BUY",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": 9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "BUY",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": 9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "SELL",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": -9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "SELL",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": -9999.999999999998
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "CLOSE",
+      "price": 19966.5,
+      "shares": 0.5008389051661533,
+      "capital": 100000.0,
+      "pnl": 0.0,
+      "position_value": 0
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "action": "SELL",
+      "price": 19966.5,
+      "shares": -0.5008389051661533,
+      "capital": 100000.0,
+      "position_value": -9999.999999999998
+    }
+  ],
+  "equity_curve": [
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 90000.0,
+      "position": -0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 110000.0,
+      "position": 0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 110000.0,
+      "position": 0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 90000.0,
+      "position": -0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 90000.0,
+      "position": -0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 110000.0,
+      "position": 0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 110000.0,
+      "position": 0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 90000.0,
+      "position": -0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 90000.0,
+      "position": -0.5008389051661533,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 100000.0,
+      "position": 0,
+      "price": 19966.5
+    },
+    {
+      "timestamp": "2025-07-16T08:21:47",
+      "equity": 90000.0,
+      "position": -0.5008389051661533,
+      "price": 19966.5
+    }
+  ]
+}

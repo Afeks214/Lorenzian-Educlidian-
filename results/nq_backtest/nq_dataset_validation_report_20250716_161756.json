@@ -1,0 +1,72 @@
+{
+  "summary": {
+    "analysis_timestamp": "2025-07-16T16:17:56.673456",
+    "total_timeframes_analyzed": 2,
+    "successful_analyses": 0,
+    "total_data_rows": 0,
+    "average_quality_score": 0,
+    "average_coverage_percentage": 0,
+    "overall_status": "POOR"
+  },
+  "detailed_analysis": {
+    "file_analysis": {
+      "available_files": [
+        "NQ - 30 min - ETH.csv",
+        "@NQ - 5 min - ETH.csv"
+      ],
+      "file_sizes": {
+        "NQ - 30 min - ETH.csv": 2.98,
+        "@NQ - 5 min - ETH.csv": 17.22
+      },
+      "last_modified": {
+        "NQ - 30 min - ETH.csv": "2025-07-16T08:10:26.275606",
+        "@NQ - 5 min - ETH.csv": "2025-07-16T08:04:39.695353"
+      },
+      "estimated_records": {
+        "NQ - 30 min - ETH.csv": 45829,
+        "@NQ - 5 min - ETH.csv": 264501
+      }
+    },
+    "30min": {
+      "timeframe": "30min",
+      "start_time": "2025-07-16T16:17:55.295384",
+      "data_quality": {},
+      "temporal_analysis": {},
+      "statistical_analysis": {},
+      "market_session_analysis": {},
+      "performance_metrics": {},
+      "status": "error",
+      "error": "Data validation failed: ['Invalid timestamp format']"
+    },
+    "5min": {
+      "timeframe": "5min",
+      "start_time": "2025-07-16T16:17:55.515529",
+      "data_quality": {},
+      "temporal_analysis": {},
+      "statistical_analysis": {},
+      "market_session_analysis": {},
+      "performance_metrics": {},
+      "status": "error",
+      "error": "Data validation failed: ['Invalid timestamp format']"
+    },
+    "cross_validation": {
+      "status": "skipped",
+      "reason": "insufficient_timeframes"
+    }
+  },
+  "recommendations": [
+    "Consider data cleaning to improve quality scores",
+    "Fill missing data gaps to improve coverage"
+  ],
+  "quality_assessment": {},
+  "production_readiness": {
+    "criteria": {
+      "minimum_quality_score": 70,
+      "minimum_coverage": 80,
+      "maximum_acceptable_gaps": 20,
+      "minimum_data_points": 100000
+    },
+    "timeframe_readiness": {},
+    "overall_production_ready": true
+  }
+}

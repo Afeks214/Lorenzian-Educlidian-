@@ -1,0 +1,178 @@
+# Multi-stage Dockerfile for XAI Trading System
+# Optimized for production deployment with security and performance
+
+# Stage 1: Base Python environment
+FROM python:3.11.7-slim-bullseye AS base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    POETRY_VERSION=1.7.1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    gcc \
+    g++ \
+    libc6-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Poetry
+RUN pip install poetry==$POETRY_VERSION
+
+# Stage 2: Dependencies installation
+FROM base AS dependencies
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock* ./
+COPY requirements.txt ./
+
+# Configure Poetry
+RUN poetry config virtualenvs.create false
+
+# Install Python dependencies
+RUN poetry install --no-dev --no-interaction --no-ansi || \
+    pip install -r requirements.txt
+
+# Install additional production dependencies
+RUN pip install \
+    uvicorn[standard]==0.24.0 \
+    gunicorn==21.2.0 \
+    prometheus-client==0.19.0 \
+    redis==5.0.1 \
+    psycopg2-binary==2.9.9 \
+    chromadb==0.4.18 \
+    ollama==0.1.7 \
+    shap==0.43.0 \
+    fastapi==0.104.1 \
+    pydantic==2.5.2 \
+    numpy==1.24.4 \
+    pandas==2.1.4 \
+    torch==2.1.2 \
+    torchvision==0.16.2 \
+    scikit-learn==1.3.2
+
+# Stage 3: Development environment
+FROM dependencies AS development
+
+# Install development dependencies
+RUN poetry install --no-interaction --no-ansi || \
+    pip install pytest pytest-asyncio pytest-cov black isort mypy
+
+# Copy source code
+COPY . .
+
+# Create non-root user for development
+RUN groupadd -r xai && useradd -r -g xai xai
+RUN chown -R xai:xai /app
+USER xai
+
+# Stage 4: Testing environment
+FROM development AS testing
+
+USER root
+
+# Install testing tools
+RUN pip install \
+    pytest-benchmark==4.0.0 \
+    pytest-mock==3.12.0 \
+    locust==2.17.0 \
+    bandit==1.7.5 \
+    safety==2.3.5
+
+# Run security and safety checks
+RUN bandit -r src/ -f json -o /tmp/bandit-report.json || true
+RUN safety check --json --output /tmp/safety-report.json || true
+
+# Run tests
+COPY tests/ ./tests/
+RUN python -m pytest tests/ -v --cov=src --cov-report=html --cov-report=term
+
+USER xai
+
+# Stage 5: Production build
+FROM base AS production
+
+# Set production environment
+ENV NODE_ENV=production \
+    XAI_ENV=production \
+    PYTHONPATH=/app/src
+
+# Create application directory
+WORKDIR /app
+
+# Create non-root user
+RUN groupadd -r xai && useradd -r -g xai -d /app -s /bin/bash xai
+
+# Copy dependencies from dependencies stage
+COPY --from=dependencies /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=dependencies /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --chown=xai:xai src/ ./src/
+COPY --chown=xai:xai configs/ ./configs/
+COPY --chown=xai:xai models/ ./models/
+
+# Copy deployment scripts
+COPY --chown=xai:xai deployment/xai/scripts/ ./scripts/
+RUN chmod +x ./scripts/*.sh
+
+# Create necessary directories
+RUN mkdir -p \
+    /app/data \
+    /app/logs \
+    /app/models \
+    /app/tmp \
+    && chown -R xai:xai /app
+
+# Install production monitoring tools
+RUN pip install \
+    psutil==5.9.6 \
+    py-spy==0.3.14
+
+# Security hardening
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Set proper file permissions
+RUN chmod 755 /app \
+    && chmod -R 644 /app/src \
+    && chmod -R 644 /app/configs \
+    && find /app/src -name "*.py" -exec chmod 644 {} \; \
+    && chmod -R 755 /app/logs \
+    && chmod -R 755 /app/data
+
+# Switch to non-root user
+USER xai
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Use tini for proper signal handling
+ENTRYPOINT ["tini", "--"]
+
+# Production startup command
+CMD ["./scripts/start-production.sh"]
+
+# Metadata
+LABEL \
+    org.opencontainers.image.title="XAI Trading System" \
+    org.opencontainers.image.description="Production-ready XAI Trading Explanations System" \
+    org.opencontainers.image.version="1.0.0" \
+    org.opencontainers.image.vendor="QuantNova" \
+    org.opencontainers.image.licenses="Proprietary" \
+    maintainer="Agent Epsilon <epsilon@quantnova.ai>"

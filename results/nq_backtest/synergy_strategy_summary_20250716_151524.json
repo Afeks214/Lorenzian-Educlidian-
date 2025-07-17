@@ -1,0 +1,13 @@
+{
+  "assessment_date": "20250716_151524",
+  "overall_grade": "F",
+  "overall_status": "FAILING",
+  "key_metrics": {
+    "total_return_3y": -5.173761298814803,
+    "annualized_return": -1.7245870996049344,
+    "win_rate": 36.231884057971016,
+    "sharpe_ratio": -1.1849507505197245,
+    "total_patterns": 70
+  },
+  "recommendation": "DO NOT DEPLOY"
+}

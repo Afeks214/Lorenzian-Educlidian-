@@ -1,0 +1,399 @@
+# GrandModel Testing Framework Configuration
+# ==========================================
+
+# Test Discovery Configuration
+test_discovery:
+  patterns:
+    - "test_*.py"
+    - "*_test.py"
+  exclude_patterns:
+    - "__pycache__"
+    - "*.pyc"
+    - ".git"
+    - "venv"
+    - ".venv"
+    - "node_modules"
+
+# Test Execution Configuration
+execution:
+  parallel: true
+  max_workers: 4
+  timeout: 300  # seconds
+  retry_count: 0
+  fail_fast: false
+
+# Coverage Configuration
+coverage:
+  threshold: 80.0
+  fail_under: 70.0
+  show_missing: true
+  omit:
+    - "*/tests/*"
+    - "*/venv/*"
+    - "*/__pycache__/*"
+    - "*/setup.py"
+  include:
+    - "src/*"
+
+# Performance Testing Configuration
+performance:
+  latency:
+    target_ms: 5.0
+    warning_threshold_ms: 10.0
+    critical_threshold_ms: 25.0
+    iterations: 1000
+    warmup_iterations: 100
+  
+  throughput:
+    target_ops_per_sec: 1000.0
+    warning_threshold_ops_per_sec: 500.0
+    critical_threshold_ops_per_sec: 100.0
+    duration_seconds: 10
+    concurrent_workers: 4
+  
+  memory:
+    max_memory_mb: 512.0
+    warning_threshold_mb: 1024.0
+    critical_threshold_mb: 2048.0
+  
+  load_testing:
+    default_users: 10
+    max_users: 100
+    ramp_up_time: 30
+    duration: 300
+    think_time: 0.1
+
+# Quality Assurance Configuration
+quality:
+  enabled: true
+  
+  thresholds:
+    complexity: 10.0
+    maintainability: 70.0
+    coverage: 80.0
+    duplication: 3.0
+    technical_debt_minutes: 60.0
+  
+  analyzers:
+    flake8:
+      enabled: true
+      max_line_length: 100
+      ignore:
+        - "E203"
+        - "W503"
+    
+    pylint:
+      enabled: true
+      disable:
+        - "C0103"
+        - "R0913"
+        - "R0914"
+        - "R0915"
+        - "W0613"
+    
+    mypy:
+      enabled: true
+      ignore_missing_imports: true
+    
+    bandit:
+      enabled: true
+      confidence_level: "HIGH"
+      severity_level: "MEDIUM"
+  
+  quality_gates:
+    - name: "code_coverage"
+      type: "coverage"
+      threshold: 80.0
+      condition: ">="
+      mandatory: true
+    
+    - name: "complexity"
+      type: "complexity"
+      threshold: 10.0
+      condition: "<="
+      mandatory: true
+    
+    - name: "maintainability"
+      type: "maintainability"
+      threshold: 70.0
+      condition: ">="
+      mandatory: true
+    
+    - name: "security_vulnerabilities"
+      type: "security"
+      threshold: 0
+      condition: "=="
+      mandatory: true
+
+# Validation Configuration
+validation:
+  enabled: true
+  
+  mathematical:
+    enabled: true
+    tolerance: 0.01
+    confidence_level: 0.95
+  
+  statistical:
+    enabled: true
+    significance_level: 0.05
+    sample_size: 1000
+  
+  backtesting:
+    enabled: true
+    lookback_days: 252
+    min_trade_count: 100
+  
+  stress_testing:
+    enabled: true
+    shock_scenarios:
+      - "correlation_breakdown"
+      - "volatility_spike"
+      - "liquidity_crisis"
+      - "black_swan_event"
+  
+  model_validation:
+    enabled: true
+    cross_validation_folds: 5
+    holdout_percentage: 20.0
+    stability_threshold: 0.05
+
+# CI/CD Configuration
+ci_cd:
+  enabled: true
+  
+  pipeline:
+    stages:
+      - "checkout"
+      - "build"
+      - "test"
+      - "quality_gates"
+      - "security_scan"
+      - "performance_test"
+      - "deploy"
+    
+    parallel_stages:
+      - "test"
+      - "security_scan"
+    
+    timeout_minutes: 60
+    retry_count: 2
+  
+  quality_gates:
+    enabled: true
+    fail_on_quality_gate: true
+    
+    gates:
+      - name: "test_pass_rate"
+        threshold: 95.0
+        condition: ">="
+        mandatory: true
+      
+      - name: "code_coverage"
+        threshold: 80.0
+        condition: ">="
+        mandatory: true
+      
+      - name: "performance_latency"
+        threshold: 5.0
+        condition: "<="
+        mandatory: true
+  
+  deployment:
+    auto_deploy: false
+    environments:
+      - "development"
+      - "testing"
+    rollback_on_failure: true
+    health_check_timeout: 300
+
+# Reporting Configuration
+reporting:
+  enabled: true
+  
+  formats:
+    - "html"
+    - "json"
+    - "junit"
+    - "csv"
+  
+  include_coverage: true
+  include_performance: true
+  include_trends: true
+  
+  output_directory: "test_reports"
+  
+  archival:
+    enabled: true
+    retention_days: 90
+    compression: "gzip"
+  
+  notifications:
+    enabled: true
+    
+    email:
+      enabled: false
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+      recipients: []
+    
+    slack:
+      enabled: false
+      webhook_url: ""
+      channel: "#testing"
+    
+    webhook:
+      enabled: false
+      url: ""
+      headers: {}
+
+# Orchestration Configuration
+orchestration:
+  enabled: true
+  
+  test_plans:
+    development:
+      mode: "development"
+      priority: "normal"
+      timeout_minutes: 30
+      parallel_execution: true
+      test_suites:
+        - "unit_tests"
+        - "integration_tests"
+      validation_types:
+        - "mathematical"
+        - "statistical"
+      performance_tests:
+        - "latency_tests"
+      quality_checks: true
+      ci_cd_pipeline: false
+    
+    continuous_integration:
+      mode: "continuous_integration"
+      priority: "high"
+      timeout_minutes: 60
+      parallel_execution: true
+      test_suites:
+        - "unit_tests"
+        - "integration_tests"
+        - "security_tests"
+      validation_types:
+        - "mathematical"
+        - "statistical"
+        - "model_validation"
+      performance_tests:
+        - "latency_tests"
+        - "throughput_tests"
+      quality_checks: true
+      ci_cd_pipeline: true
+      notify_on_failure: true
+    
+    nightly_build:
+      mode: "nightly_build"
+      priority: "high"
+      timeout_minutes: 180
+      parallel_execution: true
+      schedule_cron: "0 2 * * *"
+      test_suites:
+        - "unit_tests"
+        - "integration_tests"
+        - "performance_tests"
+        - "security_tests"
+      validation_types:
+        - "mathematical"
+        - "statistical"
+        - "backtesting"
+        - "stress_testing"
+        - "model_validation"
+      performance_tests:
+        - "latency_tests"
+        - "throughput_tests"
+        - "load_tests"
+        - "scalability_tests"
+      quality_checks: true
+      ci_cd_pipeline: true
+      notify_on_failure: true
+    
+    release_candidate:
+      mode: "release_candidate"
+      priority: "critical"
+      timeout_minutes: 360
+      parallel_execution: true
+      retry_count: 2
+      test_suites:
+        - "unit_tests"
+        - "integration_tests"
+        - "performance_tests"
+        - "security_tests"
+        - "regression_tests"
+      validation_types:
+        - "mathematical"
+        - "statistical"
+        - "backtesting"
+        - "stress_testing"
+        - "model_validation"
+        - "performance"
+        - "risk_validation"
+      performance_tests:
+        - "latency_tests"
+        - "throughput_tests"
+        - "load_tests"
+        - "scalability_tests"
+        - "endurance_tests"
+      quality_checks: true
+      ci_cd_pipeline: true
+      notify_on_failure: true
+    
+    production_monitoring:
+      mode: "production_monitoring"
+      priority: "critical"
+      timeout_minutes: 10
+      parallel_execution: true
+      schedule_cron: "*/15 * * * *"
+      test_suites:
+        - "smoke_tests"
+        - "performance_tests"
+      validation_types:
+        - "performance"
+        - "risk_validation"
+      performance_tests:
+        - "latency_tests"
+        - "throughput_tests"
+      quality_checks: false
+      ci_cd_pipeline: false
+      notify_on_failure: true
+  
+  scheduler:
+    enabled: true
+    check_interval_seconds: 60
+    max_concurrent_executions: 2
+    
+  monitoring:
+    enabled: true
+    metrics_retention_days: 30
+    alert_thresholds:
+      failure_rate: 10.0  # percent
+      avg_duration_increase: 50.0  # percent
+      consecutive_failures: 3
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/testing.log"
+  max_size_mb: 100
+  backup_count: 5
+  
+  loggers:
+    TestingFramework:
+      level: "INFO"
+    ValidationSuite:
+      level: "INFO"
+    PerformanceTester:
+      level: "INFO"
+    QualityAssurance:
+      level: "INFO"
+    CIPipeline:
+      level: "INFO"
+    TestOrchestrator:
+      level: "INFO"

@@ -1,0 +1,47 @@
+{
+  "test_results": {
+    "extreme_values": {
+      "test_passed": true,
+      "patterns_detected": 315,
+      "has_infinite_values": false,
+      "extreme_pattern_rate": false,
+      "error_encountered": false
+    },
+    "missing_data": {
+      "test_passed": true,
+      "patterns_detected": 0,
+      "missing_data_before": 150,
+      "missing_data_after": 3610,
+      "handles_missing_data": false,
+      "error_encountered": false
+    },
+    "zero_volume": {
+      "test_passed": true,
+      "patterns_detected": 13,
+      "zero_volume_bars": 20,
+      "has_infinite_values": false,
+      "handles_zero_volume": true,
+      "error_encountered": false
+    },
+    "flat_market": {
+      "test_passed": true,
+      "patterns_detected": 138,
+      "pattern_rate": 0.138,
+      "price_volatility": 0.97,
+      "appropriate_low_signals": false,
+      "error_encountered": false
+    },
+    "performance_stress": {
+      "test_passed": true,
+      "dataset_size": 10000,
+      "processing_time_seconds": 1.48,
+      "patterns_detected": 340,
+      "performance_acceptable": true,
+      "error_encountered": false
+    }
+  },
+  "overall_score": 100.0,
+  "tests_passed": 5,
+  "total_tests": 5,
+  "edge_case_rating": "EXCELLENT"
+}

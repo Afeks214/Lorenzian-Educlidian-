@@ -1,0 +1,73 @@
+{
+  "execution_engine_config": {
+    "account_value": 100000.0,
+    "nq_specs": {
+      "point_value": 20.0,
+      "tick_size": 0.25,
+      "commission_per_rt": 0.5,
+      "initial_margin": 19000.0
+    }
+  },
+  "performance_metrics": {
+    "execution_metrics": {
+      "total_orders": 2,
+      "successful_fills": 2,
+      "failed_fills": 0,
+      "fill_rate": 1.0,
+      "avg_slippage_points": 1.7416666666666667,
+      "avg_slippage_cost": 69.66666666666667,
+      "avg_latency_ms": 255.29103085285533,
+      "avg_commission_per_trade": 1.0
+    },
+    "trading_metrics": {
+      "total_trades_closed": 1,
+      "winning_trades": 1,
+      "losing_trades": 0,
+      "win_rate": 1.0,
+      "total_net_pnl": 688.5066666666667,
+      "total_commission_paid": 2.0,
+      "total_slippage_cost": 139.33333333333334
+    },
+    "position_metrics": {
+      "open_positions": 0,
+      "total_margin_used": 0,
+      "margin_utilization": 0.0
+    }
+  },
+  "executed_orders": [
+    {
+      "order_id": "NQ_1752681840474",
+      "side": "buy",
+      "quantity": 2,
+      "fill_price": 15002.0,
+      "slippage_points": 1.7416666666666667,
+      "commission_paid": 1.0,
+      "latency_ms": 238.30862234376963,
+      "timestamp": "2025-07-16T16:04:00.714996"
+    },
+    {
+      "order_id": "NQ_1752681840715",
+      "side": "sell",
+      "quantity": 2,
+      "fill_price": 15022.75,
+      "slippage_points": 1.7416666666666667,
+      "commission_paid": 1.0,
+      "latency_ms": 272.27343936194103,
+      "timestamp": "2025-07-16T16:04:00.989164"
+    }
+  ],
+  "closed_trades_pnl": [
+    {
+      "gross_pnl": 830.0,
+      "net_pnl": 688.5066666666667,
+      "price_diff_points": 20.75,
+      "total_commission": 2.0,
+      "total_fees": 0.16000000000000014,
+      "total_slippage_cost": 139.33333333333334,
+      "total_costs": 141.49333333333334,
+      "cost_per_contract": 70.74666666666667,
+      "cost_percentage": 17.047389558232933,
+      "return_on_margin": 1.811859649122807
+    }
+  ]
+}

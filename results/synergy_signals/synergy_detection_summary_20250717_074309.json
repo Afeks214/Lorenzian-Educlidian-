@@ -1,0 +1,39 @@
+{
+  "execution_info": {
+    "timestamp": "20250717_074309",
+    "execution_time_seconds": 33.5438357590001,
+    "bars_processed": 50000,
+    "processing_rate_bars_per_second": 1490.586835662781
+  },
+  "configuration": {
+    "mlmi_threshold": 0.5,
+    "nwrqk_threshold": 0.3,
+    "fvg_min_size": 0.001,
+    "time_window_bars": 10
+  },
+  "pattern_detection_results": {
+    "total_patterns": 0,
+    "patterns_by_type": {},
+    "patterns_by_direction": {},
+    "average_signal_strength": 0,
+    "average_bars_to_complete": 0,
+    "average_confidence": 0
+  },
+  "performance_metrics": {
+    "total_patterns_detected": "0",
+    "patterns_by_type": {
+      "TYPE_1": "0",
+      "TYPE_2": "0",
+      "TYPE_3": "0",
+      "TYPE_4": "0"
+    },
+    "avg_detection_time_ms": 33543.80245900029,
+    "signals_processed": 50000
+  },
+  "data_quality": {
+    "start_date": "2024-10-15 18:05:00",
+    "end_date": "2025-07-02 10:40:00",
+    "total_bars": 50000,
+    "date_range_days": 259
+  }
+}

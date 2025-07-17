@@ -1,0 +1,334 @@
+{
+  "activation_status": "COMPLETE",
+  "activation_timestamp": "2025-07-16T10:50:27.456699",
+  "system_performance": {
+    "system_name": "grandmodel-nq-system",
+    "execution_time": "0:00:24.603467",
+    "processed_bars": 3370,
+    "detected_synergies": 17,
+    "generated_decisions": 51,
+    "executed_trades": 17,
+    "processing_speed": "137.0 bars/second",
+    "data_period": "2024-01-01 to 2024-07-01",
+    "system_status": "COMPLETED"
+  },
+  "vectorbt_analysis": {
+    "analysis_metadata": {
+      "analysis_timestamp": "2025-07-16T10:48:46.579200",
+      "system_execution_time": "0:00:24.603467",
+      "data_period": "2024-01-01 to 2024-07-01",
+      "processed_bars": 3370,
+      "analysis_tool": "VectorBT Enhanced Analysis"
+    },
+    "system_performance": {
+      "detected_synergies": 17,
+      "generated_decisions": 51,
+      "executed_trades": 17,
+      "processing_speed": "137.0 bars/second"
+    },
+    "trading_performance": {
+      "total_return_pct": 0.0,
+      "total_return_value": 0.0,
+      "sharpe_ratio": 0.0,
+      "calmar_ratio": 0.0,
+      "max_drawdown_pct": NaN,
+      "max_drawdown_value": 0.0,
+      "win_rate_pct": NaN,
+      "profit_factor": NaN,
+      "sortino_ratio": 0.0,
+      "total_trades": 0,
+      "avg_trade_duration": "N/A",
+      "best_trade_pct": NaN,
+      "worst_trade_pct": NaN
+    },
+    "risk_metrics": {
+      "volatility_pct": 0.0,
+      "var_95": "N/A",
+      "cvar_95": "N/A",
+      "beta": "N/A",
+      "alpha": "N/A"
+    },
+    "trade_analysis": {
+      "buy_signals": 7,
+      "sell_signals": 10,
+      "total_signals": 17,
+      "first_trade": "2025-07-16T08:21:47",
+      "last_trade": "2025-07-16T08:21:47"
+    }
+  },
+  "simple_backtest": {
+    "initial_capital": 100000,
+    "final_capital": 90000.0,
+    "total_return_pct": -10.0,
+    "total_trades": 7,
+    "profitable_trades": 0,
+    "win_rate": 0.0,
+    "trade_log": [
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "SELL",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000,
+        "position_value": -9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "BUY",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": 9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "BUY",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": 9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "SELL",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": -9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "SELL",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": -9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "BUY",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": 9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "BUY",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": 9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "SELL",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": -9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "SELL",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": -9999.999999999998
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "CLOSE",
+        "price": 19966.5,
+        "shares": 0.5008389051661533,
+        "capital": 100000.0,
+        "pnl": 0.0,
+        "position_value": 0
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "action": "SELL",
+        "price": 19966.5,
+        "shares": -0.5008389051661533,
+        "capital": 100000.0,
+        "position_value": -9999.999999999998
+      }
+    ],
+    "equity_curve": [
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 90000.0,
+        "position": -0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 110000.0,
+        "position": 0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 110000.0,
+        "position": 0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 90000.0,
+        "position": -0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 90000.0,
+        "position": -0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 110000.0,
+        "position": 0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 110000.0,
+        "position": 0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 90000.0,
+        "position": -0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 90000.0,
+        "position": -0.5008389051661533,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 100000.0,
+        "position": 0,
+        "price": 19966.5
+      },
+      {
+        "timestamp": "2025-07-16T08:21:47",
+        "equity": 90000.0,
+        "position": -0.5008389051661533,
+        "price": 19966.5
+      }
+    ]
+  },
+  "components_status": {
+    "data_layer": "OPERATIONAL",
+    "analysis_layer": "OPERATIONAL",
+    "intelligence_layer": "OPERATIONAL",
+    "execution_layer": "OPERATIONAL"
+  },
+  "infrastructure_status": {
+    "redis": "ACTIVE",
+    "postgresql": "ACTIVE",
+    "ollama": "ACTIVE",
+    "docker_containers": 3
+  },
+  "data_processing": {
+    "nq_5min_bars": 327655,
+    "nq_30min_bars": 56083,
+    "processed_6month_bars": 12560,
+    "data_quality": "VALIDATED"
+  }
+}

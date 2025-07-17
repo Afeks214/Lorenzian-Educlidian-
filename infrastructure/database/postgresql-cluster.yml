@@ -1,0 +1,382 @@
+# PostgreSQL Cluster Configuration for High Availability
+# AGENT 1: DATABASE RTO SPECIALIST - Mission Critical Configuration
+# Target: Reduce RTO from 45.2s to <30s
+
+version: '3.8'
+
+networks:
+  postgres-cluster:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+  app-network:
+    driver: bridge
+    external: true
+
+volumes:
+  postgres-primary-data:
+    driver: local
+  postgres-standby-data:
+    driver: local
+  postgres-wal-archive:
+    driver: local
+  etcd-data:
+    driver: local
+
+services:
+  # etcd for Patroni coordination
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: postgres-etcd
+    restart: unless-stopped
+    hostname: etcd
+    environment:
+      - ETCD_NAME=etcd
+      - ETCD_DATA_DIR=/etcd-data
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER=etcd=http://etcd:2380
+      - ETCD_INITIAL_CLUSTER_STATE=new
+      - ETCD_INITIAL_CLUSTER_TOKEN=postgres-cluster
+      - ETCD_AUTO_COMPACTION_RETENTION=1
+    volumes:
+      - etcd-data:/etcd-data
+    networks:
+      - postgres-cluster
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+  # PostgreSQL Primary with Patroni
+  postgres-primary:
+    image: postgres:15-alpine
+    container_name: postgres-primary
+    restart: unless-stopped
+    hostname: postgres-primary
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-grandmodel}
+      - POSTGRES_USER=${POSTGRES_USER:-grandmodel}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Required}
+      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER:-replicator}
+      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD:?Required}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS=--auth-host=md5 --auth-local=trust
+    volumes:
+      - postgres-primary-data:/var/lib/postgresql/data
+      - postgres-wal-archive:/var/lib/postgresql/wal-archive
+      - ./configs/database/postgresql-primary.conf:/etc/postgresql/postgresql.conf:ro
+      - ./configs/database/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./scripts/database/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+    networks:
+      - postgres-cluster
+      - app-network
+    ports:
+      - "5432:5432"
+    command: |
+      bash -c "
+        # Configure PostgreSQL for replication
+        echo 'Configuring PostgreSQL for high availability...'
+        
+        # Copy custom configurations
+        cp /etc/postgresql/postgresql.conf /var/lib/postgresql/data/pgdata/postgresql.conf
+        cp /etc/postgresql/pg_hba.conf /var/lib/postgresql/data/pgdata/pg_hba.conf
+        
+        # Start PostgreSQL with custom config
+        exec docker-entrypoint.sh postgres -c config_file=/var/lib/postgresql/data/pgdata/postgresql.conf
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grandmodel} -d ${POSTGRES_DB:-grandmodel}"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      etcd:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+
+  # PostgreSQL Standby with Patroni
+  postgres-standby:
+    image: postgres:15-alpine
+    container_name: postgres-standby
+    restart: unless-stopped
+    hostname: postgres-standby
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-grandmodel}
+      - POSTGRES_USER=${POSTGRES_USER:-grandmodel}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Required}
+      - POSTGRES_REPLICATION_USER=${POSTGRES_REPLICATION_USER:-replicator}
+      - POSTGRES_REPLICATION_PASSWORD=${POSTGRES_REPLICATION_PASSWORD:?Required}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS=--auth-host=md5 --auth-local=trust
+    volumes:
+      - postgres-standby-data:/var/lib/postgresql/data
+      - postgres-wal-archive:/var/lib/postgresql/wal-archive
+      - ./configs/database/postgresql-standby.conf:/etc/postgresql/postgresql.conf:ro
+      - ./configs/database/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./scripts/database/init-standby.sh:/docker-entrypoint-initdb.d/init-standby.sh:ro
+    networks:
+      - postgres-cluster
+      - app-network
+    ports:
+      - "5433:5432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grandmodel} -d ${POSTGRES_DB:-grandmodel}"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+
+  # Patroni for Primary
+  patroni-primary:
+    image: patroni/patroni:3.1.0
+    container_name: patroni-primary
+    restart: unless-stopped
+    hostname: patroni-primary
+    environment:
+      - PATRONI_NAME=postgresql-primary
+      - PATRONI_NAMESPACE=/service
+      - PATRONI_SCOPE=postgres-cluster
+      - PATRONI_ETCD3_HOSTS=etcd:2379
+      - PATRONI_POSTGRESQL_DATA_DIR=/var/lib/postgresql/data/pgdata
+      - PATRONI_POSTGRESQL_PGPASS=/tmp/pgpass
+      - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
+      - PATRONI_POSTGRESQL_CONNECT_ADDRESS=patroni-primary:5432
+      - PATRONI_RESTAPI_LISTEN=0.0.0.0:8008
+      - PATRONI_RESTAPI_CONNECT_ADDRESS=patroni-primary:8008
+    volumes:
+      - postgres-primary-data:/var/lib/postgresql/data
+      - ./configs/database/patroni-primary.yml:/etc/patroni/patroni.yml:ro
+    networks:
+      - postgres-cluster
+    ports:
+      - "8008:8008"
+    depends_on:
+      etcd:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+  # Patroni for Standby
+  patroni-standby:
+    image: patroni/patroni:3.1.0
+    container_name: patroni-standby
+    restart: unless-stopped
+    hostname: patroni-standby
+    environment:
+      - PATRONI_NAME=postgresql-standby
+      - PATRONI_NAMESPACE=/service
+      - PATRONI_SCOPE=postgres-cluster
+      - PATRONI_ETCD3_HOSTS=etcd:2379
+      - PATRONI_POSTGRESQL_DATA_DIR=/var/lib/postgresql/data/pgdata
+      - PATRONI_POSTGRESQL_PGPASS=/tmp/pgpass
+      - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
+      - PATRONI_POSTGRESQL_CONNECT_ADDRESS=patroni-standby:5432
+      - PATRONI_RESTAPI_LISTEN=0.0.0.0:8008
+      - PATRONI_RESTAPI_CONNECT_ADDRESS=patroni-standby:8008
+    volumes:
+      - postgres-standby-data:/var/lib/postgresql/data
+      - ./configs/database/patroni-standby.yml:/etc/patroni/patroni.yml:ro
+    networks:
+      - postgres-cluster
+    ports:
+      - "8009:8008"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      patroni-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8008/health || exit 1"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+  # pgBouncer Connection Pooler
+  pgbouncer:
+    image: pgbouncer/pgbouncer:1.21.0
+    container_name: postgres-pgbouncer
+    restart: unless-stopped
+    hostname: pgbouncer
+    environment:
+      - DATABASES_HOST=postgres-primary
+      - DATABASES_PORT=5432
+      - DATABASES_USER=${POSTGRES_USER:-grandmodel}
+      - DATABASES_PASSWORD=${POSTGRES_PASSWORD:?Required}
+      - DATABASES_DBNAME=${POSTGRES_DB:-grandmodel}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=200
+      - DEFAULT_POOL_SIZE=50
+      - MIN_POOL_SIZE=10
+      - RESERVE_POOL_SIZE=20
+      - SERVER_RESET_QUERY=DISCARD ALL
+      - ADMIN_USERS=${POSTGRES_USER:-grandmodel}
+      - STATS_USERS=${POSTGRES_USER:-grandmodel}
+      - AUTH_TYPE=md5
+    volumes:
+      - ./configs/database/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./configs/database/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    networks:
+      - postgres-cluster
+      - app-network
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "psql postgresql://${POSTGRES_USER:-grandmodel}:${POSTGRES_PASSWORD}@localhost:6432/pgbouncer -c 'SHOW pools;' || exit 1"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+  # Database Health Monitor
+  db-health-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.db-monitor
+    container_name: db-health-monitor
+    restart: unless-stopped
+    hostname: db-health-monitor
+    environment:
+      - PRIMARY_HOST=postgres-primary
+      - STANDBY_HOST=postgres-standby
+      - PGBOUNCER_HOST=pgbouncer
+      - POSTGRES_USER=${POSTGRES_USER:-grandmodel}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Required}
+      - POSTGRES_DB=${POSTGRES_DB:-grandmodel}
+      - HEALTH_CHECK_INTERVAL=1
+      - FAILOVER_THRESHOLD=10
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL:-}
+    volumes:
+      - ./src/database/health_monitor.py:/app/health_monitor.py:ro
+      - ./configs/database/health-monitor.yml:/app/config.yml:ro
+    networks:
+      - postgres-cluster
+      - app-network
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      postgres-standby:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "/app/health_monitor.py", "--check"]
+      interval: 1s
+      timeout: 2s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+  # WAL Archive Manager
+  wal-archive-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.wal-manager
+    container_name: wal-archive-manager
+    restart: unless-stopped
+    hostname: wal-archive-manager
+    environment:
+      - POSTGRES_HOST=postgres-primary
+      - POSTGRES_USER=${POSTGRES_USER:-grandmodel}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Required}
+      - POSTGRES_DB=${POSTGRES_DB:-grandmodel}
+      - WAL_ARCHIVE_PATH=/var/lib/postgresql/wal-archive
+      - BACKUP_RETENTION_DAYS=7
+      - COMPRESSION_ENABLED=true
+      - S3_BUCKET=${S3_BACKUP_BUCKET:-}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-}
+    volumes:
+      - postgres-wal-archive:/var/lib/postgresql/wal-archive
+      - ./scripts/database/wal-archive.sh:/app/wal-archive.sh:ro
+      - ./scripts/database/backup-restore.sh:/app/backup-restore.sh:ro
+    networks:
+      - postgres-cluster
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "sh", "/app/wal-archive.sh", "--check"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+# Production Usage:
+# 1. Set environment variables in .env file
+# 2. Run: docker-compose -f infrastructure/database/postgresql-cluster.yml up -d
+# 3. Monitor health: docker-compose -f infrastructure/database/postgresql-cluster.yml logs -f db-health-monitor
+# 4. Test failover: docker-compose -f infrastructure/database/postgresql-cluster.yml exec patroni-primary patronictl failover

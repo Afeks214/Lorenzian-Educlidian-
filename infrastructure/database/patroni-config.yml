@@ -1,0 +1,197 @@
+# Patroni Configuration for PostgreSQL High Availability
+# AGENT 1: DATABASE RTO SPECIALIST - Patroni Clustering Setup
+# Target: Automatic failover within 15 seconds
+
+# Primary Node Configuration
+scope: postgres-cluster
+namespace: /service
+name: postgresql-primary
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: patroni-primary:8008
+
+etcd3:
+  hosts: etcd:2379
+
+bootstrap:
+  dcs:
+    ttl: 10
+    loop_wait: 2
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    master_start_timeout: 30
+    synchronous_mode: true
+    synchronous_mode_strict: false
+    synchronous_node_count: 1
+    # Fast leader election optimizations
+    check_timeline: true
+    use_pg_rewind: true
+    remove_data_directory_on_rewind_failure: true
+    remove_data_directory_on_diverged_timelines: true
+    # Faster failover settings
+    failover_timeout: 15
+    switchover_timeout: 15
+    # Etcd optimization
+    etcd_hosts_fallback_to_srv: false
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        # Performance and reliability settings
+        max_connections: 200
+        shared_buffers: 256MB
+        effective_cache_size: 1GB
+        maintenance_work_mem: 64MB
+        checkpoint_completion_target: 0.9
+        wal_buffers: 16MB
+        default_statistics_target: 100
+        random_page_cost: 1.1
+        effective_io_concurrency: 200
+        work_mem: 4MB
+        min_wal_size: 1GB
+        max_wal_size: 4GB
+        max_worker_processes: 8
+        max_parallel_workers_per_gather: 2
+        max_parallel_workers: 8
+        max_parallel_maintenance_workers: 2
+        
+        # Replication settings
+        wal_level: replica
+        max_wal_senders: 10
+        max_replication_slots: 10
+        hot_standby: on
+        hot_standby_feedback: on
+        
+        # Logging for monitoring
+        log_destination: stderr
+        logging_collector: on
+        log_directory: /var/log/postgresql
+        log_filename: postgresql-%Y-%m-%d_%H%M%S.log
+        log_truncate_on_rotation: on
+        log_rotation_age: 1d
+        log_rotation_size: 100MB
+        log_min_duration_statement: 1000
+        log_line_prefix: '%t [%p]: user=%u,db=%d,app=%a,client=%h '
+        log_checkpoints: on
+        log_connections: on
+        log_disconnections: on
+        log_lock_waits: on
+        log_temp_files: 0
+        log_autovacuum_min_duration: 0
+        log_error_verbosity: default
+        
+        # Archive settings
+        archive_mode: on
+        archive_command: 'test ! -f /var/lib/postgresql/wal-archive/%f && cp %p /var/lib/postgresql/wal-archive/%f'
+        archive_timeout: 15
+        
+        # Monitoring and health checks
+        track_activities: on
+        track_counts: on
+        track_io_timing: on
+        track_functions: all
+        stats_temp_directory: /var/run/postgresql/stats_temp
+        
+        # Security settings
+        ssl: on
+        ssl_cert_file: /etc/ssl/certs/ssl-cert-snakeoil.pem
+        ssl_key_file: /etc/ssl/private/ssl-cert-snakeoil.key
+        password_encryption: scram-sha-256
+        
+      pg_hba:
+        - host replication replicator 0.0.0.0/0 md5
+        - host all all 0.0.0.0/0 md5
+        - local all all trust
+        - host all all 127.0.0.1/32 trust
+        - host all all ::1/128 trust
+        
+      users:
+        admin:
+          password: admin
+          options:
+            - createrole
+            - createdb
+        replicator:
+          password: replicator_password
+          options:
+            - replication
+
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: patroni-primary:5432
+  data_dir: /var/lib/postgresql/data/pgdata
+  bin_dir: /usr/lib/postgresql/15/bin
+  pgpass: /tmp/pgpass
+  authentication:
+    replication:
+      username: replicator
+      password: replicator_password
+    superuser:
+      username: postgres
+      password: postgres_password
+  parameters:
+    unix_socket_directories: '/var/run/postgresql'
+  create_replica_methods:
+    - basebackup
+  basebackup:
+    checkpoint: 'fast'
+    max-rate: '100M'
+    verbose: true
+
+watchdog:
+  mode: automatic
+  device: /dev/watchdog
+  safety_margin: 2
+
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false
+
+# Callbacks for automated actions
+callbacks:
+  on_role_change: /usr/local/bin/on_role_change.sh
+  on_stop: /usr/local/bin/on_stop.sh
+  on_restart: /usr/local/bin/on_restart.sh
+  on_reload: /usr/local/bin/on_reload.sh
+
+# Standby configuration (for standby nodes)
+standby_cluster:
+  host: postgres-primary
+  port: 5432
+  create_replica_methods:
+    - basebackup
+
+# Logging configuration
+log:
+  level: INFO
+  format: '%(asctime)s %(levelname)s: %(message)s'
+  file_num: 4
+  file_size: 25MB
+  loggers:
+    urllib3.connectionpool:
+      level: WARNING
+
+# Failover configuration
+failover:
+  candidate_tags:
+    - nofailover: false
+  maximum_lag_on_failover: 1048576
+  
+# Synchronous replication settings
+synchronous_mode: true
+synchronous_mode_strict: false
+synchronous_node_count: 1
+
+# Maintenance settings
+maintenance_mode: false
+pause: false
+
+# Custom scripts directory
+scripts_dir: /usr/local/bin

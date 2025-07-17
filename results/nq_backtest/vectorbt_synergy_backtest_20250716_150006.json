@@ -1,0 +1,85 @@
+{
+  "backtest_metadata": {
+    "strategy": "Synergy Strategy - VectorBT Implementation",
+    "agent": "AGENT 2 - VectorBT Backtesting Implementation",
+    "timestamp": "2025-07-16T15:00:06.012235",
+    "data_period": "2024-01-01 to 2024-07-01",
+    "timeframe": "5-minute bars",
+    "total_bars": 12560
+  },
+  "synergy_patterns": {
+    "type_1_signals": 51,
+    "type_2_signals": 1580,
+    "type_3_signals": 166,
+    "type_4_signals": 0,
+    "total_synergy_signals": 1736
+  },
+  "performance_results": {
+    "basic_stats": {
+      "total_return_pct": -0.7498478697471437,
+      "total_return_value": -749.8478697471437,
+      "total_trades": 0,
+      "win_rate_pct": 25.0,
+      "profit_factor": 0.3764671865050717,
+      "sharpe_ratio": -1.806064753148209,
+      "calmar_ratio": -5.392221947358566,
+      "max_drawdown_pct": 1.1322106500141502,
+      "max_drawdown_value": 0.0,
+      "sortino_ratio": -2.343886169192632,
+      "volatility_pct": 2.8706826122949627
+    },
+    "trade_analysis": {
+      "avg_trade_duration": "N/A",
+      "best_trade_pct": 0.47764156211305664,
+      "worst_trade_pct": -0.8929335953368167,
+      "avg_winning_trade_pct": 0.47764156211305664,
+      "avg_losing_trade_pct": -0.4218270082054572,
+      "max_consecutive_wins": 0,
+      "max_consecutive_losses": 0
+    },
+    "portfolio_stats": {
+      "Start": "2024-01-02 14:45:00",
+      "End": "2024-06-28 23:55:00",
+      "Period": "43 days 14:40:00",
+      "Start Value": "100000.0",
+      "End Value": "99250.15213025286",
+      "Total Return [%]": "-0.7498478697471437",
+      "Benchmark Return [%]": "15.949477351916252",
+      "Max Gross Exposure [%]": "95.02557386833728",
+      "Total Fees Paid": "758.6328877977437",
+      "Max Drawdown [%]": "1.1322106500141502",
+      "Max Drawdown Duration": "42 days 23:55:00",
+      "Total Trades": "4",
+      "Total Closed Trades": "4",
+      "Total Open Trades": "0",
+      "Open Trade PnL": "0.0",
+      "Win Rate [%]": "25.0",
+      "Best Trade [%]": "0.47764156211305664",
+      "Worst Trade [%]": "-0.8929335953368167",
+      "Avg Winning Trade [%]": "0.47764156211305664",
+      "Avg Losing Trade [%]": "-0.4218270082054572",
+      "Avg Winning Trade Duration": "0 days 00:20:00",
+      "Avg Losing Trade Duration": "0 days 00:15:00",
+      "Profit Factor": "0.3764671865050717",
+      "Expectancy": "-187.4619674367843",
+      "Sharpe Ratio": "-1.806064753148209",
+      "Calmar Ratio": "-5.392221947358566",
+      "Omega Ratio": "0.637676041323743",
+      "Sortino Ratio": "-2.343886169192632"
+    }
+  },
+  "strategy_assessment": {
+    "overall_rating": "Poor",
+    "strengths": [
+      "Controlled drawdowns"
+    ],
+    "weaknesses": [
+      "Poor risk-adjusted returns",
+      "Low win rate"
+    ],
+    "recommendations": [
+      "Consider optimizing entry signals for more trades",
+      "Review exit conditions to improve win rate"
+    ]
+  }
+}

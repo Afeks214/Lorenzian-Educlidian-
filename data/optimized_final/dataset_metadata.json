@@ -1,0 +1,38 @@
+{
+  "creation_date": "2025-07-17T09:03:14.701496",
+  "total_rows": 56083,
+  "date_range": {
+    "start": "2020-01-07T01:00:00",
+    "end": "2025-12-06T23:30:00"
+  },
+  "columns": {
+    "ohlcv": [
+      "Timestamp",
+      "Open",
+      "High",
+      "Low",
+      "Close",
+      "Volume"
+    ],
+    "returns_indicators": [
+      "Timestamp",
+      "Open",
+      "High",
+      "Low",
+      "Close",
+      "Volume",
+      "returns",
+      "log_returns",
+      "volatility",
+      "sma_20",
+      "sma_50"
+    ]
+  },
+  "file_sizes_mb": {
+    "ohlcv_csv": 3.16,
+    "ohlcv_pickle": 1.5,
+    "returns_csv": 6.81,
+    "returns_pickle": 3.64,
+    "numpy_arrays": 0.85
+  }
+}

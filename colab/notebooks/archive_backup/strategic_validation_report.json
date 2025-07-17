@@ -1,0 +1,21 @@
+{
+  "validation_status": "PASSED",
+  "total_processed": 452,
+  "average_processing_time_ms": 0.17125205656068515,
+  "max_processing_time_ms": 6.160736083984375,
+  "processing_speed_rows_per_sec": 51.49884983459361,
+  "performance_target_met": "True",
+  "confidence_distribution": {
+    "HIGH": 0,
+    "MEDIUM": 0,
+    "LOW": 452
+  },
+  "regime_distribution": {
+    "BULL": 106,
+    "BEAR": 122,
+    "SIDEWAYS": 83,
+    "VOLATILE": 141
+  },
+  "vector_database_entries": 453,
+  "validation_timestamp": "2025-07-14T14:55:00.782082"
+}

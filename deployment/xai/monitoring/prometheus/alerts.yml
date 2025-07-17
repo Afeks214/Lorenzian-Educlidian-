@@ -1,0 +1,245 @@
+# Prometheus Alerting Rules for XAI Trading System
+# Agent Epsilon - Production Monitoring Specialist
+
+groups:
+  # Critical System Health Alerts
+  - name: xai_system_health
+    rules:
+      - alert: XAI_API_Down
+        expr: up{job="xai-api"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "XAI API is down"
+          description: "XAI Trading API has been down for more than 30 seconds"
+          runbook_url: "https://docs.company.com/runbooks/xai-api-down"
+
+      - alert: XAI_High_Error_Rate
+        expr: rate(http_requests_total{job="xai-api",status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High error rate in XAI API"
+          description: "XAI API error rate is {{ $value }} requests/second"
+
+  # Trading Performance Alerts
+  - name: trading_performance
+    rules:
+      - alert: Explanation_Latency_High
+        expr: histogram_quantile(0.95, rate(trading_explanation_latency_seconds_bucket[5m])) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+          component: xai-engine
+        annotations:
+          summary: "XAI explanation latency exceeds 100ms"
+          description: "95th percentile explanation latency is {{ $value }}s (target: <0.1s)"
+
+      - alert: Explanation_Latency_Critical
+        expr: histogram_quantile(0.95, rate(trading_explanation_latency_seconds_bucket[5m])) > 0.2
+        for: 30s
+        labels:
+          severity: critical
+          component: xai-engine
+        annotations:
+          summary: "CRITICAL: XAI explanation latency exceeds 200ms"
+          description: "95th percentile explanation latency is {{ $value }}s"
+
+      - alert: Query_Response_Time_High
+        expr: histogram_quantile(0.95, rate(xai_query_response_time_seconds_bucket[5m])) > 2.0
+        for: 2m
+        labels:
+          severity: warning
+          component: query-engine
+        annotations:
+          summary: "Query response time exceeds 2 seconds"
+          description: "95th percentile query response time is {{ $value }}s"
+
+      - alert: Trading_Decision_Rate_Low
+        expr: rate(xai_trading_decisions_total[5m]) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: trading-engine
+        annotations:
+          summary: "Low trading decision rate"
+          description: "Trading decision rate is {{ $value }} decisions/second"
+
+  # Resource Usage Alerts
+  - name: resource_usage
+    rules:
+      - alert: High_CPU_Usage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: High_Memory_Usage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+
+      - alert: Disk_Space_Low
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is {{ $value }}% available on {{ $labels.instance }}"
+
+  # Database and Cache Alerts
+  - name: database_alerts
+    rules:
+      - alert: Redis_Down
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache server is unreachable"
+
+      - alert: PostgreSQL_Down
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: postgres
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is unreachable"
+
+      - alert: High_Database_Connections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: postgres
+        annotations:
+          summary: "High database connection usage"
+          description: "Database connection usage is {{ $value }}%"
+
+      - alert: Redis_Memory_High
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: redis
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis memory usage is {{ $value }}%"
+
+  # AI/ML Model Alerts
+  - name: ml_model_alerts
+    rules:
+      - alert: Model_Inference_Latency_High
+        expr: histogram_quantile(0.95, rate(xai_model_inference_duration_seconds_bucket[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: ml-models
+        annotations:
+          summary: "High ML model inference latency"
+          description: "95th percentile model inference latency is {{ $value }}s"
+
+      - alert: SHAP_Explanation_Failures
+        expr: rate(xai_shap_explanation_errors_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+          component: shap-engine
+        annotations:
+          summary: "SHAP explanation failures detected"
+          description: "SHAP explanation error rate is {{ $value }} errors/second"
+
+      - alert: Ollama_LLM_Down
+        expr: up{job="ollama"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: llm
+        annotations:
+          summary: "Ollama LLM service is down"
+          description: "Ollama LLM service is unreachable"
+
+  # Security and Compliance Alerts
+  - name: security_alerts
+    rules:
+      - alert: High_Authentication_Failures
+        expr: rate(xai_authentication_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is {{ $value }} failures/second"
+
+      - alert: Unusual_API_Request_Pattern
+        expr: rate(http_requests_total{job="xai-api"}[5m]) > 100
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Unusual API request pattern detected"
+          description: "API request rate is {{ $value }} requests/second"
+
+      - alert: SSL_Certificate_Expiry
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+        for: 1h
+        labels:
+          severity: warning
+          component: ssl
+        annotations:
+          summary: "SSL certificate expires soon"
+          description: "SSL certificate expires in {{ $value | humanizeDuration }}"
+
+  # Business Logic Alerts
+  - name: business_alerts
+    rules:
+      - alert: Low_Explanation_Quality
+        expr: avg(xai_explanation_quality_score) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          component: xai-quality
+        annotations:
+          summary: "Low explanation quality detected"
+          description: "Average explanation quality score is {{ $value }}"
+
+      - alert: Trading_System_Consensus_Low
+        expr: avg(xai_trading_consensus_score) < 0.6
+        for: 5m
+        labels:
+          severity: warning
+          component: consensus
+        annotations:
+          summary: "Low trading system consensus"
+          description: "Average consensus score is {{ $value }}"
+
+      - alert: Market_Data_Stale
+        expr: time() - xai_market_data_last_update_timestamp > 300
+        for: 1m
+        labels:
+          severity: critical
+          component: market-data
+        annotations:
+          summary: "Market data is stale"
+          description: "Market data hasn't been updated for {{ $value }} seconds"

@@ -1,0 +1,583 @@
+# Multi-Region Disaster Recovery Infrastructure
+# Agent 6: Disaster Recovery Specialist Implementation
+
+version: '3.8'
+
+# ============================================================================
+# Regional Configuration
+# ============================================================================
+
+regions:
+  primary:
+    name: "us-east-1"
+    zone: "us-east-1a"
+    capacity: "production"
+    role: "primary"
+    endpoints:
+      api: "https://api.grandmodel.com"
+      monitoring: "https://monitoring.grandmodel.com"
+      backup: "https://backup.grandmodel.com"
+    
+  secondary:
+    name: "us-west-2"
+    zone: "us-west-2a"
+    capacity: "warm-standby"
+    role: "secondary"
+    endpoints:
+      api: "https://api-west.grandmodel.com"
+      monitoring: "https://monitoring-west.grandmodel.com"
+      backup: "https://backup-west.grandmodel.com"
+
+  tertiary:
+    name: "eu-west-1"
+    zone: "eu-west-1a"
+    capacity: "cold-standby"
+    role: "tertiary"
+    endpoints:
+      api: "https://api-eu.grandmodel.com"
+      monitoring: "https://monitoring-eu.grandmodel.com"
+      backup: "https://backup-eu.grandmodel.com"
+
+# ============================================================================
+# Kubernetes Multi-Region Deployment
+# ============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandmodel-strategic-primary
+  namespace: grandmodel-primary
+  labels:
+    app: grandmodel
+    component: strategic
+    region: primary
+    disaster-recovery: enabled
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+      region: primary
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: strategic
+        region: primary
+        disaster-recovery: enabled
+      annotations:
+        disaster-recovery.grandmodel.com/backup-frequency: "5m"
+        disaster-recovery.grandmodel.com/replication-target: "us-west-2"
+        disaster-recovery.grandmodel.com/priority: "high"
+    spec:
+      serviceAccountName: grandmodel-dr-sa
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values: ["strategic"]
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: strategic-agent
+        image: grandmodel/strategic-agent:latest
+        env:
+        - name: REGION
+          value: "primary"
+        - name: REPLICATION_ENABLED
+          value: "true"
+        - name: REPLICATION_TARGET
+          value: "us-west-2"
+        - name: BACKUP_FREQUENCY
+          value: "300" # 5 minutes
+        - name: DR_MONITORING_ENABLED
+          value: "true"
+        - name: FAILOVER_DETECTION_TIMEOUT
+          value: "30"
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8888
+          name: dr-sync
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 2
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: models-volume
+          mountPath: /app/models
+        - name: dr-state-volume
+          mountPath: /app/dr-state
+        - name: backup-volume
+          mountPath: /app/backups
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grandmodel-config
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: models-pvc-primary
+      - name: dr-state-volume
+        persistentVolumeClaim:
+          claimName: dr-state-pvc-primary
+      - name: backup-volume
+        persistentVolumeClaim:
+          claimName: backup-pvc-primary
+
+---
+# Secondary Region Deployment (Warm Standby)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandmodel-strategic-secondary
+  namespace: grandmodel-secondary
+  labels:
+    app: grandmodel
+    component: strategic
+    region: secondary
+    disaster-recovery: enabled
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+      region: secondary
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: strategic
+        region: secondary
+        disaster-recovery: enabled
+      annotations:
+        disaster-recovery.grandmodel.com/role: "warm-standby"
+        disaster-recovery.grandmodel.com/primary-region: "us-east-1"
+        disaster-recovery.grandmodel.com/sync-frequency: "30s"
+    spec:
+      serviceAccountName: grandmodel-dr-sa
+      containers:
+      - name: strategic-agent
+        image: grandmodel/strategic-agent:latest
+        env:
+        - name: REGION
+          value: "secondary"
+        - name: STANDBY_MODE
+          value: "warm"
+        - name: PRIMARY_REGION
+          value: "us-east-1"
+        - name: SYNC_FREQUENCY
+          value: "30"
+        - name: DR_MONITORING_ENABLED
+          value: "true"
+        - name: AUTO_FAILOVER_ENABLED
+          value: "true"
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8888
+          name: dr-sync
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: models-volume
+          mountPath: /app/models
+        - name: dr-state-volume
+          mountPath: /app/dr-state
+        - name: backup-volume
+          mountPath: /app/backups
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grandmodel-config
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: models-pvc-secondary
+      - name: dr-state-volume
+        persistentVolumeClaim:
+          claimName: dr-state-pvc-secondary
+      - name: backup-volume
+        persistentVolumeClaim:
+          claimName: backup-pvc-secondary
+
+---
+# Tertiary Region Deployment (Cold Standby)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grandmodel-strategic-tertiary
+  namespace: grandmodel-tertiary
+  labels:
+    app: grandmodel
+    component: strategic
+    region: tertiary
+    disaster-recovery: enabled
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+      region: tertiary
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: strategic
+        region: tertiary
+        disaster-recovery: enabled
+      annotations:
+        disaster-recovery.grandmodel.com/role: "cold-standby"
+        disaster-recovery.grandmodel.com/primary-region: "us-east-1"
+        disaster-recovery.grandmodel.com/sync-frequency: "5m"
+    spec:
+      serviceAccountName: grandmodel-dr-sa
+      containers:
+      - name: strategic-agent
+        image: grandmodel/strategic-agent:latest
+        env:
+        - name: REGION
+          value: "tertiary"
+        - name: STANDBY_MODE
+          value: "cold"
+        - name: PRIMARY_REGION
+          value: "us-east-1"
+        - name: SYNC_FREQUENCY
+          value: "300"
+        - name: DR_MONITORING_ENABLED
+          value: "true"
+        - name: AUTO_FAILOVER_ENABLED
+          value: "false"
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8888
+          name: dr-sync
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: models-volume
+          mountPath: /app/models
+        - name: dr-state-volume
+          mountPath: /app/dr-state
+        - name: backup-volume
+          mountPath: /app/backups
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grandmodel-config
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: models-pvc-tertiary
+      - name: dr-state-volume
+        persistentVolumeClaim:
+          claimName: dr-state-pvc-tertiary
+      - name: backup-volume
+        persistentVolumeClaim:
+          claimName: backup-pvc-tertiary
+
+---
+# Cross-Region Service for Data Synchronization
+apiVersion: v1
+kind: Service
+metadata:
+  name: grandmodel-dr-sync
+  namespace: grandmodel-primary
+  labels:
+    app: grandmodel
+    component: dr-sync
+spec:
+  selector:
+    app: grandmodel
+    component: strategic
+    region: primary
+  ports:
+  - port: 8888
+    targetPort: 8888
+    name: dr-sync
+  type: ClusterIP
+
+---
+# Global Load Balancer Configuration
+apiVersion: v1
+kind: Service
+metadata:
+  name: grandmodel-global-lb
+  namespace: grandmodel-primary
+  labels:
+    app: grandmodel
+    component: global-lb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+    external-dns.alpha.kubernetes.io/hostname: "api.grandmodel.com"
+spec:
+  selector:
+    app: grandmodel
+    component: strategic
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+  - port: 443
+    targetPort: 8000
+    name: https
+  type: LoadBalancer
+
+---
+# Disaster Recovery Monitoring Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dr-monitor
+  namespace: grandmodel-primary
+  labels:
+    app: grandmodel
+    component: dr-monitor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: dr-monitor
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: dr-monitor
+    spec:
+      serviceAccountName: grandmodel-dr-sa
+      containers:
+      - name: dr-monitor
+        image: grandmodel/dr-monitor:latest
+        env:
+        - name: PRIMARY_REGION
+          value: "us-east-1"
+        - name: SECONDARY_REGION
+          value: "us-west-2"
+        - name: TERTIARY_REGION
+          value: "eu-west-1"
+        - name: MONITORING_INTERVAL
+          value: "10"
+        - name: FAILOVER_THRESHOLD
+          value: "3"
+        - name: ALERT_WEBHOOK
+          value: "https://alerts.grandmodel.com/webhook"
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: metrics
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 15
+
+---
+# Persistent Volume Claims for Each Region
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc-primary
+  namespace: grandmodel-primary
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dr-state-pvc-primary
+  namespace: grandmodel-primary
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc-primary
+  namespace: grandmodel-primary
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: standard
+
+---
+# Service Account for DR Operations
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grandmodel-dr-sa
+  namespace: grandmodel-primary
+  labels:
+    app: grandmodel
+    component: disaster-recovery
+
+---
+# RBAC for DR Operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grandmodel-dr-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grandmodel-dr-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grandmodel-dr-role
+subjects:
+- kind: ServiceAccount
+  name: grandmodel-dr-sa
+  namespace: grandmodel-primary
+
+---
+# Network Policies for Cross-Region Communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cross-region-sync
+  namespace: grandmodel-primary
+spec:
+  podSelector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: grandmodel-secondary
+    - namespaceSelector:
+        matchLabels:
+          name: grandmodel-tertiary
+    ports:
+    - protocol: TCP
+      port: 8888
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: grandmodel-secondary
+    - namespaceSelector:
+        matchLabels:
+          name: grandmodel-tertiary
+    ports:
+    - protocol: TCP
+      port: 8888

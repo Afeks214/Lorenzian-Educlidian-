@@ -1,0 +1,76 @@
+{
+  "mission_info": {
+    "agent": "AGENT_2",
+    "mission": "SYNERGY_PATTERN_DETECTION_FOR_BACKTESTING",
+    "timestamp": "20250717_075127",
+    "status": "COMPLETE"
+  },
+  "execution_info": {
+    "execution_time_seconds": 6.709312435999891,
+    "bars_processed": 10000,
+    "processing_rate_bars_per_second": 1490.4656915876205,
+    "bottleneck_free": false
+  },
+  "configuration": {
+    "mlmi_threshold": 0.01,
+    "nwrqk_threshold": 0.001,
+    "fvg_min_size": 0.0005,
+    "time_window_bars": 10,
+    "direction_consistency": true,
+    "vectorized_execution": true,
+    "testing_mode": true
+  },
+  "signal_detection_results": {
+    "individual_signals": {
+      "mlmi": 0,
+      "nwrqk": 1713,
+      "fvg": 380
+    },
+    "total_patterns": 0,
+    "patterns_by_type": {},
+    "patterns_by_direction": {}
+  },
+  "quality_metrics": {
+    "average_signal_strength": 0,
+    "average_bars_to_complete": 0,
+    "average_confidence": 0
+  },
+  "performance_metrics": {
+    "total_patterns_detected": "0",
+    "patterns_by_type": {
+      "TYPE_1": "0",
+      "TYPE_2": "0",
+      "TYPE_3": "0",
+      "TYPE_4": "0"
+    },
+    "individual_signals": {
+      "mlmi": 0,
+      "nwrqk": 1713,
+      "fvg": 380
+    },
+    "avg_detection_time_ms": 6709.27473599977,
+    "max_detection_time_ms": 6709.27473599977,
+    "signals_processed": 10000,
+    "execution_bottlenecks": [
+      "Signal detection took 1865.83ms (bottleneck detected)",
+      "Pattern detection took 4836.02ms (bottleneck detected)"
+    ]
+  },
+  "data_quality": {
+    "start_date": "2025-05-12 20:25:00",
+    "end_date": "2025-07-02 10:40:00",
+    "total_bars": 10000,
+    "date_range_days": 50
+  },
+  "deliverables": {
+    "mlmi_crossover_detection": true,
+    "nwrqk_slope_change_detection": true,
+    "fvg_mitigation_detection": true,
+    "time_window_validation": true,
+    "direction_consistency_checks": true,
+    "vectorized_signal_detection": true,
+    "signal_strength_scoring": true,
+    "comprehensive_output_dataframe": true,
+    "bottleneck_free_execution": false
+  }
+}

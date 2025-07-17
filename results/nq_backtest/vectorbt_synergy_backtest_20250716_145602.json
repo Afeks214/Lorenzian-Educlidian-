@@ -1,0 +1,41 @@
+{
+  "backtest_metadata": {
+    "strategy": "Synergy Strategy - VectorBT Implementation",
+    "agent": "AGENT 2 - VectorBT Backtesting Implementation",
+    "timestamp": "2025-07-16T14:56:02.714525",
+    "data_period": "2024-01-01 to 2024-07-01",
+    "timeframe": "5-minute bars",
+    "total_bars": 12560
+  },
+  "synergy_patterns": {
+    "type_1_signals": 0,
+    "type_2_signals": 0,
+    "type_3_signals": 166,
+    "type_4_signals": 0,
+    "total_synergy_signals": 166
+  },
+  "performance_results": {
+    "basic_stats": {
+      "total_return_pct": 0.0,
+      "total_return_value": 0.0,
+      "total_trades": 0,
+      "win_rate_pct": NaN,
+      "profit_factor": NaN,
+      "sharpe_ratio": Infinity,
+      "calmar_ratio": NaN,
+      "max_drawdown_pct": NaN,
+      "max_drawdown_value": 0.0,
+      "sortino_ratio": Infinity,
+      "volatility_pct": 0.0
+    },
+    "trade_analysis": {
+      "avg_trade_duration": "N/A",
+      "best_trade_pct": NaN,
+      "worst_trade_pct": NaN,
+      "avg_winning_trade_pct": NaN,
+      "avg_losing_trade_pct": NaN,
+      "max_consecutive_wins": 0,
+      "max_consecutive_losses": 0
+    },
+    "portfolio_stats": {
+      "Start": 

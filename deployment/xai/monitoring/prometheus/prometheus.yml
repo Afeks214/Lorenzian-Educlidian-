@@ -1,0 +1,143 @@
+# Prometheus Configuration for XAI Trading System
+# Agent Epsilon - Production Monitoring Specialist
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'xai-trading-system'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Load alerting rules
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # XAI Trading System API
+  - job_name: 'xai-api'
+    static_configs:
+      - targets: ['xai-app:8000']
+    scrape_interval: 5s  # High frequency for trading latency
+    metrics_path: /metrics
+    scrape_timeout: 10s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+
+  # PostgreSQL metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+
+  # Nginx metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 15s
+
+  # ChromaDB metrics
+  - job_name: 'chromadb'
+    static_configs:
+      - targets: ['xai-chromadb:8000']
+    scrape_interval: 30s
+    metrics_path: /api/v1/metrics
+
+  # Ollama metrics
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['xai-ollama:11434']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['xai-grafana:3000']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Custom XAI application metrics
+  - job_name: 'xai-custom-metrics'
+    static_configs:
+      - targets: ['xai-app:8000']
+    scrape_interval: 5s
+    metrics_path: /metrics/xai
+    params:
+      format: ['prometheus']
+    metric_relabel_configs:
+      # Rename metrics for consistency
+      - source_labels: [__name__]
+        regex: 'xai_explanation_latency_seconds'
+        target_label: __name__
+        replacement: 'trading_explanation_latency_seconds'
+      
+      # Add trading-specific labels
+      - source_labels: [__name__]
+        regex: 'trading_.*'
+        target_label: system
+        replacement: 'xai-trading'
+
+  # Trading performance metrics (custom endpoint)
+  - job_name: 'trading-performance'
+    static_configs:
+      - targets: ['xai-app:8000']
+    scrape_interval: 10s
+    metrics_path: /metrics/trading
+    honor_timestamps: true
+    
+  # Market data ingestion metrics
+  - job_name: 'market-data'
+    static_configs:
+      - targets: ['xai-app:8000']
+    scrape_interval: 5s
+    metrics_path: /metrics/market-data
+
+  # Security and compliance metrics
+  - job_name: 'security-metrics'
+    static_configs:
+      - targets: ['xai-app:8000']
+    scrape_interval: 60s
+    metrics_path: /metrics/security
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 30d
+    retention.size: 50GB
+    
+# Remote write for long-term storage (optional)
+# remote_write:
+#   - url: "https://prometheus-remote-write-endpoint"
+#     write_relabel_configs:
+#       - source_labels: [__name__]
+#         regex: 'trading_.*|xai_.*'
+#         action: keep

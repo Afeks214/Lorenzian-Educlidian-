@@ -1,0 +1,66 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'
+
+rule_files:
+  - "/etc/prometheus/rules/trading_alerts.yml"
+  - "/etc/prometheus/rules/system_alerts.yml"
+  - "/etc/prometheus/rules/sla_alerts.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'grandmodel-app'
+    static_configs:
+      - targets: ['grandmodel:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'grandmodel-monitoring'
+    static_configs:
+      - targets: ['grandmodel:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+
+  - job_name: 'strategic-agent'
+    static_configs:
+      - targets: ['strategic_agent:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'tactical-agent'
+    static_configs:
+      - targets: ['tactical_agent:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  - job_name: 'risk-agent'
+    static_configs:
+      - targets: ['risk_agent:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s

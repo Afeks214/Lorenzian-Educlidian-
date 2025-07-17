@@ -1,0 +1,176 @@
+# GrandModel Kubernetes Services - Agent 5 Production Configuration
+# Strategic MARL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: strategic-service
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent5
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "9090"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: strategic
+  sessionAffinity: None
+
+---
+# Tactical MARL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: tactical-service
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent5
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "9090"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: tactical
+  sessionAffinity: None
+
+---
+# Risk Management Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: risk-service
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent5
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "9090"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: risk
+  sessionAffinity: None
+
+---
+# NGINX Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: gateway
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: gateway
+  loadBalancerSourceRanges:
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+
+---
+# Headless Service for StatefulSet discovery
+apiVersion: v1
+kind: Service
+metadata:
+  name: grandmodel-headless
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    service-type: headless
+spec:
+  clusterIP: None
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: grandmodel
+
+---
+# External Service for database connectivity
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-external
+  namespace: grandmodel
+  labels:
+    app: postgres
+    service-type: external
+spec:
+  type: ExternalName
+  externalName: postgres.database.svc.cluster.local
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+
+---
+# External Service for Redis cache
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-external
+  namespace: grandmodel
+  labels:
+    app: redis
+    service-type: external
+spec:
+  type: ExternalName
+  externalName: redis.cache.svc.cluster.local
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP

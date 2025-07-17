@@ -1,0 +1,59 @@
+{
+  "timestamp": "20250715_160126",
+  "training_results": {
+    "timestamp": "2025-07-15T16:01:26.872299",
+    "total_duration": 0.0043828487396240234,
+    "overall_status": "partial_failure",
+    "systems": {
+      "risk_management": {
+        "status": "failed",
+        "duration": 0,
+        "metrics": {},
+        "target_met": false,
+        "performance_grade": "F"
+      },
+      "execution_engine": {
+        "status": "failed",
+        "duration": 0,
+        "metrics": {},
+        "target_met": false,
+        "performance_grade": "F"
+      }
+    },
+    "summary": {
+      "successful_systems": 0,
+      "total_systems": 2,
+      "targets_met": 0,
+      "success_rate": 0.0,
+      "target_achievement_rate": 0.0
+    },
+    "recommendations": [
+      "Some systems failed training - review error logs",
+      "Performance targets not met - consider optimization"
+    ]
+  },
+  "training_logs": [
+    "[2025-07-15 16:01:26] INFO: \ud83d\ude80 Starting dual MAPPO training execution",
+    "[2025-07-15 16:01:26] INFO: \ud83d\ude80 Starting execution_engine training from /home/QuantNova/GrandModel/colab/notebooks/execution_engine_mappo_training.ipynb",
+    "[2025-07-15 16:01:26] INFO: \ud83d\ude80 Starting risk_management training from /home/QuantNova/GrandModel/colab/notebooks/risk_management_mappo_training.ipynb",
+    "[2025-07-15 16:01:26] ERROR: \u274c Failed to convert notebook: /bin/sh: 1: jupyter: not found\n",
+    "[2025-07-15 16:01:26] ERROR: \u274c risk_management training failed: notebook_conversion_failed",
+    "[2025-07-15 16:01:26] ERROR: \u274c Failed to convert notebook: /bin/sh: 1: jupyter: not found\n",
+    "[2025-07-15 16:01:26] ERROR: \u274c execution_engine training failed: notebook_conversion_failed",
+    "[2025-07-15 16:01:26] INFO: \ud83c\udf89 Dual training completed in 0.00s",
+    "[2025-07-15 16:01:26] INFO: \ud83d\udcca Generating performance curves",
+    "[2025-07-15 16:01:26] ERROR: \u274c Failed to generate performance curves: 'facecolor' or 'color' argument must be a valid color orsequence of colors."
+  ],
+  "system_status": {
+    "execution_engine": {
+      "status": "failed",
+      "target_response_time": 500,
+      "current_response_time": 0
+    },
+    "risk_management": {
+      "status": "failed",
+      "target_response_time": 10000,
+      "current_response_time": 0
+    }
+  }
+}

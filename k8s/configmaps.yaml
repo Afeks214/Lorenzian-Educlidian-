@@ -1,0 +1,322 @@
+# GrandModel Kubernetes ConfigMaps - Agent 5 Production Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grandmodel-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: configuration
+    managed-by: agent5
+data:
+  # Application configuration
+  production-config.yaml: |
+    # GrandModel Production Configuration - Agent 5 Validated
+    system:
+      name: "GrandModel"
+      version: "1.0.0"
+      environment: "production"
+      agent5_validated: true
+      
+    performance:
+      target_latency_ms: 5
+      strategic_target_ms: 2
+      tactical_target_ms: 2
+      memory_limit_mb: 512
+      cpu_limit_percent: 80
+      
+    logging:
+      level: "INFO"
+      format: "json"
+      rotation_size_mb: 100
+      retention_days: 30
+      
+    monitoring:
+      enabled: true
+      metrics_port: 9090
+      health_check_interval: 30
+      
+    security:
+      tls_enabled: true
+      token_validation: true
+      rate_limiting: true
+      
+  # Nginx configuration
+  nginx.conf: |
+    upstream strategic_backend {
+        server strategic-service:8000 max_fails=3 fail_timeout=30s;
+    }
+    
+    upstream tactical_backend {
+        server tactical-service:8000 max_fails=3 fail_timeout=30s;
+    }
+    
+    upstream risk_backend {
+        server risk-service:8000 max_fails=3 fail_timeout=30s;
+    }
+    
+    server {
+        listen 80;
+        server_name _;
+        
+        # Health check endpoint
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Strategic MARL routing
+        location /api/strategic/ {
+            proxy_pass http://strategic_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 5s;
+            proxy_read_timeout 10s;
+        }
+        
+        # Tactical MARL routing
+        location /api/tactical/ {
+            proxy_pass http://tactical_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 5s;
+            proxy_read_timeout 10s;
+        }
+        
+        # Risk Management routing
+        location /api/risk/ {
+            proxy_pass http://risk_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 5s;
+            proxy_read_timeout 10s;
+        }
+    }
+
+---
+# Prometheus configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: grandmodel
+  labels:
+    app: prometheus
+    component: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+      
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager-service:9093
+              
+    scrape_configs:
+      # Strategic MARL metrics
+      - job_name: 'strategic-marl'
+        static_configs:
+          - targets: ['strategic-service:9090']
+        metrics_path: '/metrics'
+        scrape_interval: 5s
+        scrape_timeout: 5s
+        
+      # Tactical MARL metrics
+      - job_name: 'tactical-marl'
+        static_configs:
+          - targets: ['tactical-service:9090']
+        metrics_path: '/metrics'
+        scrape_interval: 5s
+        scrape_timeout: 5s
+        
+      # Risk Management metrics
+      - job_name: 'risk-management'
+        static_configs:
+          - targets: ['risk-service:9090']
+        metrics_path: '/metrics'
+        scrape_interval: 5s
+        scrape_timeout: 5s
+        
+      # Kubernetes cluster metrics
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+  # Alert rules
+  alerts.yml: |
+    groups:
+      - name: grandmodel.rules
+        rules:
+          # Latency alerts
+          - alert: HighInferenceLatency
+            expr: inference_latency_ms{quantile="0.99"} > 5
+            for: 30s
+            labels:
+              severity: critical
+              component: "{{ $labels.component }}"
+            annotations:
+              summary: "High inference latency detected"
+              description: "P99 inference latency is {{ $value }}ms, exceeding 5ms target"
+              
+          - alert: VeryHighInferenceLatency
+            expr: inference_latency_ms{quantile="0.99"} > 10
+            for: 10s
+            labels:
+              severity: critical
+              component: "{{ $labels.component }}"
+            annotations:
+              summary: "Very high inference latency detected"
+              description: "P99 inference latency is {{ $value }}ms, significantly exceeding target"
+              
+          # Memory alerts
+          - alert: HighMemoryUsage
+            expr: (process_resident_memory_bytes / 1024 / 1024) > 400
+            for: 2m
+            labels:
+              severity: warning
+              component: "{{ $labels.component }}"
+            annotations:
+              summary: "High memory usage detected"
+              description: "Memory usage is {{ $value }}MB, approaching 512MB limit"
+              
+          - alert: CriticalMemoryUsage
+            expr: (process_resident_memory_bytes / 1024 / 1024) > 480
+            for: 1m
+            labels:
+              severity: critical
+              component: "{{ $labels.component }}"
+            annotations:
+              summary: "Critical memory usage detected"
+              description: "Memory usage is {{ $value }}MB, very close to 512MB limit"
+              
+          # Error rate alerts
+          - alert: HighErrorRate
+            expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+            for: 2m
+            labels:
+              severity: warning
+              component: "{{ $labels.component }}"
+            annotations:
+              summary: "High error rate detected"
+              description: "Error rate is {{ $value | humanizePercentage }}, exceeding 1% threshold"
+              
+          # Service availability alerts
+          - alert: ServiceDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+              component: "{{ $labels.job }}"
+            annotations:
+              summary: "Service is down"
+              description: "{{ $labels.job }} service is not responding to health checks"
+
+---
+# Grafana dashboard configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: grandmodel
+  labels:
+    app: grafana
+    component: monitoring
+data:
+  grandmodel-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "GrandModel Production Dashboard - Agent 5",
+        "tags": ["grandmodel", "production", "agent5"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Inference Latency (P99)",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "inference_latency_ms{quantile=\"0.99\"}",
+                "legendFormat": "{{component}} P99 Latency"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 3},
+                    {"color": "red", "value": 5}
+                  ]
+                },
+                "unit": "ms"
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Memory Usage",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "process_resident_memory_bytes / 1024 / 1024",
+                "legendFormat": "{{component}} Memory (MB)"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Request Rate",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total[5m])",
+                "legendFormat": "{{component}} Requests/sec"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Error Rate",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])",
+                "legendFormat": "{{component}} Error Rate"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "5s"
+      }
+    }

@@ -1,0 +1,14 @@
+{
+  "execution_info": {
+    "timestamp": "20250717_074800",
+    "agent": "AGENT_3_VECTORBT_BACKTESTING_ENGINE",
+    "mission": "Comprehensive VectorBT backtesting with realistic execution"
+  },
+  "strategy_comparison": {
+    "Conservative": {
+      "execution_time": 5.610620021820068,
+      "total_return": -0.09259227306517034,
+      "sharpe_ratio": -1.6015880116141106,
+      "max_drawdown": -0.26422686101124027,
+      "win_rate": 0.34201954397394135,
+      "total_trades": 

@@ -1,0 +1,53 @@
+{
+  "execution_info": {
+    "timestamp": "20250717_074748",
+    "execution_time_seconds": 9.348056532999635,
+    "bars_processed": 10000,
+    "processing_rate_bars_per_second": 1069.7410702105765
+  },
+  "configuration": {
+    "mlmi_threshold": 0.01,
+    "nwrqk_threshold": 0.001,
+    "fvg_min_size": 0.0005,
+    "time_window_bars": 10
+  },
+  "individual_signal_counts": {
+    "mlmi": 1,
+    "nwrqk": 1687,
+    "fvg": 380
+  },
+  "pattern_detection_results": {
+    "total_patterns": 1,
+    "patterns_by_type": {
+      "TYPE_3": 1
+    },
+    "patterns_by_direction": {
+      "SHORT": 1
+    },
+    "average_signal_strength": 0.00607621565790262,
+    "average_bars_to_complete": 5.0,
+    "average_confidence": 0.15425335096053183
+  },
+  "performance_metrics": {
+    "total_patterns_detected": "1",
+    "patterns_by_type": {
+      "TYPE_1": "0",
+      "TYPE_2": "0",
+      "TYPE_3": "1",
+      "TYPE_4": "0"
+    },
+    "individual_signals": {
+      "mlmi": 1,
+      "nwrqk": 1687,
+      "fvg": 380
+    },
+    "avg_detection_time_ms": 9348.029833000055,
+    "signals_processed": 10000
+  },
+  "data_quality": {
+    "start_date": "2025-05-12 20:25:00",
+    "end_date": "2025-07-02 10:40:00",
+    "total_bars": 10000,
+    "date_range_days": 50
+  }
+}

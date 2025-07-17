@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-07-15 07:56:47",
+  "project_root": "/home/QuantNova/GrandModel",
+  "config_validation": {
+    "main": false,
+    "ci": false,
+    "local": false,
+    "performance": false
+  },
+  "marker_validation": {
+    "conftest_exists": true,
+    "marker_validation_error": true
+  },
+  "test_counts": {
+    "unit": 0,
+    "integration": 0,
+    "performance": 0,
+    "slow": 0,
+    "strategic": 0,
+    "tactical": 0,
+    "risk": 0,
+    "security": 0,
+    "xai": 0,
+    "memory_intensive": 0,
+    "cpu_intensive": 0,
+    "smoke": 0
+  },
+  "performance_estimates": {
+    "improvements": {},
+    "baseline_total": 0,
+    "optimized_total": 0,
+    "overall_improvement": 0
+  },
+  "summary": {
+    "total_tests": 0,
+    "config_files_valid": 0,
+    "estimated_time_savings": 0,
+    "baseline_execution_time": 0,
+    "optimized_execution_time": 0
+  }
+}

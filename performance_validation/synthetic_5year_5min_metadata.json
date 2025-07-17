@@ -1,0 +1,15 @@
+{
+  "dataset_info": {
+    "start_date": "2019-01-01",
+    "end_date": "2024-01-01",
+    "interval_minutes": 5,
+    "total_records": 525888,
+    "file_size_mb": 30.725539207458496
+  },
+  "generation_stats": {
+    "total_records": 525888,
+    "memory_usage_mb": 204.66796875,
+    "generation_time_seconds": 32.332109451293945,
+    "records_per_second": 16265.192990027866
+  }
+}

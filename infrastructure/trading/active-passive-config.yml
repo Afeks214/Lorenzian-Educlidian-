@@ -1,0 +1,536 @@
+# Active-Passive Trading Engine Configuration
+# AGENT 2: Trading Engine RTO Specialist
+# Target: Reduce RTO from 7.8s to <5s
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-engine-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: trading-engine
+    agent: agent2-rto-specialist
+data:
+  active-passive.yml: |
+    # Active-Passive Configuration
+    deployment:
+      mode: "active-passive"
+      instances:
+        active:
+          replicas: 1
+          priority: 100
+          health_check_interval: 1s
+          startup_timeout: 30s
+          ready_timeout: 5s
+        passive:
+          replicas: 2
+          priority: 50
+          health_check_interval: 2s
+          startup_timeout: 15s
+          ready_timeout: 2s
+          warmup_enabled: true
+          preload_models: true
+    
+    # Hot Standby Configuration
+    hot_standby:
+      enabled: true
+      sync_interval: 250ms
+      redis_sync_key: "trading_engine:state"
+      model_warmup_on_startup: true
+      jit_precompiled_models: true
+      ready_within_seconds: 1
+      aggressive_preloading: true
+      background_warmup: true
+      connection_pool_size: 20
+      batch_sync_enabled: true
+      compression_enabled: true
+      
+    # Failover Configuration
+    failover:
+      detection_threshold: 2
+      detection_interval: 500ms
+      automatic_failover: true
+      manual_override: false
+      circuit_breaker_enabled: true
+      max_failover_attempts: 3
+      backoff_multiplier: 1.5
+      fast_failover_enabled: true
+      consensus_timeout: 1s
+      leader_election_timeout: 2s
+      
+    # Performance Targets
+    performance:
+      startup_time_target: 3s
+      model_loading_target: 1s
+      redis_sync_target: 250ms
+      health_check_response: 50ms
+      rto_target: 4s
+      failover_detection_target: 1s
+      state_sync_target: 500ms
+      warmup_target: 2s
+      
+    # Redis State Synchronization
+    redis:
+      enabled: true
+      cluster_mode: false
+      sentinel_mode: false
+      url: "redis://redis-service:6379/3"
+      sync_frequency: 250ms
+      connection_pool_size: 20
+      timeout: 500ms
+      retry_attempts: 2
+      keepalive_enabled: true
+      pipeline_enabled: true
+      compression_enabled: true
+      
+    # Health Check Configuration
+    health_checks:
+      startup_probe:
+        path: "/health/startup"
+        initial_delay: 2s
+        period: 1s
+        timeout: 500ms
+        failure_threshold: 10
+        success_threshold: 1
+      liveness_probe:
+        path: "/health/live"
+        initial_delay: 10s
+        period: 5s
+        timeout: 2s
+        failure_threshold: 2
+        success_threshold: 1
+      readiness_probe:
+        path: "/health/ready"
+        initial_delay: 3s
+        period: 2s
+        timeout: 1s
+        failure_threshold: 2
+        success_threshold: 1
+      failover_probe:
+        path: "/health/failover"
+        initial_delay: 1s
+        period: 500ms
+        timeout: 250ms
+        failure_threshold: 2
+        success_threshold: 1
+    
+    # Model Preloading Configuration
+    model_preloading:
+      enabled: true
+      jit_compilation: true
+      warmup_iterations: 10
+      models:
+        - name: "position_sizing_agent"
+          path: "/app/models/jit_optimized/position_sizing_agent_jit.pt"
+          warmup_input_shape: [1, 47]
+          critical: true
+        - name: "stop_target_agent"
+          path: "/app/models/jit_optimized/stop_target_agent_jit.pt"
+          warmup_input_shape: [1, 47]
+          critical: true
+        - name: "risk_monitor_agent"
+          path: "/app/models/jit_optimized/risk_monitor_agent_jit.pt"
+          warmup_input_shape: [1, 47]
+          critical: true
+        - name: "portfolio_optimizer_agent"
+          path: "/app/models/jit_optimized/portfolio_optimizer_agent_jit.pt"
+          warmup_input_shape: [1, 47]
+          critical: true
+        - name: "routing_agent"
+          path: "/app/models/jit_optimized/routing_agent_jit.pt"
+          warmup_input_shape: [1, 55]
+          critical: true
+        - name: "centralized_critic"
+          path: "/app/models/jit_optimized/centralized_critic_jit.pt"
+          warmup_input_shape: [1, 47]
+          critical: true
+    
+    # Circuit Breaker Configuration
+    circuit_breaker:
+      enabled: true
+      failure_threshold: 3
+      timeout_seconds: 15
+      half_open_max_calls: 5
+      half_open_timeout: 5s
+      exponential_backoff: true
+      max_timeout: 60s
+      fast_recovery: true
+      adaptive_timeout: true
+      ml_prediction_enabled: true
+      
+    # Monitoring and Alerting
+    monitoring:
+      metrics_enabled: true
+      prometheus_port: 9090
+      log_level: "INFO"
+      performance_tracking: true
+      alert_on_rto_violation: true
+      alert_on_failover: true
+      
+    # Environment-specific Overrides
+    environments:
+      development:
+        active:
+          replicas: 1
+        passive:
+          replicas: 1
+        performance:
+          startup_time_target: 10s
+          rto_target: 10s
+      production:
+        active:
+          replicas: 2
+        passive:
+          replicas: 3
+        performance:
+          startup_time_target: 5s
+          rto_target: 5s
+          
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-engine-active
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: trading-engine
+    role: active
+    agent: agent2-rto-specialist
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: trading-engine
+      role: active
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: trading-engine
+        role: active
+        priority: "100"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9090"
+        agent2.rto.target: "5s"
+        config.hash: "{{ .Values.configHash }}"
+    spec:
+      serviceAccountName: grandmodel-sa
+      priorityClassName: critical-priority
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: trading-engine
+        image: grandmodel/trading-engine:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: INSTANCE_ROLE
+          value: "active"
+        - name: INSTANCE_PRIORITY
+          value: "100"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379/3"
+        - name: MODEL_PRELOADING_ENABLED
+          value: "true"
+        - name: JIT_MODELS_PATH
+          value: "/app/models/jit_optimized"
+        - name: STARTUP_TIMEOUT
+          value: "30s"
+        - name: READY_TIMEOUT
+          value: "5s"
+        - name: CIRCUIT_BREAKER_ENABLED
+          value: "true"
+        - name: PERFORMANCE_TARGET_RTO
+          value: "5s"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: METRICS_ENABLED
+          value: "true"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 15
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+          successThreshold: 1
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: models-volume
+          mountPath: /app/models
+          readOnly: true
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: redis-config
+          mountPath: /app/config/redis
+          readOnly: true
+      volumes:
+      - name: config-volume
+        configMap:
+          name: trading-engine-config
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: models-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: logs-pvc
+      - name: tmp-volume
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: redis-config
+        configMap:
+          name: grandmodel-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values: ["trading-engine"]
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: workload-type
+                operator: In
+                values: ["trading-engine", "compute-intensive"]
+      tolerations:
+      - key: "grandmodel.com/trading-engine"
+        operator: "Equal"
+        value: "dedicated"
+        effect: "NoSchedule"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-engine-passive
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: trading-engine
+    role: passive
+    agent: agent2-rto-specialist
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: trading-engine
+      role: passive
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: trading-engine
+        role: passive
+        priority: "50"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9090"
+        agent2.rto.target: "5s"
+        config.hash: "{{ .Values.configHash }}"
+    spec:
+      serviceAccountName: grandmodel-sa
+      priorityClassName: high-priority
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: trading-engine
+        image: grandmodel/trading-engine:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: INSTANCE_ROLE
+          value: "passive"
+        - name: INSTANCE_PRIORITY
+          value: "50"
+        - name: REDIS_URL
+          value: "redis://redis-service:6379/3"
+        - name: MODEL_PRELOADING_ENABLED
+          value: "true"
+        - name: JIT_MODELS_PATH
+          value: "/app/models/jit_optimized"
+        - name: STARTUP_TIMEOUT
+          value: "15s"
+        - name: READY_TIMEOUT
+          value: "2s"
+        - name: CIRCUIT_BREAKER_ENABLED
+          value: "true"
+        - name: WARMUP_ENABLED
+          value: "true"
+        - name: PERFORMANCE_TARGET_RTO
+          value: "5s"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: METRICS_ENABLED
+          value: "true"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 8
+          successThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 3
+          successThreshold: 1
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: models-volume
+          mountPath: /app/models
+          readOnly: true
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: redis-config
+          mountPath: /app/config/redis
+          readOnly: true
+      volumes:
+      - name: config-volume
+        configMap:
+          name: trading-engine-config
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: models-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: logs-pvc
+      - name: tmp-volume
+        emptyDir:
+          sizeLimit: 512Mi
+      - name: redis-config
+        configMap:
+          name: grandmodel-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values: ["trading-engine"]
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: workload-type
+                operator: In
+                values: ["trading-engine", "compute-intensive"]
+      tolerations:
+      - key: "grandmodel.com/trading-engine"
+        operator: "Equal"
+        value: "dedicated"
+        effect: "NoSchedule"

@@ -1,0 +1,23 @@
+{
+  "report_metadata": {
+    "agent": "AGENT 4 - Performance Analytics",
+    "generation_timestamp": "2025-07-16T12:00:00.000000"
+  },
+  "individual_strategy_analysis": {
+    "Strategy_A": {
+      "comprehensive_metrics": {
+        "total_return": 16.7,
+        "sharpe_ratio": 2.0,
+        "max_drawdown": -8.9,
+        "win_rate": 59.3,
+        "profit_factor": 1.45,
+        "volatility": 14.2,
+        "calmar_ratio": 1.87,
+        "sortino_ratio": 2.5
+      },
+      "original_data": {
+        "total_trades": 167
+      }
+    }
+  }
+}

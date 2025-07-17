@@ -1,0 +1,11 @@
+{
+  "system_name": "grandmodel-nq-system",
+  "execution_time": "0:00:50.528646",
+  "processed_bars": 3370,
+  "detected_synergies": 17,
+  "generated_decisions": 51,
+  "executed_trades": 17,
+  "processing_speed": "66.7 bars/second",
+  "data_period": "2024-01-01 to 2024-07-01",
+  "system_status": "COMPLETED"
+}

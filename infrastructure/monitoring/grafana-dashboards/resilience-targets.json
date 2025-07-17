@@ -1,0 +1,295 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "🎯 Resilience Targets & RTO/RPO Monitoring",
+    "description": "Comprehensive monitoring of Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO) with SLA compliance tracking",
+    "tags": ["resilience", "rto", "rpo", "sla", "compliance"],
+    "timezone": "UTC",
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🚨 RTO Compliance Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(rto_actual_seconds) / avg(rto_target_seconds)",
+            "legendFormat": "RTO Compliance Ratio",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.8},
+                {"color": "green", "value": 1.0}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "📊 RPO Compliance Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(rpo_actual_seconds) / avg(rpo_target_seconds)",
+            "legendFormat": "RPO Compliance Ratio",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.8},
+                {"color": "green", "value": 1.0}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "⚡ Recovery Time Objectives (RTO)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rto_target_seconds",
+            "legendFormat": "RTO Target",
+            "refId": "A"
+          },
+          {
+            "expr": "rto_actual_seconds",
+            "legendFormat": "RTO Actual",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "s",
+            "label": "Seconds"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "📈 Recovery Point Objectives (RPO)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rpo_target_seconds",
+            "legendFormat": "RPO Target",
+            "refId": "A"
+          },
+          {
+            "expr": "rpo_actual_seconds",
+            "legendFormat": "RPO Actual",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "unit": "s",
+            "label": "Seconds"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "🎯 SLA Compliance Heatmap",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sla_compliance_percentage by (service, sla_type)",
+            "legendFormat": "{{service}} - {{sla_type}}",
+            "refId": "A"
+          }
+        ],
+        "heatmap": {
+          "hideZeroBuckets": true,
+          "highlightCards": true,
+          "cardColor": "#b4ff00",
+          "colorScale": "sqrt",
+          "cardPadding": 2,
+          "cardRound": 2
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "🔄 Disaster Recovery Test Results",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "dr_test_success_rate by (scenario, test_type)",
+            "legendFormat": "{{scenario}} - {{test_type}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "⚠️ Resilience Incidents Timeline",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"resilience-monitor\"} |= \"incident\" | json",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "showCommonLabels": false,
+          "wrapLogMessage": false,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "🔍 Failover Detection Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(failover_detection_time_seconds)",
+            "legendFormat": "Avg Detection Time",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 30}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 32}
+      },
+      {
+        "id": 9,
+        "title": "💾 Data Backup Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(backup_success_total[5m]) / rate(backup_total[5m])",
+            "legendFormat": "Backup Success Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.95},
+                {"color": "green", "value": 0.99}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 32}
+      },
+      {
+        "id": 10,
+        "title": "🔧 Self-Healing Actions",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(self_healing_actions_total[5m])",
+            "legendFormat": "Self-Healing Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 10}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 32}
+      },
+      {
+        "id": 11,
+        "title": "📈 System Availability",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(up)",
+            "legendFormat": "System Availability",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.995},
+                {"color": "green", "value": 0.999}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 32}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Resilience Incidents",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*Resilience.*\"}",
+          "iconColor": "red",
+          "titleFormat": "{{alertname}}",
+          "textFormat": "{{description}}"
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "service",
+        "type": "query",
+        "query": "label_values(up, job)",
+        "refresh": "on_time_range_change",
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  }
+}

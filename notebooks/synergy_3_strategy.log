@@ -1,0 +1,24 @@
+2025-07-09 21:56:23,216 - Synergy3Strategy - INFO - [2897489038.py:229] - Configuration validated successfully
+2025-07-09 21:56:23,218 - Synergy3Strategy - INFO - [2897489038.py:255] - Strategy configuration initialized successfully
+2025-07-09 21:56:23,221 - Synergy3Strategy - INFO - [2897489038.py:283] - ============================================================
+2025-07-09 21:56:23,224 - Synergy3Strategy - INFO - [2897489038.py:284] - SYNERGY 3: NW-RQK → MLMI → FVG STRATEGY
+2025-07-09 21:56:23,227 - Synergy3Strategy - INFO - [2897489038.py:285] - Production-grade implementation initialized
+2025-07-09 21:56:23,230 - Synergy3Strategy - INFO - [2897489038.py:286] - ============================================================
+2025-07-09 21:56:23,356 - Synergy3Strategy - INFO - [3615366201.py:4] - Starting data loading process...
+2025-07-09 21:56:23,359 - Synergy3Strategy - INFO - [3615366201.py:15] - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-09 21:56:23,973 - Synergy3Strategy - INFO - [3615366201.py:69] - Parsing timestamps for 30m data...
+2025-07-10 06:36:21,726 - Synergy3Strategy - INFO - [2897489038.py:229] - Configuration validated successfully
+2025-07-10 06:36:21,730 - Synergy3Strategy - INFO - [2897489038.py:255] - Strategy configuration initialized successfully
+2025-07-10 06:36:21,731 - Synergy3Strategy - INFO - [2897489038.py:283] - ============================================================
+2025-07-10 06:36:21,732 - Synergy3Strategy - INFO - [2897489038.py:284] - SYNERGY 3: NW-RQK → MLMI → FVG STRATEGY
+2025-07-10 06:36:21,732 - Synergy3Strategy - INFO - [2897489038.py:285] - Production-grade implementation initialized
+2025-07-10 06:36:21,733 - Synergy3Strategy - INFO - [2897489038.py:286] - ============================================================
+2025-07-10 06:36:21,782 - Synergy3Strategy - INFO - [3615366201.py:4] - Starting data loading process...
+2025-07-10 06:36:21,784 - Synergy3Strategy - INFO - [3615366201.py:15] - Loading 30m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 5 min - ETH.csv
+2025-07-10 06:36:22,141 - Synergy3Strategy - INFO - [3615366201.py:69] - Parsing timestamps for 30m data...
+2025-07-10 06:36:41,735 - Synergy3Strategy - INFO - [3615366201.py:110] - Timestamp parsing complete: 100.0% success (354748/354748)
+2025-07-10 06:36:41,774 - Synergy3Strategy - INFO - [3615366201.py:139] - Successfully loaded 354748 rows of 30m data
+2025-07-10 06:36:41,774 - Synergy3Strategy - INFO - [3615366201.py:19] - Loading 5m data from /home/QuantNova/AlgoSpace-8/notebooks/notebook data/@CL - 30 min - ETH.csv
+2025-07-10 06:36:41,837 - Synergy3Strategy - ERROR - [3615366201.py:143] - Error loading 5m data: Missing required columns in 5m data: ['low']
+2025-07-10 06:36:41,838 - Synergy3Strategy - ERROR - [3615366201.py:43] - Critical error in data loading: Missing required columns in 5m data: ['low']
+2025-07-10 06:36:41,839 - Synergy3Strategy - ERROR - [3615366201.py:465] - Failed to load data: Missing required columns in 5m data: ['low']

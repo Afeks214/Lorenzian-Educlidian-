@@ -1,0 +1,344 @@
+{
+  "metadata": {
+    "timestamp": "20250717_074229",
+    "agent": "AGENT_6_OUT_OF_SAMPLE_TESTING",
+    "mission": "Conduct rigorous out-of-sample testing (3 Years Backtest)",
+    "config": {
+      "training_period_months": 24,
+      "testing_period_months": 36,
+      "walk_forward_train_months": 6,
+      "walk_forward_test_months": 3,
+      "primary_timeframe": "30min",
+      "validation_timeframes": [
+        "1h",
+        "4h"
+      ],
+      "min_trades_per_period": 5
+    }
+  },
+  "walk_forward_analysis": {
+    "TYPE1": {
+      "total_periods": 10,
+      "profitable_periods": 6,
+      "average_return": 53.97110022530111,
+      "total_return": 539.7110022530111,
+      "return_volatility": 119.47163358637822,
+      "average_sharpe": 1.1395268840424913,
+      "total_trades": "0",
+      "average_trades_per_period": 0.0,
+      "best_period": 348.3414762027762,
+      "worst_period": -66.74819920602182,
+      "consistency_score": 0.45174824019025317
+    },
+    "TYPE2": {
+      "total_periods": 10,
+      "profitable_periods": 6,
+      "average_return": 56.288944848687564,
+      "total_return": 562.8894484868756,
+      "return_volatility": 125.54706988062725,
+      "average_sharpe": 1.1480121175680913,
+      "total_trades": "0",
+      "average_trades_per_period": 0.0,
+      "best_period": 372.93035015728174,
+      "worst_period": -66.3483845359797,
+      "consistency_score": 0.44834933146753847
+    },
+    "TYPE3": {
+      "total_periods": 10,
+      "profitable_periods": 6,
+      "average_return": 58.9193815994749,
+      "total_return": 589.193815994749,
+      "return_volatility": 121.59546519001987,
+      "average_sharpe": 1.317972557554163,
+      "total_trades": "0",
+      "average_trades_per_period": 0.0,
+      "best_period": 369.1606325073471,
+      "worst_period": -49.837161664945114,
+      "consistency_score": 0.4845524584934176
+    },
+    "TYPE4": {
+      "total_periods": 6,
+      "profitable_periods": 4,
+      "average_return": 102.71681296719362,
+      "total_return": 616.3008778031617,
+      "return_volatility": 143.14178370584565,
+      "average_sharpe": 1.87833459375252,
+      "total_trades": "0",
+      "average_trades_per_period": 0.0,
+      "best_period": 352.1614605496179,
+      "worst_period": -45.144564242803284,
+      "consistency_score": 0.7175879069543748
+    }
+  },
+  "multi_timeframe_validation": {
+    "1h": {
+      "TYPE1": {
+        "total_return": 453.51450242998254,
+        "sharpe_ratio": 1.1333254469459642,
+        "max_drawdown": 87.19879845301196,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "1h"
+      },
+      "TYPE2": {
+        "total_return": 467.4049577855398,
+        "sharpe_ratio": 1.1387409199201426,
+        "max_drawdown": 87.23460638490407,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "1h"
+      },
+      "TYPE3": {
+        "total_return": 405.41510278524015,
+        "sharpe_ratio": 1.1041070305054463,
+        "max_drawdown": 87.05972327637961,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "1h"
+      },
+      "TYPE4": {
+        "total_return": 246.62657162934752,
+        "sharpe_ratio": 1.0155156244494024,
+        "max_drawdown": 86.4276591191775,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "1h"
+      }
+    },
+    "4h": {
+      "TYPE1": {
+        "total_return": 485.1231963557459,
+        "sharpe_ratio": 1.1447463095449602,
+        "max_drawdown": 86.90719467031937,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "4h"
+      },
+      "TYPE2": {
+        "total_return": 471.10447932184655,
+        "sharpe_ratio": 1.1393073350880245,
+        "max_drawdown": 86.87281253281948,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "4h"
+      },
+      "TYPE3": {
+        "total_return": 500.6349088121632,
+        "sharpe_ratio": 1.1489682874137568,
+        "max_drawdown": 86.94338174222952,
+        "total_trades": 0,
+        "win_rate": NaN,
+        "timeframe": "4h"
+      }
+    }
+  },
+  "performance_consistency": {
+    "TYPE1": {
+      "return_stability": {
+        "mean": 53.97110022530111,
+        "std": 119.47163358637822,
+        "min": -66.74819920602182,
+        "max": 348.3414762027762,
+        "consistency_ratio": 0.45174824019025317
+      },
+      "sharpe_stability": {
+        "mean": 1.1395268840424913,
+        "std": 2.0310270107513335,
+        "positive_periods": 6,
+        "total_periods": 10
+      },
+      "drawdown_control": {
+        "mean": 59.507911736111694,
+        "worst": 74.1992898874934,
+        "best": 45.6333497981531,
+        "consistency": 9.692027268668733
+      },
+      "regime_performance": {
+        "bull_performance": 118.15928289787432,
+        "bear_performance": -42.3111737835587,
+        "sideways_performance": 0,
+        "regime_counts": {
+          "bull": 6,
+          "bear": 4,
+          "sideways": 0
+        }
+      }
+    },
+    "TYPE2": {
+      "return_stability": {
+        "mean": 56.288944848687564,
+        "std": 125.54706988062725,
+        "min": -66.3483845359797,
+        "max": 372.93035015728174,
+        "consistency_ratio": 0.44834933146753847
+      },
+      "sharpe_stability": {
+        "mean": 1.1480121175680913,
+        "std": 2.054538679570051,
+        "positive_periods": 6,
+        "total_periods": 10
+      },
+      "drawdown_control": {
+        "mean": 59.515499495888136,
+        "worst": 74.12967197355792,
+        "best": 45.610856727170365,
+        "consistency": 9.672135279865463
+      },
+      "regime_performance": {
+        "bull_performance": 122.41667566873723,
+        "bear_performance": -42.90265138138695,
+        "sideways_performance": 0,
+        "regime_counts": {
+          "bull": 6,
+          "bear": 4,
+          "sideways": 0
+        }
+      }
+    },
+    "TYPE3": {
+      "return_stability": {
+        "mean": 58.9193815994749,
+        "std": 121.59546519001987,
+        "min": -49.837161664945114,
+        "max": 369.1606325073471,
+        "consistency_ratio": 0.4845524584934176
+      },
+      "sharpe_stability": {
+        "mean": 1.317972557554163,
+        "std": 1.910114179035281,
+        "positive_periods": 7,
+        "total_periods": 10
+      },
+      "drawdown_control": {
+        "mean": 58.060648706441896,
+        "worst": 74.76323066009188,
+        "best": 36.00671321644121,
+        "consistency": 10.989907042595554
+      },
+      "regime_performance": {
+        "bull_performance": 121.12376032569703,
+        "bear_performance": -44.28298936517317,
+        "sideways_performance": -4.699777863913783,
+        "regime_counts": {
+          "bull": 6,
+          "bear": 3,
+          "sideways": 1
+        }
+      }
+    },
+    "TYPE4": {
+      "return_stability": {
+        "mean": 102.71681296719362,
+        "std": 143.14178370584565,
+        "min": -45.144564242803284,
+        "max": 352.1614605496179,
+        "consistency_ratio": 0.7175879069543748
+      },
+      "sharpe_stability": {
+        "mean": 1.87833459375252,
+        "std": 2.2214194603529305,
+        "positive_periods": 4,
+        "total_periods": 6
+      },
+      "drawdown_control": {
+        "mean": 52.168222514796184,
+        "worst": 73.97627247714725,
+        "best": 28.24620695992566,
+        "consistency": 16.69519477904619
+      },
+      "regime_performance": {
+        "bull_performance": 173.41058205735175,
+        "bear_performance": -38.67072521312261,
+        "sideways_performance": 0,
+        "regime_counts": {
+          "bull": 4,
+          "bear": 2,
+          "sideways": 0
+        }
+      }
+    }
+  },
+  "regime_analysis": {
+    "TYPE1": {
+      "performance_trend": "improving",
+      "trend_strength": 6.41635868960801,
+      "stability_score": 0.31117533170286543
+    },
+    "TYPE2": {
+      "performance_trend": "improving",
+      "trend_strength": 6.006585837654551,
+      "stability_score": 0.3095588348242264
+    },
+    "TYPE3": {
+      "performance_trend": "improving",
+      "trend_strength": 5.924410413713738,
+      "stability_score": 0.32639631945721914
+    },
+    "TYPE4": {
+      "performance_trend": "improving",
+      "trend_strength": 4.37967280869732,
+      "stability_score": 0.4177881691230588
+    }
+  },
+  "trustworthiness_assessment": {
+    "TYPE1": {
+      "trustworthiness_score": 0.0,
+      "positive_factors": [],
+      "negative_factors": [
+        "Low return consistency",
+        "Inconsistent Sharpe ratios"
+      ],
+      "recommendation": "CAUTION"
+    },
+    "TYPE2": {
+      "trustworthiness_score": 0.0,
+      "positive_factors": [],
+      "negative_factors": [
+        "Low return consistency",
+        "Inconsistent Sharpe ratios"
+      ],
+      "recommendation": "CAUTION"
+    },
+    "TYPE3": {
+      "trustworthiness_score": 0.0,
+      "positive_factors": [],
+      "negative_factors": [
+        "Low return consistency",
+        "Inconsistent Sharpe ratios"
+      ],
+      "recommendation": "CAUTION"
+    },
+    "TYPE4": {
+      "trustworthiness_score": 0.0,
+      "positive_factors": [],
+      "negative_factors": [
+        "Low return consistency",
+        "Inconsistent Sharpe ratios"
+      ],
+      "recommendation": "CAUTION"
+    }
+  },
+  "recommendations": {
+    "best_strategies": [
+      {
+        "strategy": "TYPE4",
+        "score": 73.70834282615246,
+        "reason": "High risk-adjusted consistency score: 73.71"
+      },
+      {
+        "strategy": "TYPE3",
+        "score": 28.549531206937395,
+        "reason": "High risk-adjusted consistency score: 28.55"
+      }
+    ],
+    "risk_warnings": [
+      "Results based on limited historical data - consider additional validation"
+    ],
+    "deployment_suggestions": [
+      "Start with small position sizes and gradually increase based on live performance"
+    ],
+    "further_analysis": [
+      "Conduct additional stress testing under extreme market conditions"
+    ]
+  }
+}

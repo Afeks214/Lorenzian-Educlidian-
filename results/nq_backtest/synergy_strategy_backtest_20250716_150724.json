@@ -1,0 +1,22 @@
+{
+  "backtest_period": {
+    "start": "2024-01-02 14:45:00",
+    "end": "2024-07-01 23:55:00",
+    "total_bars": 12836
+  },
+  "strategy_performance": {
+    "total_patterns": 35,
+    "total_trades": 34,
+    "total_return_pct": -2.440493236227776,
+    "sharpe_ratio": -2.9893305533855634,
+    "max_drawdown_pct": 3.714050955754869,
+    "win_rate_pct": 44.11764705882353,
+    "profit_factor": 0.560412648623969
+  },
+  "trade_analysis": {
+    "profitable_trades": 15,
+    "losing_trades": 19,
+    "average_profit": 207.4192647842789,
+    "average_loss": -292.19906357852267
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "validation_timestamp": "2025-07-16T16:08:07.496310",
+  "test_results": {
+    "performance_analytics": {
+      "status": "PASSED",
+      "tests": {
+        "returns_calculated": true,
+        "sharpe_calculated": true,
+        "drawdown_analyzed": true,
+        "trade_stats_generated": true,
+        "time_analysis_complete": true,
+        "risk_metrics_calculated": true
+      },
+      "sample_metrics": {
+        "total_return": 0.191624038396782,
+        "sharpe_ratio": 0.6600186210344504,
+        "max_drawdown": -0.2550683819399943
+      }
+    },
+    "risk_management": {
+      "status": "PASSED",
+      "tests": {
+        "trade_validation_works": true,
+        "position_size_check": true,
+        "stress_test_works": true,
+        "risk_metrics_calculated": true,
+        "risk_report_generated": true
+      },
+      "sample_validation": {
+        "approved": true,
+        "adjustments": {},
+        "risk_checks": {
+          "position_size": {
+            "passed": true,
+            "current_fraction": 5e-05,
+            "limit": 0.1,
+            "adjustments": {}
+          },
+          "total_exposure": {
+            "passed": true,
+            "current_exposure": 5e-05,
+            "limit": 1.0,
+            "adjustments": {}
+          },
+          "daily_loss": {
+            "passed": true,
+            "daily_loss_fraction": 0,
+            "limit": 0.02,
+            "daily_pnl": 0
+          },
+          "correlation": {
+            "passed": true,
+            "high_correlation_positions": [],
+            "threshold": 0.7
+          },
+          "var": {
+            "passed": true,
+            "reason": "Insufficient history for VaR calculation"
+          }
+        },
+        "warnings": [],
+        "timestamp": "2025-07-16T16:08:07.545533"
+      },
+      "stress_scenarios_tested": 5
+    },
+    "reporting_system": {
+      "status": "PASSED",
+      "tests": {
+        "comprehensive_report_generated": true,
+        "executive_summary_created": true,
+        "performance_analysis_included": true,
+        "recommendations_generated": true,
+        "report_export_works": true
+      },
+      "report_sections": [
+        "report_metadata",
+        "executive_summary",
+        "performance_analysis",
+        "risk_analysis",
+        "trade_attribution",
+        "charts_generated",
+        "recommendations"
+      ]
+    },
+    "data_quality": {
+      "status": "PASSED",
+      "tests": {
+        "quality_score_calculated": true,
+        "missing_data_detected": true,
+        "outliers_detected": true,
+        "consistency_checks_performed": true,
+        "recommendations_generated": true,
+        "data_integrity_assessed": true
+      },
+      "quality_score": 93.1,
+      "issues_detected": 3
+    },
+    "framework_integration": {
+      "status": "PASSED",
+      "tests": {
+        "framework_initialized": true,
+        "strategy_function_works": true,
+        "performance_analyzer_integrated": true,
+        "risk_manager_integrated": true,
+        "reporter_integrated": true,
+        "data_quality_integrated": true,
+        "signals_generated": true
+      },
+      "components_integrated": 6
+    },
+    "synergy_integration": {
+      "status": "FAILED",
+      "tests": {
+        "synergy_backtest_file_exists": true,
+        "framework_directory_exists": true,
+        "results_directories_created": true,
+        "synergy_class_importable": false,
+        "synergy_class_initializes": false,
+        "strategy_function_created": false
+      }
+    }
+  },
+  "overall_status": "FAILED"
+}

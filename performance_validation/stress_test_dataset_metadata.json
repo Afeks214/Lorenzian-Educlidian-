@@ -1,0 +1,19 @@
+{
+  "stress_test_results": {
+    "file_path": "performance_validation/stress_test_dataset.csv",
+    "total_records": 105120,
+    "scenarios_applied": [
+      "flash_crash",
+      "volatility_spike",
+      "trend_reversal",
+      "gap_events"
+    ],
+    "file_size_mb": 6.185873985290527
+  },
+  "generation_stats": {
+    "total_records": 105120,
+    "memory_usage_mb": 128.14453125,
+    "generation_time_seconds": 3.9204723834991455,
+    "records_per_second": 26813.095391881598
+  }
+}

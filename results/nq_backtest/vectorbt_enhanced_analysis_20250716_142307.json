@@ -1,0 +1,44 @@
+{
+  "analysis_metadata": {
+    "analysis_timestamp": "2025-07-16T14:23:07.945507",
+    "system_execution_time": "0:00:24.603467",
+    "data_period": "2024-01-01 to 2024-07-01",
+    "processed_bars": 3370,
+    "analysis_tool": "VectorBT Enhanced Analysis"
+  },
+  "system_performance": {
+    "detected_synergies": 17,
+    "generated_decisions": 51,
+    "executed_trades": 17,
+    "processing_speed": "137.0 bars/second"
+  },
+  "trading_performance": {
+    "total_return_pct": 0.0,
+    "total_return_value": 0.0,
+    "sharpe_ratio": 0.0,
+    "calmar_ratio": 0.0,
+    "max_drawdown_pct": NaN,
+    "max_drawdown_value": 0.0,
+    "win_rate_pct": NaN,
+    "profit_factor": NaN,
+    "sortino_ratio": 0.0,
+    "total_trades": 0,
+    "avg_trade_duration": "N/A",
+    "best_trade_pct": NaN,
+    "worst_trade_pct": NaN
+  },
+  "risk_metrics": {
+    "volatility_pct": 0.0,
+    "var_95": "N/A",
+    "cvar_95": "N/A",
+    "beta": "N/A",
+    "alpha": "N/A"
+  },
+  "trade_analysis": {
+    "buy_signals": 7,
+    "sell_signals": 10,
+    "total_signals": 17,
+    "first_trade": "2025-07-16T08:21:47",
+    "last_trade": "2025-07-16T08:21:47"
+  }
+}

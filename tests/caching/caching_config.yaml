@@ -1,0 +1,269 @@
+# Agent 4 Mission: Test Data Management & Caching System Configuration
+# Advanced caching system configuration for maximum test efficiency
+
+# Test Result Caching Configuration
+test_caching:
+  enabled: true
+  cache_directory: ".pytest_cache"
+  cache_expiry_hours: 24
+  cache_size_limit_mb: 1024
+  invalidate_on_failure: true
+  parallel_cache_operations: true
+  
+  # Cache strategies
+  strategies:
+    - name: "aggressive"
+      description: "Maximum caching for development"
+      cache_passing_tests: true
+      cache_failing_tests: false
+      cache_duration_hours: 48
+      
+    - name: "conservative"
+      description: "Minimal caching for CI/CD"
+      cache_passing_tests: true
+      cache_failing_tests: false
+      cache_duration_hours: 6
+      
+    - name: "disabled"
+      description: "No caching"
+      cache_passing_tests: false
+      cache_failing_tests: false
+      cache_duration_hours: 0
+
+# Incremental Test Execution
+incremental_execution:
+  enabled: true
+  dependency_tracking: true
+  file_change_detection: true
+  git_integration: true
+  
+  # File patterns to watch
+  watch_patterns:
+    - "src/**/*.py"
+    - "tests/**/*.py"
+    - "configs/**/*.yaml"
+    - "requirements*.txt"
+    - "pytest.ini"
+  
+  # Ignore patterns
+  ignore_patterns:
+    - "**/__pycache__/**"
+    - "**/*.pyc"
+    - "**/.pytest_cache/**"
+    - "**/venv/**"
+    - "**/.venv/**"
+
+# Test Data Factory Configuration
+test_data_factory:
+  enabled: true
+  cache_directory: ".pytest_cache/test_data"
+  compression_enabled: true
+  compression_algorithm: "lz4"  # lz4, zstd, gzip
+  compression_level: 3
+  
+  # Data generation settings
+  data_generation:
+    default_seed: 42
+    parallel_generation: true
+    max_workers: 4
+    
+    # Market data defaults
+    market_data:
+      default_frequency: "5min"
+      default_num_assets: 1
+      default_volatility: 0.02
+      default_correlation: 0.3
+      include_gaps: true
+      include_outliers: true
+    
+    # Asset types and regimes
+    asset_types:
+      - "futures"
+      - "forex"
+      - "stocks"
+      - "crypto"
+      - "commodities"
+    
+    market_regimes:
+      - "bullish"
+      - "bearish"
+      - "sideways"
+      - "volatile"
+      - "trending"
+  
+  # Data lifecycle management
+  lifecycle:
+    cleanup_enabled: true
+    max_age_days: 7
+    max_cache_size_mb: 2048
+    cleanup_frequency_hours: 24
+
+# Database Fixture Management
+database_fixtures:
+  enabled: true
+  
+  # PostgreSQL configuration
+  postgresql:
+    enabled: true
+    host: "localhost"
+    port: 5432
+    database: "test_db"
+    user: "test_user"
+    password: "test_password"
+    max_connections: 20
+    command_timeout: 30
+    
+    # Container management
+    container_management:
+      enabled: true
+      container_name: "test_postgres"
+      image: "postgres:13"
+      auto_start: true
+      auto_cleanup: true
+  
+  # Redis configuration
+  redis:
+    enabled: true
+    host: "localhost"
+    port: 6379
+    db: 0
+    password: null
+    max_connections: 10
+    
+    # Container management
+    container_management:
+      enabled: true
+      container_name: "test_redis"
+      image: "redis:6"
+      auto_start: true
+      auto_cleanup: true
+  
+  # Schema isolation
+  schema_isolation:
+    enabled: true
+    schema_prefix: "test_schema_"
+    auto_cleanup: true
+    cleanup_on_failure: true
+
+# Mock External Services
+mock_services:
+  enabled: true
+  
+  # Service types
+  services:
+    broker:
+      enabled: true
+      response_delay_ms: 0
+      failure_rate: 0.0
+      
+    market_data:
+      enabled: true
+      response_delay_ms: 0
+      failure_rate: 0.0
+      
+    risk_service:
+      enabled: true
+      response_delay_ms: 0
+      failure_rate: 0.0
+  
+  # Response customization
+  response_customization:
+    enabled: true
+    random_responses: false
+    realistic_delays: false
+
+# Memory Optimization
+memory_optimization:
+  enabled: true
+  
+  # Memory mapping
+  memory_mapping:
+    enabled: true
+    cache_directory: ".pytest_cache/mmap_data"
+    chunk_size_kb: 8
+    max_memory_mb: 1024
+    preload_data: true
+    
+  # Compression
+  compression:
+    enabled: true
+    algorithm: "lz4"  # lz4, zstd, gzip
+    level: 3
+    benchmark_algorithms: true
+    
+  # Async operations
+  async_operations:
+    enabled: true
+    max_workers: 4
+    use_process_pool: false
+    
+  # Memory management
+  memory_management:
+    auto_cleanup: true
+    cleanup_threshold_mb: 800
+    cleanup_frequency_minutes: 30
+
+# Performance Monitoring
+performance_monitoring:
+  enabled: true
+  
+  # Metrics collection
+  metrics:
+    test_execution_time: true
+    cache_hit_rate: true
+    memory_usage: true
+    data_generation_time: true
+    database_operation_time: true
+    
+  # Alerting
+  alerting:
+    enabled: true
+    performance_degradation_threshold: 0.5  # 50% slower
+    memory_usage_threshold: 0.8  # 80% of limit
+    cache_miss_rate_threshold: 0.7  # 70% miss rate
+    
+  # Reporting
+  reporting:
+    enabled: true
+    report_frequency_minutes: 60
+    save_reports: true
+    report_directory: ".pytest_cache/reports"
+
+# Integration Settings
+integration:
+  # Pytest integration
+  pytest:
+    auto_configure: true
+    modify_collection: true
+    hook_test_results: true
+    
+  # CI/CD integration
+  ci_cd:
+    enabled: true
+    export_metrics: true
+    fail_on_performance_regression: false
+    
+  # Development tools
+  development:
+    debug_mode: false
+    verbose_logging: false
+    profiling_enabled: false
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Log destinations
+  destinations:
+    console: true
+    file: true
+    file_path: ".pytest_cache/caching_system.log"
+    
+  # Component-specific logging
+  components:
+    cache_manager: "INFO"
+    data_factory: "INFO"
+    database_fixtures: "INFO"
+    memory_optimization: "INFO"
+    mock_services: "INFO"

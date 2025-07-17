@@ -1,0 +1,448 @@
+"""
+Stop/Target Agent (π₂) for Risk Management MARL System
+
+Specialized risk agent for dynamic stop-loss and take-profit management
+based on volatility, market conditions, and risk assessment.
+
+Action Space: Box(0.5, 3.0, (2,)) - [stop_multiplier, target_multiplier]
+Focuses on: Volatility regime, drawdown protection, and adaptive position exits
+"""
+
+import numpy as np
+from typing import Dict, Any, Tuple, Optional, Union
+import structlog
+from datetime import datetime, timedelta
+from collections import deque
+
+from src.risk.agents.base_risk_agent import BaseRiskAgent, RiskState, RiskAction, RiskMetrics
+from src.core.events import EventBus, Event, EventType
+
+logger = structlog.get_logger()
+
+
+class StopTargetAgent(BaseRiskAgent):
+    """
+    Stop/Target Agent (π₂)
+    
+    Manages stop-loss and take-profit levels based on:
+    - Market volatility regime
+    - Current drawdown levels
+    - Time-based risk factors
+    - Market stress conditions
+    - Position performance history
+    """
+    
+    def __init__(self, config: Dict[str, Any], event_bus: Optional[EventBus] = None):
+        """
+        Initialize Stop/Target Agent
+        
+        Args:
+            config: Agent configuration
+            event_bus: Event bus for communication
+        """
+        # Set agent-specific configuration
+        config['name'] = config.get('name', 'stop_target_agent')
+        config['action_dim'] = 2  # Continuous action space [stop_multiplier, target_multiplier]
+        
+        super().__init__(config, event_bus)
+        
+        # Stop/Target parameters
+        self.base_stop_distance = config.get('base_stop_distance', 0.02)  # 2% base stop
+        self.base_target_distance = config.get('base_target_distance', 0.04)  # 4% base target
+        self.min_stop_multiplier = config.get('min_stop_multiplier', 0.5)
+        self.max_stop_multiplier = config.get('max_stop_multiplier', 3.0)
+        self.min_target_multiplier = config.get('min_target_multiplier', 0.5)
+        self.max_target_multiplier = config.get('max_target_multiplier', 3.0)
+        
+        # Volatility adjustment parameters
+        self.volatility_sensitivity = config.get('volatility_sensitivity', 1.5)
+        self.stress_adjustment_factor = config.get('stress_adjustment_factor', 1.2)
+        
+        # Performance tracking
+        self.stop_adjustments = 0
+        self.target_adjustments = 0
+        self.stops_triggered = 0
+        self.targets_hit = 0
+        self.drawdown_protections = 0
+        
+        # Historical tracking
+        self.volatility_history = deque(maxlen=100)
+        self.stop_effectiveness = deque(maxlen=50)
+        self.target_effectiveness = deque(maxlen=50)
+        
+        # Current stop/target state
+        self.current_stop_multiplier = 1.0
+        self.current_target_multiplier = 1.0
+        self.last_adjustment_time = None
+        
+        logger.info("Stop/Target Agent initialized",
+                   base_stop=self.base_stop_distance,
+                   base_target=self.base_target_distance,
+                   volatility_sensitivity=self.volatility_sensitivity)
+    
+    def calculate_risk_action(self, risk_state: RiskState) -> Tuple[np.ndarray, float]:
+        """
+        Calculate stop/target action based on risk state
+        
+        Args:
+            risk_state: Current risk state
+            
+        Returns:
+            Tuple of (action_array, confidence)
+            action_array: [stop_multiplier, target_multiplier]
+        """
+        try:
+            # Analyze market conditions
+            market_analysis = self._analyze_market_conditions(risk_state)
+            
+            # Calculate optimal stop multiplier
+            stop_multiplier = self._calculate_stop_multiplier(risk_state, market_analysis)
+            
+            # Calculate optimal target multiplier
+            target_multiplier = self._calculate_target_multiplier(risk_state, market_analysis)
+            
+            # Ensure values are within bounds
+            stop_multiplier = np.clip(stop_multiplier, self.min_stop_multiplier, self.max_stop_multiplier)
+            target_multiplier = np.clip(target_multiplier, self.min_target_multiplier, self.max_target_multiplier)
+            
+            # Create action array
+            action = np.array([stop_multiplier, target_multiplier], dtype=np.float32)
+            
+            # Calculate confidence
+            confidence = self._calculate_confidence(risk_state, market_analysis, action)
+            
+            # Update state
+            self._update_agent_state(action, risk_state)
+            
+            # Log decision
+            self._log_decision_reasoning(action, market_analysis, confidence)
+            
+            return action, confidence
+            
+        except Exception as e:
+            logger.error("Error in stop/target calculation", error=str(e))
+            # Return safe default action
+            return np.array([1.0, 1.0], dtype=np.float32), 0.1
+    
+    def _analyze_market_conditions(self, risk_state: RiskState) -> Dict[str, float]:
+        """Analyze current market conditions for stop/target optimization"""
+        
+        analysis = {
+            'volatility_regime': risk_state.volatility_regime,
+            'stress_level': risk_state.market_stress_level,
+            'drawdown_pressure': risk_state.current_drawdown_pct,
+            'time_risk': risk_state.time_of_day_risk,
+            'liquidity_risk': 1.0 - risk_state.liquidity_conditions,
+            'trend_strength': 0.0,  # Will be calculated
+            'mean_reversion_signal': 0.0  # Will be calculated
+        }
+        
+        # Track volatility changes
+        self.volatility_history.append(risk_state.volatility_regime)
+        
+        # Calculate trend strength (simplified)
+        if len(self.volatility_history) >= 5:
+            recent_vol = list(self.volatility_history)[-5:]
+            vol_trend = (recent_vol[-1] - recent_vol[0]) / max(recent_vol[0], 0.01)
+            analysis['trend_strength'] = np.tanh(vol_trend * 5.0)  # Scale to [-1, 1]
+        
+        # Calculate mean reversion signal
+        if risk_state.volatility_regime > 0.8:  # High volatility
+            analysis['mean_reversion_signal'] = 0.7  # Expect reversion
+        elif risk_state.volatility_regime < 0.2:  # Low volatility
+            analysis['mean_reversion_signal'] = -0.3  # Expect breakout
+        else:
+            analysis['mean_reversion_signal'] = 0.0
+        
+        # Composite volatility signal
+        analysis['volatility_signal'] = (
+            analysis['volatility_regime'] * 0.5 +
+            abs(analysis['trend_strength']) * 0.3 +
+            analysis['stress_level'] * 0.2
+        )
+        
+        return analysis
+    
+    def _calculate_stop_multiplier(self, risk_state: RiskState, market_analysis: Dict[str, float]) -> float:
+        """Calculate optimal stop loss multiplier"""
+        
+        base_multiplier = 1.0
+        
+        # Volatility adjustment - wider stops in high volatility
+        volatility_adjustment = 1.0 + (market_analysis['volatility_signal'] - 0.5) * self.volatility_sensitivity
+        
+        # Stress adjustment - tighter stops in stressed markets
+        stress_adjustment = 1.0 - market_analysis['stress_level'] * 0.3
+        
+        # Drawdown protection - tighter stops when in drawdown
+        drawdown_adjustment = 1.0 - risk_state.current_drawdown_pct * 0.5
+        
+        # Time-based adjustment - tighter stops during risky periods
+        time_adjustment = 1.0 - risk_state.time_of_day_risk * 0.2
+        
+        # Liquidity adjustment - wider stops in illiquid conditions
+        liquidity_adjustment = 1.0 + market_analysis['liquidity_risk'] * 0.3
+        
+        # Mean reversion adjustment
+        if market_analysis['mean_reversion_signal'] > 0.5:
+            # Expecting reversion - tighter stops
+            reversion_adjustment = 0.8
+        elif market_analysis['mean_reversion_signal'] < -0.3:
+            # Expecting continuation - wider stops
+            reversion_adjustment = 1.3
+        else:
+            reversion_adjustment = 1.0
+        
+        # Combine all adjustments
+        stop_multiplier = (base_multiplier * 
+                          volatility_adjustment * 
+                          stress_adjustment * 
+                          drawdown_adjustment * 
+                          time_adjustment * 
+                          liquidity_adjustment * 
+                          reversion_adjustment)
+        
+        # Apply safety bounds
+        stop_multiplier = max(0.5, min(3.0, stop_multiplier))
+        
+        return stop_multiplier
+    
+    def _calculate_target_multiplier(self, risk_state: RiskState, market_analysis: Dict[str, float]) -> float:
+        """Calculate optimal take profit multiplier"""
+        
+        base_multiplier = 1.0
+        
+        # Volatility adjustment - closer targets in high volatility
+        volatility_adjustment = 1.0 - (market_analysis['volatility_signal'] - 0.5) * 0.8
+        
+        # Stress adjustment - closer targets in stressed markets
+        stress_adjustment = 1.0 - market_analysis['stress_level'] * 0.4
+        
+        # Profit protection in drawdown
+        if risk_state.current_drawdown_pct > 0.05:  # 5% drawdown
+            drawdown_adjustment = 0.7  # Take profits quicker
+            self.drawdown_protections += 1
+        else:
+            drawdown_adjustment = 1.0
+        
+        # Market regime adjustment
+        if market_analysis['trend_strength'] > 0.3:
+            # Strong trend - let profits run
+            trend_adjustment = 1.4
+        elif market_analysis['trend_strength'] < -0.3:
+            # Weak trend - take profits quickly
+            trend_adjustment = 0.7
+        else:
+            trend_adjustment = 1.0
+        
+        # Time-based adjustment
+        time_adjustment = 1.0 - risk_state.time_of_day_risk * 0.15
+        
+        # Mean reversion consideration
+        if market_analysis['mean_reversion_signal'] > 0.5:
+            # Strong mean reversion expected - closer targets
+            reversion_adjustment = 0.7
+        else:
+            reversion_adjustment = 1.0
+        
+        # Combine adjustments
+        target_multiplier = (base_multiplier * 
+                           volatility_adjustment * 
+                           stress_adjustment * 
+                           drawdown_adjustment * 
+                           trend_adjustment * 
+                           time_adjustment * 
+                           reversion_adjustment)
+        
+        # Apply safety bounds
+        target_multiplier = max(0.5, min(3.0, target_multiplier))
+        
+        return target_multiplier
+    
+    def _calculate_confidence(self, 
+                             risk_state: RiskState, 
+                             market_analysis: Dict[str, float],
+                             action: np.ndarray) -> float:
+        """Calculate confidence in stop/target decision"""
+        
+        # Signal strength from volatility regime
+        volatility_confidence = 1.0 - abs(market_analysis['volatility_signal'] - 0.5) * 2.0
+        volatility_confidence = max(0.0, min(1.0, volatility_confidence))
+        
+        # Confidence from market stress clarity
+        if market_analysis['stress_level'] > 0.7 or market_analysis['stress_level'] < 0.3:
+            stress_confidence = 0.8  # Clear stress signal
+        else:
+            stress_confidence = 0.4  # Ambiguous stress signal
+        
+        # Trend strength confidence
+        trend_confidence = min(1.0, abs(market_analysis['trend_strength']) * 2.0)
+        
+        # Drawdown confidence - high confidence when protecting against losses
+        if risk_state.current_drawdown_pct > 0.03:
+            drawdown_confidence = 0.9
+        else:
+            drawdown_confidence = 0.5
+        
+        # Historical effectiveness (if available)
+        historical_confidence = 0.5
+        if len(self.stop_effectiveness) > 5:
+            avg_effectiveness = np.mean(self.stop_effectiveness)
+            historical_confidence = max(0.2, min(0.9, avg_effectiveness))
+        
+        # Action reasonableness - confidence decreases for extreme actions
+        stop_mult, target_mult = action[0], action[1]
+        action_reasonableness = 1.0
+        if stop_mult > 2.0 or stop_mult < 0.7:
+            action_reasonableness *= 0.8
+        if target_mult > 2.0 or target_mult < 0.7:
+            action_reasonableness *= 0.8
+        
+        # Combined confidence
+        confidence = (volatility_confidence * 0.25 +
+                     stress_confidence * 0.2 +
+                     trend_confidence * 0.2 +
+                     drawdown_confidence * 0.15 +
+                     historical_confidence * 0.1 +
+                     action_reasonableness * 0.1)
+        
+        return max(0.1, min(1.0, confidence))
+    
+    def _update_agent_state(self, action: np.ndarray, risk_state: RiskState):
+        """Update internal agent state"""
+        
+        stop_mult, target_mult = action[0], action[1]
+        
+        # Track if significant changes were made
+        if abs(stop_mult - self.current_stop_multiplier) > 0.1:
+            self.stop_adjustments += 1
+        
+        if abs(target_mult - self.current_target_multiplier) > 0.1:
+            self.target_adjustments += 1
+        
+        # Update current state
+        self.current_stop_multiplier = stop_mult
+        self.current_target_multiplier = target_mult
+        self.last_adjustment_time = datetime.now()
+    
+    def _log_decision_reasoning(self, 
+                               action: np.ndarray,
+                               market_analysis: Dict[str, float],
+                               confidence: float):
+        """Log decision reasoning for transparency"""
+        
+        stop_mult, target_mult = action[0], action[1]
+        
+        logger.info("Stop/Target decision",
+                   stop_multiplier=f"{stop_mult:.3f}",
+                   target_multiplier=f"{target_mult:.3f}",
+                   confidence=f"{confidence:.3f}",
+                   volatility_signal=f"{market_analysis.get('volatility_signal', 0):.3f}",
+                   stress_level=f"{market_analysis.get('stress_level', 0):.3f}",
+                   trend_strength=f"{market_analysis.get('trend_strength', 0):.3f}",
+                   mean_reversion=f"{market_analysis.get('mean_reversion_signal', 0):.3f}")
+    
+    def validate_risk_constraints(self, risk_state: RiskState) -> bool:
+        """
+        Validate current risk state against stop/target constraints
+        
+        Args:
+            risk_state: Current risk state
+            
+        Returns:
+            True if constraints are satisfied
+        """
+        violations = []
+        
+        # Check if stops are too wide during high stress
+        if (risk_state.market_stress_level > 0.8 and 
+            self.current_stop_multiplier > 2.0):
+            violations.append(f"wide_stops_in_stress: {self.current_stop_multiplier:.2f} > 2.0")
+        
+        # Check if targets are too ambitious during high volatility
+        if (risk_state.volatility_regime > 0.8 and 
+            self.current_target_multiplier > 2.5):
+            violations.append(f"ambitious_targets_in_volatility: {self.current_target_multiplier:.2f} > 2.5")
+        
+        # Check drawdown protection
+        if (risk_state.current_drawdown_pct > 0.1 and 
+            self.current_target_multiplier > 1.5):
+            violations.append(f"insufficient_drawdown_protection: target {self.current_target_multiplier:.2f} > 1.5")
+        
+        if violations:
+            logger.warning("Stop/Target constraint violations", violations=violations)
+            return False
+        
+        return True
+    
+    def _get_safe_action(self) -> np.ndarray:
+        """Get safe default action for error cases"""
+        return np.array([0.8, 1.0], dtype=np.float32)  # Conservative stops, normal targets
+    
+    def record_stop_triggered(self, effectiveness: float):
+        """Record when a stop loss was triggered and its effectiveness"""
+        self.stops_triggered += 1
+        self.stop_effectiveness.append(effectiveness)
+        logger.info("Stop loss triggered", effectiveness=effectiveness, total_stops=self.stops_triggered)
+    
+    def record_target_hit(self, effectiveness: float):
+        """Record when a target was hit and its effectiveness"""
+        self.targets_hit += 1
+        self.target_effectiveness.append(effectiveness)
+        logger.info("Target hit", effectiveness=effectiveness, total_targets=self.targets_hit)
+    
+    def get_risk_metrics(self) -> RiskMetrics:
+        """Get stop/target agent metrics"""
+        base_metrics = super().get_risk_metrics()
+        
+        # Calculate stop/target specific metrics
+        total_adjustments = self.stop_adjustments + self.target_adjustments
+        stop_hit_rate = self.stops_triggered / max(1, total_adjustments)
+        target_hit_rate = self.targets_hit / max(1, total_adjustments)
+        
+        avg_stop_effectiveness = np.mean(self.stop_effectiveness) if self.stop_effectiveness else 0.0
+        avg_target_effectiveness = np.mean(self.target_effectiveness) if self.target_effectiveness else 0.0
+        
+        return RiskMetrics(
+            total_risk_decisions=total_adjustments,
+            risk_events_detected=self.drawdown_protections,
+            false_positive_rate=base_metrics.false_positive_rate,
+            avg_response_time_ms=base_metrics.avg_response_time_ms,
+            risk_adjusted_return=avg_target_effectiveness,  # Proxy for risk-adjusted return
+            max_drawdown=0.0,  # Would be calculated from position history
+            sharpe_ratio=avg_stop_effectiveness,  # Proxy using stop effectiveness
+            var_accuracy=0.0,  # Not directly applicable
+            correlation_prediction_accuracy=0.0  # Not directly applicable
+        )
+    
+    def get_stop_target_summary(self) -> Dict[str, Any]:
+        """Get current stop/target summary"""
+        return {
+            'current_stop_multiplier': self.current_stop_multiplier,
+            'current_target_multiplier': self.current_target_multiplier,
+            'stop_adjustments': self.stop_adjustments,
+            'target_adjustments': self.target_adjustments,
+            'stops_triggered': self.stops_triggered,
+            'targets_hit': self.targets_hit,
+            'drawdown_protections': self.drawdown_protections,
+            'stop_hit_rate': self.stops_triggered / max(1, self.stop_adjustments + self.target_adjustments),
+            'target_hit_rate': self.targets_hit / max(1, self.stop_adjustments + self.target_adjustments),
+            'avg_stop_effectiveness': np.mean(self.stop_effectiveness) if self.stop_effectiveness else 0.0,
+            'avg_target_effectiveness': np.mean(self.target_effectiveness) if self.target_effectiveness else 0.0
+        }
+    
+    def reset(self):
+        """Reset agent state"""
+        super().reset()
+        self.stop_adjustments = 0
+        self.target_adjustments = 0
+        self.stops_triggered = 0
+        self.targets_hit = 0
+        self.drawdown_protections = 0
+        self.current_stop_multiplier = 1.0
+        self.current_target_multiplier = 1.0
+        self.last_adjustment_time = None
+        self.volatility_history.clear()
+        self.stop_effectiveness.clear()
+        self.target_effectiveness.clear()
+        logger.info("Stop/Target Agent reset")

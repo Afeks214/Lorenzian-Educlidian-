@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-07-16T16:06:34.099162",
+  "overall_score": 87.5,
+  "rating": "HIGH TRUSTWORTHINESS \u2705",
+  "validation_time_seconds": 35.737579107284546,
+  "component_scores": {
+    "Data Pipeline": 100,
+    "Communication": 50,
+    "System Files": 100.0,
+    "Recent Results": 100
+  },
+  "critical_issues": [
+    "Event bus error: Event.__init__() got an unexpected keyword argument 'data'"
+  ],
+  "validation_details": {
+    "data_pipeline": {
+      "data_loading": true,
+      "data_quality": true,
+      "indicator_calculation": true,
+      "issues": []
+    },
+    "communication": {
+      "event_bus": false,
+      "agent_communication": true,
+      "issues": [
+        "Event bus error: Event.__init__() got an unexpected keyword argument 'data'"
+      ]
+    },
+    "files": {
+      "config_files": 4,
+      "source_files": 4,
+      "data_files": 2,
+      "missing_files": [],
+      "issues": []
+    },
+    "results": {
+      "recent_backtests": 20,
+      "conversion_issues": [],
+      "performance_issues": [],
+      "issues": []
+    }
+  }
+}

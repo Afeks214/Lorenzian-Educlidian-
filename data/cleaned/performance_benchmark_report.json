@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-07-17 09:01:52",
+  "loading_results": {
+    "original_csv": {
+      "load_time": 0.06641745567321777,
+      "rows": 56083,
+      "memory_mb": 5.673480987548828,
+      "status": "success"
+    },
+    "cleaned_csv": {
+      "load_time": 0.10078930854797363,
+      "rows": 56083,
+      "memory_mb": 9.199531555175781,
+      "status": "success"
+    },
+    "optimized_pickle": {
+      "load_time": 0.0014302730560302734,
+      "rows": 56083,
+      "memory_mb": 3.6371002197265625,
+      "status": "success"
+    }
+  },
+  "operation_results": {
+    "timestamp_parsing": {
+      "avg_time": 0.01284775733947754,
+      "min_time": 0.008073568344116211,
+      "max_time": 0.017637968063354492,
+      "status": "success"
+    },
+    "price_returns": {
+      "avg_time": 0.0006536483764648437,
+      "min_time": 0.0005521774291992188,
+      "max_time": 0.000904083251953125,
+      "status": "success"
+    },
+    "rolling_mean_20": {
+      "avg_time": 0.0008386611938476562,
+      "min_time": 0.0007519721984863281,
+      "max_time": 0.0009810924530029297,
+      "status": "success"
+    },
+    "rolling_std_20": {
+      "avg_time": 0.0012395858764648437,
+      "min_time": 0.0012195110321044922,
+      "max_time": 0.001291513442993164,
+      "status": "success"
+    },
+    "volume_analysis": {
+      "avg_time": 0.0007994174957275391,
+      "min_time": 0.0007843971252441406,
+      "max_time": 0.0008287429809570312,
+      "status": "success"
+    },
+    "boolean_filtering": {
+      "avg_time": 0.0009221076965332031,
+      "min_time": 0.0008115768432617188,
+      "max_time": 0.0012159347534179688,
+      "status": "success"
+    },
+    "groupby_hour": {
+      "status": "failed",
+      "error": "Can only use .dt accessor with datetimelike values"
+    },
+    "technical_indicator": {
+      "avg_time": 0.00025463104248046875,
+      "min_time": 0.00017714500427246094,
+      "max_time": 0.0003218650817871094,
+      "status": "success"
+    },
+    "data_slice": {
+      "avg_time": 4.138946533203125e-05,
+      "min_time": 2.8371810913085938e-05,
+      "max_time": 7.700920104980469e-05,
+      "status": "success"
+    },
+    "sorting": {
+      "avg_time": 0.004387044906616211,
+      "min_time": 0.003689289093017578,
+      "max_time": 0.005882740020751953,
+      "status": "success"
+    }
+  },
+  "backtesting_results": {
+    "simulation_time": 0.005312681198120117,
+    "total_return": -0.9999993253550574,
+    "volatility": 0.009848065004905277,
+    "sharpe_ratio": -0.02044768331993873,
+    "status": "success"
+  }
+}

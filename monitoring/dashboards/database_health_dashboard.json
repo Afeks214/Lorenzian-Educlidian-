@@ -1,0 +1,287 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Database Health Monitoring - 1s Intervals",
+    "description": "Real-time database health monitoring with 1-second intervals for <30s RTO",
+    "tags": ["database", "health", "rto", "postgresql", "patroni"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "1s",
+    "time": {
+      "from": "now-5m",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["1s", "5s", "10s", "30s", "1m", "5m"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Health Check Status Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "db_health_checks_total",
+            "legendFormat": "{{database}} - {{status}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.95},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Response Time (1s Target)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(db_response_time_seconds_sum[1s]) / rate(db_response_time_seconds_count[1s]) * 1000",
+            "legendFormat": "{{database}} Response Time (ms)",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Response Time (ms)",
+            "max": 1000,
+            "min": 0
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 500,
+            "colorMode": "critical",
+            "op": "gt"
+          },
+          {
+            "value": 200,
+            "colorMode": "warning",
+            "op": "gt"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Connection Pool Health",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "db_pool_utilization_percent",
+            "legendFormat": "{{pool_name}} Utilization %",
+            "refId": "A"
+          },
+          {
+            "expr": "db_pool_connections_total",
+            "legendFormat": "{{pool_name}} {{state}} Connections",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections / Utilization %",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 95,
+            "colorMode": "critical",
+            "op": "gt"
+          },
+          {
+            "value": 80,
+            "colorMode": "warning",
+            "op": "gt"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Patroni Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"patroni\"}",
+            "legendFormat": "{{instance}} Status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {"text": "DOWN", "color": "red"},
+                  "1": {"text": "UP", "color": "green"}
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Replication Lag",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "db_replication_lag_bytes",
+            "legendFormat": "{{database}} Replication Lag (bytes)",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Lag (bytes)",
+            "logBase": 2,
+            "min": 0
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 1048576,
+            "colorMode": "critical",
+            "op": "gt"
+          },
+          {
+            "value": 524288,
+            "colorMode": "warning",
+            "op": "gt"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Failure Detection Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(db_failures_total[1s])",
+            "legendFormat": "{{database}} Failures",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Failures per second",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "RTO Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(db_response_time_seconds_bucket[1s]))",
+            "legendFormat": "P95 Response Time",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(db_response_time_seconds_bucket[1s]))",
+            "legendFormat": "P99 Response Time",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 1}
+              ]
+            },
+            "unit": "s"
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "System Resource Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[1s]) * 100",
+            "legendFormat": "{{instance}} CPU %",
+            "refId": "A"
+          },
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "{{instance}} Memory (MB)",
+            "refId": "B"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Usage",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=\"DatabaseDown\"}",
+          "iconColor": "red",
+          "name": "Database Alerts",
+          "showIn": 0,
+          "step": "1s",
+          "titleFormat": "Database Alert",
+          "type": "alert"
+        }
+      ]
+    }
+  }
+}

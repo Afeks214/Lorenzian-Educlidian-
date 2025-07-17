@@ -1,0 +1,256 @@
+# Unified Data Pipeline Configuration
+# This configuration file defines the settings for the unified data pipeline system
+
+# Data Loading Configuration
+data_loading:
+  # Data directory path
+  data_dir: "/home/QuantNova/GrandModel/colab/data/"
+  
+  # Chunk size for processing large datasets
+  chunk_size: 10000
+  
+  # Enable caching for faster repeated access
+  cache_enabled: true
+  
+  # Cache directory
+  cache_dir: ".cache"
+  
+  # Enable data validation
+  validation_enabled: true
+  
+  # Enable preprocessing
+  preprocessing_enabled: true
+  
+  # Supported timeframes
+  supported_timeframes:
+    - "30min"
+    - "5min"
+    - "5min_extended"
+  
+  # Data validation rules
+  validation_rules:
+    required_columns: ["timestamp", "open", "high", "low", "close", "volume"]
+    price_range_factor: 10.0  # Maximum price range (Q99/Q1)
+    volume_threshold: 0  # Minimum volume threshold
+  
+  # Preprocessing configuration
+  preprocessing:
+    normalize_features: true
+    add_technical_indicators: true
+    add_volatility_features: true
+    add_time_features: true
+    fillna_method: "ffill"
+
+# Memory Management Configuration
+memory_management:
+  # Shared memory pool size in GB
+  shared_pool_size_gb: 4.0
+  
+  # Enable memory monitoring
+  enable_monitoring: true
+  
+  # Monitoring interval in seconds
+  monitoring_interval: 5.0
+  
+  # Memory usage thresholds
+  thresholds:
+    warning: 0.8
+    critical: 0.9
+  
+  # Eviction policy for shared pool
+  eviction_policy: "lru"  # lru, lfu, fifo
+  
+  # Enable persistence
+  enable_persistence: true
+  
+  # Persistence directory
+  persistence_dir: "/tmp/shared_memory_pool"
+
+# Data Flow Coordination Configuration
+coordination:
+  # Coordination directory
+  coordination_dir: "/tmp/data_flow_coordination"
+  
+  # Enable state persistence
+  enable_persistence: true
+  
+  # Default buffer size for data streams
+  default_buffer_size: 1000
+  
+  # Concurrent processing configuration
+  concurrent_processing:
+    max_workers: 8
+    use_multiprocessing: true
+    timeout_seconds: 300
+
+# Performance Monitoring Configuration
+performance_monitoring:
+  # Enable performance dashboard
+  enable_dashboard: true
+  
+  # Dashboard update interval in seconds
+  dashboard_update_interval: 5
+  
+  # Maximum history length for metrics
+  max_history: 10000
+  
+  # Metrics aggregation window in seconds
+  aggregation_window: 60
+  
+  # Alert thresholds
+  alert_thresholds:
+    data_load_time: 10.0  # seconds
+    memory_usage: 0.9     # 90%
+    throughput: 100       # items/second
+  
+  # Export configuration
+  export:
+    enabled: true
+    format: "json"  # json, csv
+    filepath: "performance_metrics.json"
+
+# Scalability Configuration
+scalability:
+  # Maximum number of workers
+  max_workers: 8
+  
+  # Use multiprocessing instead of threading
+  use_multiprocessing: true
+  
+  # Enable GPU acceleration
+  enable_gpu_acceleration: true
+  
+  # Enable distributed training
+  distributed_training: false
+  
+  # Enable data parallelism
+  data_parallelism: true
+  
+  # Memory limit in GB
+  memory_limit_gb: 16.0
+  
+  # Auto-scaling configuration
+  auto_scaling:
+    enabled: true
+    
+    # Scaling thresholds
+    thresholds:
+      cpu_usage: 0.8
+      memory_usage: 0.8
+      gpu_utilization: 0.8
+      queue_depth: 100
+    
+    # Scaling parameters
+    cooldown_seconds: 30
+    scale_up_factor: 2
+    scale_down_factor: 1
+    min_workers: 1
+    max_workers: 16
+
+# Logging Configuration
+logging:
+  # Logging level
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Log to file
+  file_enabled: true
+  file_path: "data_pipeline.log"
+  
+  # Log to console
+  console_enabled: true
+  
+  # Rotate logs
+  rotation:
+    enabled: true
+    max_size_mb: 10
+    backup_count: 5
+
+# Optimization Settings
+optimization:
+  # JIT compilation
+  jit_enabled: true
+  
+  # Memory optimization level
+  memory_optimization_level: "moderate"  # aggressive, moderate, conservative, disabled
+  
+  # Batch processing optimization
+  batch_optimization:
+    enabled: true
+    optimal_batch_size: 1000
+    adaptive_batching: true
+  
+  # GPU optimization
+  gpu_optimization:
+    enabled: true
+    memory_fraction: 0.8
+    allow_growth: true
+    
+  # Preprocessing optimization
+  preprocessing_optimization:
+    parallel_processing: true
+    vectorized_operations: true
+    memory_efficient_operations: true
+
+# System Integration Settings
+integration:
+  # Notebook integration
+  notebook_integration:
+    auto_discovery: true
+    heartbeat_interval: 30  # seconds
+    timeout_seconds: 120
+  
+  # External systems
+  external_systems:
+    enabled: false
+    endpoints: []
+  
+  # API configuration
+  api:
+    enabled: false
+    host: "localhost"
+    port: 8000
+    cors_enabled: true
+
+# Security Settings
+security:
+  # Data encryption
+  encryption:
+    enabled: false
+    algorithm: "AES-256-GCM"
+  
+  # Access control
+  access_control:
+    enabled: false
+    authentication_required: false
+  
+  # Audit logging
+  audit_logging:
+    enabled: true
+    log_level: "INFO"
+    include_data_samples: false
+
+# Development Settings
+development:
+  # Debug mode
+  debug_mode: false
+  
+  # Profiling
+  profiling:
+    enabled: false
+    profiler: "cProfile"  # cProfile, line_profiler, memory_profiler
+    
+  # Testing
+  testing:
+    enabled: true
+    test_data_size: 1000
+    mock_gpu: false
+    
+  # Benchmarking
+  benchmarking:
+    enabled: true
+    benchmark_iterations: 5
+    include_memory_benchmarks: true
+    include_gpu_benchmarks: true

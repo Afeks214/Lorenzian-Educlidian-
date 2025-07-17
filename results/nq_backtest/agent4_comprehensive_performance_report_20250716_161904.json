@@ -1,0 +1,548 @@
+{
+  "report_metadata": {
+    "agent": "AGENT 4 - Performance Analytics & Risk Specialist",
+    "mission": "Comprehensive Performance Analytics & Risk Assessment",
+    "generation_timestamp": "2025-07-16T16:19:04.213372",
+    "total_metrics_calculated": "50+ institutional-grade metrics per strategy",
+    "analysis_scope": "3-year backtest comprehensive analysis"
+  },
+  "executive_summary": {
+    "analysis_overview": {
+      "total_strategies_analyzed": 2,
+      "analysis_period": "3-year comprehensive backtest",
+      "total_metrics_calculated": "50+ institutional-grade metrics per strategy",
+      "analysis_completion_time": "2025-07-16T16:19:04.213227"
+    },
+    "key_performance_insights": {
+      "best_total_return": {
+        "strategy": "Synergy_3Year",
+        "return_pct": -5.13499998416751
+      },
+      "best_risk_adjusted": {
+        "strategy": "Synergy_3Year",
+        "sharpe_ratio": 0.21302482792841343
+      },
+      "return_range": [
+        -15.509491345419535,
+        -5.13499998416751
+      ],
+      "average_return": -10.322245664793522,
+      "return_volatility": 5.187245680626013
+    },
+    "risk_assessment_summary": {
+      "high_risk_strategies": 0,
+      "medium_risk_strategies": 2,
+      "portfolio_diversification": "GOOD",
+      "overall_risk_level": "CONSERVATIVE PORTFOLIO"
+    },
+    "statistical_validation": {
+      "monte_carlo_completed": true,
+      "stress_testing_completed": true,
+      "confidence_intervals_calculated": true,
+      "normality_tests_performed": true
+    },
+    "strategic_recommendations": [
+      "Focus allocation on Synergy_3Year - highest performance score",
+      "Consider reducing allocation to VectorBT_Implementation - lowest performance",
+      "Synergy_3Year: Implement position sizing controls - high drawdown risk",
+      "Synergy_3Year: Review strategy parameters - poor risk-adjusted returns",
+      "Synergy_3Year: Optimize entry/exit signals - low win rate",
+      "VectorBT_Implementation: Implement position sizing controls - high drawdown risk",
+      "VectorBT_Implementation: Review strategy parameters - poor risk-adjusted returns",
+      "VectorBT_Implementation: Optimize entry/exit signals - low win rate"
+    ],
+    "overall_assessment": "POOR PERFORMANCE - Significant strategy revision required"
+  },
+  "individual_strategy_analysis": {
+    "Synergy_3Year": {
+      "original_data": {
+        "total_return_pct": -5.173761298814803,
+        "sharpe_ratio": -1.1849507505197245,
+        "max_drawdown_pct": 5.57111615872298,
+        "win_rate_pct": 36.231884057971016,
+        "profit_factor": 0.5052627574279973,
+        "total_trades": 69,
+        "total_patterns": 70,
+        "profitable_trades": 25,
+        "losing_trades": 44,
+        "average_profit": 211.35331446028903,
+        "average_loss": -237.67259455277326,
+        "period": {
+          "start": "2022-01-03 01:00:00",
+          "end": "2024-12-31 23:55:00",
+          "total_bars": 185908
+        }
+      },
+      "comprehensive_metrics": {
+        "total_return": -5.13499998416751,
+        "cagr": -99.36587179855236,
+        "excess_return": 72.61461229459698,
+        "sharpe_ratio": 0.21302482792841343,
+        "sortino_ratio": 0.36421467611495373,
+        "calmar_ratio": -2.0190916623438104,
+        "omega_ratio": 1.0019863560704032,
+        "treynor_ratio": 0.0,
+        "information_ratio": 0.0,
+        "volatility": 340.873939440519,
+        "downside_volatility": 199.37310892897216,
+        "max_drawdown": -49.213155426141505,
+        "max_drawdown_duration": 327,
+        "var_95": -2.0637126782190696,
+        "var_99": -2.859289269385849,
+        "cvar_95": -2.54743903008252,
+        "cvar_99": -3.283304806417496,
+        "win_rate": 36.231884057971016,
+        "profit_factor": 0.541161859747062,
+        "avg_win": 217.61108372233764,
+        "avg_loss": -228.4763033072287,
+        "best_trade": 303.1003860029585,
+        "worst_trade": -345.74784549962004,
+        "tail_ratio": 1.0182605113974823,
+        "skewness": 0.08687582114917577,
+        "kurtosis": 0.11047021069382179,
+        "beta": 0.0,
+        "tracking_error": 0.0,
+        "pain_index": 19.361969210635266,
+        "ulcer_index": 26.564773499058486,
+        "jarque_bera_pvalue": 0.5128896904628707,
+        "ljung_box_pvalue": 1.0
+      },
+      "rolling_analysis": {
+        "rolling_sharpe": [],
+        "rolling_volatility": [],
+        "rolling_max_dd": [],
+        "rolling_return": []
+      },
+      "stress_testing": {
+        "black_monday_1987": {
+          "shocked_return": -22.0,
+          "total_return": -22.92170460806845,
+          "max_drawdown": -49.2131554261415,
+          "sharpe_ratio": -4.124358685679857,
+          "var_95": -2.0637126782190696,
+          "cvar_95": -3.0211074137796756
+        },
+        "dot_com_crash_2000": {
+          "shocked_return": -49.0,
+          "total_return": -49.60265301296779,
+          "max_drawdown": -63.57219461681116,
+          "sharpe_ratio": -7.232112684041755,
+          "var_95": -2.0637126782190696,
+          "cvar_95": -3.731633729569149
+        },
+        "financial_crisis_2008": {
+          "shocked_return": -37.0,
+          "total_return": -37.74445372190138,
+          "max_drawdown": -55.00094629135497,
+          "sharpe_ratio": -6.241406881023305,
+          "var_95": -2.0637126782190696,
+          "cvar_95": -3.415844255884939
+        },
+        "covid_crash_2020": {
+          "shocked_return": -34.0,
+          "total_return": -34.77990389913461,
+          "max_drawdown": -52.85813420999087,
+          "sharpe_ratio": -5.911457638618793,
+          "var_95": -2.0637126782190696,
+          "cvar_95": -3.336896887463886
+        },
+        "custom_extreme": {
+          "shocked_return": -50.0,
+          "total_return": -50.590836287223354,
+          "max_drawdown": -64.28646531059913,
+          "sharpe_ratio": -7.295857918062622,
+          "var_95": -2.0637126782190696,
+          "cvar_95": -3.7579495190428336
+        }
+      },
+      "monte_carlo_validation": {
+        "mean_return": 0.5219192561165628,
+        "return_std": 20.30443155326376,
+        "return_percentiles": {
+          "5th": -30.10865194564534,
+          "25th": -14.394129158361531,
+          "50th": -0.4828039707648668,
+          "75th": 13.10471476138565,
+          "95th": 36.00522270224724
+        },
+        "mean_sharpe": 0.47600334336569167,
+        "sharpe_std": 17.146847052412955,
+        "mean_max_dd": 21.135149732782423,
+        "max_dd_std": 7.829249190784969
+      },
+      "synthetic_returns_stats": {
+        "mean_return": 1.02808934488808e-05,
+        "volatility": 0.012653110054229673,
+        "min_return": -0.04000601419508115,
+        "max_return": 0.04936997012433861,
+        "skewness": 0.08687582114917594,
+        "kurtosis": 0.11047021069382179
+      }
+    },
+    "VectorBT_Implementation": {
+      "original_data": {
+        "total_return_pct": -15.695230427590213,
+        "sharpe_ratio": -2.3481398948081433,
+        "max_drawdown_pct": 16.772562398014067,
+        "win_rate_pct": 16.923076923076923,
+        "profit_factor": 0.2654574487137284,
+        "sortino_ratio": -2.9756744599553846,
+        "calmar_ratio": -0.35615924834764934,
+        "volatility_pct": 2.1675653792559806,
+        "total_trades": "65",
+        "best_trade_pct": 2.1316641354472097,
+        "worst_trade_pct": -1.904345370904737,
+        "avg_winning_trade_pct": 0.6292108631661775,
+        "avg_losing_trade_pct": -0.4589500453433656
+      },
+      "comprehensive_metrics": {
+        "total_return": -15.509491345419535,
+        "cagr": -99.99999059062516,
+        "excess_return": -876.1900740516687,
+        "sharpe_ratio": -2.2772074199573464,
+        "sortino_ratio": -3.236934892968646,
+        "calmar_ratio": -1.3009430627386036,
+        "omega_ratio": 0.9784077689912224,
+        "treynor_ratio": 0.0,
+        "information_ratio": 0.0,
+        "volatility": 384.7651585765869,
+        "downside_volatility": 270.68510891428537,
+        "max_drawdown": -76.86730761307577,
+        "max_drawdown_duration": 327,
+        "var_95": -2.366625875382424,
+        "var_99": -4.2229394218426535,
+        "cvar_95": -3.3917586325462725,
+        "cvar_99": -4.837140320561153,
+        "win_rate": 16.0,
+        "profit_factor": 0.20230769602361057,
+        "avg_win": 102.83539234426277,
+        "avg_loss": -96.82129827415744,
+        "best_trade": 128.14851417927994,
+        "worst_trade": -144.56681119110917,
+        "tail_ratio": 0.9247572260997087,
+        "skewness": -0.41882645374523964,
+        "kurtosis": 0.9390123538558299,
+        "beta": 0.0,
+        "tracking_error": 0.0,
+        "pain_index": 28.53186744064494,
+        "ulcer_index": 43.44635451279027,
+        "jarque_bera_pvalue": 1.4766590915897685e-11,
+        "ljung_box_pvalue": 1.0
+      },
+      "rolling_analysis": {
+        "rolling_sharpe": [],
+        "rolling_volatility": [],
+        "rolling_max_dd": [],
+        "rolling_return": []
+      },
+      "stress_testing": {
+        "black_monday_1987": {
+          "shocked_return": -22.0,
+          "total_return": -30.315388503473827,
+          "max_drawdown": -80.92102050844886,
+          "sharpe_ratio": -5.636278498770624,
+          "var_95": -2.366625875382424,
+          "cvar_95": -3.8278814925091837
+        },
+        "dot_com_crash_2000": {
+          "shocked_return": -49.0,
+          "total_return": -54.43698479073289,
+          "max_drawdown": -87.52528264013964,
+          "sharpe_ratio": -8.257504619118793,
+          "var_95": -2.366625875382424,
+          "cvar_95": -4.538407808298658
+        },
+        "financial_crisis_2008": {
+          "shocked_return": -37.0,
+          "total_return": -43.7162753297289,
+          "max_drawdown": -84.59005502605486,
+          "sharpe_ratio": -7.431231242224396,
+          "var_95": -2.366625875382424,
+          "cvar_95": -4.222618334614447
+        },
+        "covid_crash_2020": {
+          "shocked_return": -34.0,
+          "total_return": -41.03609796447793,
+          "max_drawdown": -83.85624812253366,
+          "sharpe_ratio": -7.152688147348735,
+          "var_95": -2.366625875382424,
+          "cvar_95": -4.143670966193394
+        },
+        "custom_extreme": {
+          "shocked_return": -50.0,
+          "total_return": -55.33037724581655,
+          "max_drawdown": -87.76988494131336,
+          "sharpe_ratio": -8.309801922722626,
+          "var_95": -2.366625875382424,
+          "cvar_95": -4.564723597772342
+        }
+      },
+      "monte_carlo_validation": {
+        "mean_return": -3.001962094888437,
+        "return_std": 22.05488436216242,
+        "return_percentiles": {
+          "5th": -35.65057061920783,
+          "25th": -18.684049881854495,
+          "50th": -4.845205081797293,
+          "75th": 10.642045265221178,
+          "95th": 36.58903823593509
+        },
+        "mean_sharpe": -2.298842335119083,
+        "sharpe_std": 17.184251067515305,
+        "mean_max_dd": 24.754363217064483,
+        "max_dd_std": 9.158201631469463
+      },
+      "synthetic_returns_stats": {
+        "mean_return": -0.00012045167466540802,
+        "volatility": 0.014282335295251324,
+        "min_return": -0.054273313214093524,
+        "max_return": 0.05042088159741033,
+        "skewness": -0.41882645374523975,
+        "kurtosis": 0.9390123538558317
+      }
+    }
+  },
+  "strategy_comparison": {
+    "performance_ranking": {
+      "Synergy_3Year": 17.14139469868613,
+      "VectorBT_Implementation": -10.489553445985091
+    },
+    "risk_ranking": {
+      "Synergy_3Year": 122.56655780607801,
+      "VectorBT_Implementation": 146.8864583808211
+    },
+    "efficiency_ranking": {
+      "Synergy_3Year": -0.4112531646972916,
+      "VectorBT_Implementation": -2.2722463546951133
+    },
+    "detailed_comparison": {
+      "total_return": {
+        "Synergy_3Year": -5.13499998416751,
+        "VectorBT_Implementation": -15.509491345419535
+      },
+      "sharpe_ratio": {
+        "Synergy_3Year": 0.21302482792841343,
+        "VectorBT_Implementation": -2.2772074199573464
+      },
+      "max_drawdown": {
+        "Synergy_3Year": -49.213155426141505,
+        "VectorBT_Implementation": -76.86730761307577
+      },
+      "win_rate": {
+        "Synergy_3Year": 36.231884057971016,
+        "VectorBT_Implementation": 16.0
+      },
+      "profit_factor": {
+        "Synergy_3Year": 0.541161859747062,
+        "VectorBT_Implementation": 0.20230769602361057
+      },
+      "volatility": {
+        "Synergy_3Year": 340.873939440519,
+        "VectorBT_Implementation": 384.7651585765869
+      }
+    }
+  },
+  "risk_assessment": {
+    "individual_risk_profiles": {
+      "Synergy_3Year": {
+        "risk_grade": "EXTREME RISK",
+        "key_risk_metrics": {
+          "max_drawdown": -49.213155426141505,
+          "volatility": 340.873939440519,
+          "var_95": -2.0637126782190696,
+          "cvar_95": -2.54743903008252,
+          "tail_ratio": 1.0182605113974823,
+          "downside_volatility": 199.37310892897216
+        },
+        "stress_test_worst_case": {
+          "covid_scenario": {
+            "shocked_return": -34.0,
+            "total_return": -34.77990389913461,
+            "max_drawdown": -52.85813420999087,
+            "sharpe_ratio": -5.911457638618793,
+            "var_95": -2.0637126782190696,
+            "cvar_95": -3.336896887463886
+          },
+          "financial_crisis": {
+            "shocked_return": -37.0,
+            "total_return": -37.74445372190138,
+            "max_drawdown": -55.00094629135497,
+            "sharpe_ratio": -6.241406881023305,
+            "var_95": -2.0637126782190696,
+            "cvar_95": -3.415844255884939
+          },
+          "extreme_scenario": {
+            "shocked_return": -50.0,
+            "total_return": -50.590836287223354,
+            "max_drawdown": -64.28646531059913,
+            "sharpe_ratio": -7.295857918062622,
+            "var_95": -2.0637126782190696,
+            "cvar_95": -3.7579495190428336
+          }
+        },
+        "risk_characteristics": {
+          "skewness": 0.08687582114917577,
+          "kurtosis": 0.11047021069382179,
+          "fat_tails": "False",
+          "negative_skew": "False"
+        }
+      },
+      "VectorBT_Implementation": {
+        "risk_grade": "EXTREME RISK",
+        "key_risk_metrics": {
+          "max_drawdown": -76.86730761307577,
+          "volatility": 384.7651585765869,
+          "var_95": -2.366625875382424,
+          "cvar_95": -3.3917586325462725,
+          "tail_ratio": 0.9247572260997087,
+          "downside_volatility": 270.68510891428537
+        },
+        "stress_test_worst_case": {
+          "covid_scenario": {
+            "shocked_return": -34.0,
+            "total_return": -41.03609796447793,
+            "max_drawdown": -83.85624812253366,
+            "sharpe_ratio": -7.152688147348735,
+            "var_95": -2.366625875382424,
+            "cvar_95": -4.143670966193394
+          },
+          "financial_crisis": {
+            "shocked_return": -37.0,
+            "total_return": -43.7162753297289,
+            "max_drawdown": -84.59005502605486,
+            "sharpe_ratio": -7.431231242224396,
+            "var_95": -2.366625875382424,
+            "cvar_95": -4.222618334614447
+          },
+          "extreme_scenario": {
+            "shocked_return": -50.0,
+            "total_return": -55.33037724581655,
+            "max_drawdown": -87.76988494131336,
+            "sharpe_ratio": -8.309801922722626,
+            "var_95": -2.366625875382424,
+            "cvar_95": -4.564723597772342
+          }
+        },
+        "risk_characteristics": {
+          "skewness": -0.41882645374523964,
+          "kurtosis": 0.9390123538558299,
+          "fat_tails": "False",
+          "negative_skew": "True"
+        }
+      }
+    },
+    "portfolio_risk_analysis": {
+      "diversification_potential": true,
+      "return_correlation": "Low",
+      "risk_concentration": {
+        "high_risk_strategies": 2,
+        "medium_risk_strategies": 0,
+        "low_risk_strategies": 0
+      },
+      "portfolio_characteristics": {
+        "avg_return": -10.322245664793522,
+        "return_std": 5.187245680626013,
+        "avg_sharpe": -1.0320912960144666,
+        "worst_drawdown": -76.86730761307577
+      }
+    },
+    "stress_test_summary": {},
+    "var_analysis": {},
+    "tail_risk_assessment": {}
+  },
+  "statistical_validation": {
+    "normality_tests": {
+      "Synergy_3Year": {
+        "jarque_bera_pvalue": 0.5128896904628707,
+        "returns_are_normal": "True",
+        "skewness": 0.08687582114917577,
+        "kurtosis": 0.11047021069382179,
+        "fat_tails_detected": "False",
+        "asymmetric_returns": "False"
+      },
+      "VectorBT_Implementation": {
+        "jarque_bera_pvalue": 1.4766590915897685e-11,
+        "returns_are_normal": "False",
+        "skewness": -0.41882645374523964,
+        "kurtosis": 0.9390123538558299,
+        "fat_tails_detected": "False",
+        "asymmetric_returns": "False"
+      }
+    },
+    "significance_tests": {
+      "Synergy_3Year": {
+        "sharpe_ratio_significant": "False",
+        "positive_returns_significant": "False",
+        "autocorrelation_test_pvalue": 1.0,
+        "no_autocorrelation": true
+      },
+      "VectorBT_Implementation": {
+        "sharpe_ratio_significant": "True",
+        "positive_returns_significant": "False",
+        "autocorrelation_test_pvalue": 1.0,
+        "no_autocorrelation": true
+      }
+    },
+    "confidence_intervals": {
+      "Synergy_3Year": {
+        "return_95_ci": [
+          -30.10865194564534,
+          36.00522270224724
+        ],
+        "return_50_ci": [
+          -14.394129158361531,
+          13.10471476138565
+        ],
+        "sharpe_estimate": 0.47600334336569167,
+        "sharpe_uncertainty": 17.146847052412955
+      },
+      "VectorBT_Implementation": {
+        "return_95_ci": [
+          -35.65057061920783,
+          36.58903823593509
+        ],
+        "return_50_ci": [
+          -18.684049881854495,
+          10.642045265221178
+        ],
+        "sharpe_estimate": -2.298842335119083,
+        "sharpe_uncertainty": 17.184251067515305
+      }
+    },
+    "statistical_robustness": {
+      "Synergy_3Year": {
+        "return_consistency": "False",
+        "sharpe_stability": "False",
+        "drawdown_predictability": "False",
+        "overall_robustness": "LOW ROBUSTNESS"
+      },
+      "VectorBT_Implementation": {
+        "return_consistency": "False",
+        "sharpe_stability": "False",
+        "drawdown_predictability": "False",
+        "overall_robustness": "LOW ROBUSTNESS"
+      }
+    },
+    "monte_carlo_validation": {}
+  },
+  "methodology": {
+    "performance_metrics": "50+ institutional-grade metrics including Sharpe, Sortino, Calmar, VaR, CVaR",
+    "risk_analysis": "Comprehensive VaR analysis, stress testing, tail risk assessment",
+    "statistical_validation": "Monte Carlo simulation, normality testing, significance testing",
+    "advanced_analytics": "Rolling windows, regime analysis, factor attribution"
+  },
+  "data_sources": [
+    "synergy_3year",
+    "vectorbt_latest",
+    "synergy_summary",
+    "validation_report"
+  ],
+  "validation_methods": [
+    "Monte Carlo simulation (1000 runs)",
+    "Historical stress testing (5 scenarios)",
+    "Statistical significance testing",
+    "Normality and autocorrelation tests",
+    "Rolling window analysis",
+    "Confidence interval estimation"
+  ]
+}

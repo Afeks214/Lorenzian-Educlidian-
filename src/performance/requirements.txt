@@ -1,0 +1,29 @@
+# Performance Optimization Requirements
+# Core dependencies
+numpy>=1.21.0
+torch>=1.9.0
+psutil>=5.8.0
+structlog>=21.0.0
+scikit-learn>=1.0.0
+pandas>=1.3.0
+
+# Memory optimization
+gc-utils>=0.1.0  # Optional: additional GC utilities
+
+# CPU optimization  
+numba>=0.54.0
+concurrent-futures>=3.1.1  # For Python < 3.2
+
+# I/O optimization
+aiofiles>=0.7.0
+aiohttp>=3.8.0
+aiodns>=3.0.0
+lz4>=3.1.0
+
+# Enhanced monitoring
+matplotlib>=3.5.0  # For dashboard plotting
+plotly>=5.0.0      # For interactive dashboards
+
+# Testing
+pytest>=6.0.0
+pytest-asyncio>=0.18.0

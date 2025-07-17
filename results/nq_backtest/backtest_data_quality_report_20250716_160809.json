@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "analysis_timestamp": "20250716_160809",
+    "dataset_bars": 291373,
+    "analysis_type": "Backtest Data Quality Validation"
+  },
+  "quality_score": 99.59270295465163,
+  "grade": "A+",
+  "assessment": "EXCELLENT - Data is of institutional quality and suitable for production trading",
+  "detailed_results": {
+    "dataset_summary": {
+      "total_bars": 291373,
+      "date_range": {
+        "start": "2021-01-04 01:00:00",
+        "end": "2025-06-30 23:55:00",
+        "days": 1638
+      }
+    },
+    "completeness": {
+      "missing_values": 0,
+      "completeness_pct": 100.0
+    },
+    "timestamp_quality": {
+      "regular_intervals": 287153,
+      "regular_pct": 98.55202284365005,
+      "gaps_count": 4219
+    },
+    "price_integrity": {
+      "ohlc_violations": 0,
+      "price_stats": {
+        "min_price": 10484.75,
+        "max_price": 22934.75,
+        "mean_price": 15643.927692339372,
+        "price_range": 12450.0
+      }
+    },
+    "volume_quality": {
+      "zero_volume_bars": 66,
+      "negative_volume_bars": 0,
+      "avg_volume": 2040.2605697851209
+    },
+    "microstructure": {
+      "extreme_moves": 0,
+      "avg_spread": 15.467569060963095,
+      "volatility_pct": 0.0909112770151409
+    },
+    "consistency": {
+      "duplicates": 0,
+      "negative_prices": 0,
+      "consecutive_same": 5182
+    }
+  }
+}

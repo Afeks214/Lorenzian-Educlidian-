@@ -1,0 +1,264 @@
+# GrandModel Monitoring System Configuration
+# AGENT 13: Comprehensive monitoring configuration for production deployment
+
+# Prometheus Metrics Configuration
+prometheus_port: 8000
+prometheus_enabled: true
+
+# SLA Monitoring Configuration
+sla_monitoring_enabled: true
+sla_check_interval: 30  # seconds
+
+# Alerting Configuration
+alerting_enabled: true
+alert_channels:
+  - console
+  - redis
+  - slack  # Configure slack webhook in environment
+  - email  # Configure email settings in environment
+
+# Structured Logging Configuration
+structured_logging_enabled: true
+log_level: INFO
+log_file_path: logs/grandmodel.log
+elasticsearch_enabled: false  # Set to true for centralized logging
+redis_enabled: true
+
+# Redis Configuration
+redis_host: localhost
+redis_port: 6379
+redis_db: 0
+
+# Health Check Configuration
+health_check_interval: 60  # seconds
+
+# Feature Flags
+performance_monitoring_enabled: true
+business_metrics_enabled: true
+
+# SLA Targets (can be overridden)
+sla_targets:
+  trading_engine:
+    response_time:
+      target: 10.0  # milliseconds
+      warning: 15.0
+      critical: 25.0
+    availability:
+      target: 99.9  # percentage
+      warning: 99.5
+      critical: 99.0
+    error_rate:
+      target: 0.01  # 1%
+      warning: 0.05
+      critical: 0.1
+      
+  marl_agents:
+    response_time:
+      target: 8.0   # milliseconds
+      warning: 12.0
+      critical: 20.0
+    accuracy:
+      target: 80.0  # percentage
+      warning: 75.0
+      critical: 70.0
+      
+  risk_management:
+    response_time:
+      target: 5.0   # milliseconds
+      warning: 8.0
+      critical: 15.0
+    var_95_threshold: 0.05  # 5%
+    margin_usage_threshold: 0.8  # 80%
+    
+  data_pipeline:
+    throughput:
+      target: 1000.0  # messages per second
+      warning: 800.0
+      critical: 500.0
+    latency:
+      target: 100.0  # milliseconds
+      warning: 200.0
+      critical: 500.0
+
+# Alert Correlation Rules
+correlation_rules:
+  - name: "same_service_grouping"
+    type: "related"
+    time_window: 600  # 10 minutes
+    conditions:
+      - "alert1_source == alert2_source"
+    action: "group"
+    
+  - name: "cascade_detection"
+    type: "cascade"
+    time_window: 300  # 5 minutes
+    conditions:
+      - "alert1_type == 'high_latency' and alert2_type == 'high_cpu'"
+    action: "suppress_child"
+
+# Alert Suppression Rules
+suppression_rules:
+  - name: "low_priority_maintenance"
+    conditions:
+      - "priority < 3"
+    duration: 3600  # 1 hour
+    reason: "Maintenance window active"
+    
+  - name: "duplicate_alerts"
+    conditions:
+      - "fingerprint_match"
+    duration: 300  # 5 minutes
+    reason: "Duplicate alert suppression"
+
+# Escalation Policies
+escalation_policies:
+  - name: "critical_alert_escalation"
+    triggers:
+      - "unacknowledged_critical"
+      - "emergency_priority"
+    levels:
+      - contacts: ["team-lead@company.com"]
+        delay: 300  # 5 minutes
+      - contacts: ["manager@company.com"]
+        delay: 900  # 15 minutes
+      - contacts: ["director@company.com"]
+        delay: 1800  # 30 minutes
+    repeat_interval: 3600  # 1 hour
+    max_escalations: 3
+    
+  - name: "trading_system_failure"
+    triggers:
+      - "trading_engine_down"
+      - "execution_failure_rate > 0.1"
+    levels:
+      - contacts: ["trading-team@company.com", "oncall@company.com"]
+        delay: 60  # 1 minute
+      - contacts: ["cto@company.com"]
+        delay: 300  # 5 minutes
+    repeat_interval: 1800  # 30 minutes
+    max_escalations: 5
+
+# Logging Configuration
+logging:
+  formatters:
+    structured:
+      format: json
+      include_correlation_id: true
+      include_performance_metrics: true
+      include_business_metrics: true
+      
+  handlers:
+    console:
+      enabled: true
+      level: INFO
+      formatter: structured
+      
+    file:
+      enabled: true
+      level: DEBUG
+      formatter: structured
+      filename: logs/grandmodel.log
+      max_size: 104857600  # 100MB
+      backup_count: 10
+      
+    elasticsearch:
+      enabled: false
+      level: INFO
+      formatter: structured
+      hosts:
+        - localhost:9200
+      index_pattern: "grandmodel-logs"
+      
+    redis:
+      enabled: true
+      level: INFO
+      formatter: structured
+      stream_name: "grandmodel:logs"
+      max_length: 10000
+
+# Performance Monitoring
+performance:
+  collection_interval: 1.0  # seconds
+  system_metrics:
+    cpu_threshold: 80.0
+    memory_threshold: 85.0
+    disk_threshold: 90.0
+    
+  trading_metrics:
+    latency_percentiles: [50, 90, 95, 99]
+    slippage_tracking: true
+    execution_quality: true
+    
+  marl_metrics:
+    inference_time_tracking: true
+    accuracy_tracking: true
+    consensus_monitoring: true
+    
+  risk_metrics:
+    var_calculation_interval: 300  # 5 minutes
+    correlation_monitoring: true
+    kelly_fraction_tracking: true
+
+# Business Metrics
+business:
+  revenue_tracking: true
+  trade_volume_tracking: true
+  strategy_performance: true
+  customer_satisfaction: false  # Enable if applicable
+  
+  reporting:
+    daily_summary: true
+    weekly_summary: true
+    monthly_summary: true
+    
+  kpis:
+    - name: "daily_pnl"
+      target: 10000.0
+      warning: 5000.0
+      critical: 0.0
+      
+    - name: "sharpe_ratio"
+      target: 2.0
+      warning: 1.5
+      critical: 1.0
+      
+    - name: "max_drawdown"
+      target: 0.05  # 5%
+      warning: 0.10
+      critical: 0.15
+
+# Security and Compliance
+security:
+  audit_logging: true
+  sensitive_data_masking: true
+  access_logging: true
+  
+  compliance:
+    data_retention_days: 2555  # 7 years
+    audit_trail: true
+    regulatory_reporting: true
+
+# Development and Testing
+development:
+  debug_mode: false
+  test_mode: false
+  mock_data: false
+  verbose_logging: false
+
+# Environment-specific overrides
+# These can be overridden by environment variables
+environment_overrides:
+  development:
+    log_level: DEBUG
+    prometheus_port: 8001
+    debug_mode: true
+    
+  staging:
+    log_level: INFO
+    elasticsearch_enabled: true
+    
+  production:
+    log_level: WARNING
+    elasticsearch_enabled: true
+    redis_enabled: true
+    alerting_enabled: true

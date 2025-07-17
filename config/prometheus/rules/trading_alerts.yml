@@ -1,0 +1,397 @@
+# Trading System Alerting Rules
+# AGENT 13: Comprehensive alerting rules for trading system monitoring
+
+groups:
+  - name: trading_performance
+    rules:
+      # Trading Engine Alerts
+      - alert: TradingEngineHighLatency
+        expr: histogram_quantile(0.95, rate(trading_execution_latency_ms_bucket[5m])) > 20
+        for: 2m
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Trading engine execution latency is high"
+          description: "Trading engine P95 execution latency ({{ $value }}ms) exceeds 20ms threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-latency"
+
+      - alert: TradingEngineVeryHighLatency
+        expr: histogram_quantile(0.95, rate(trading_execution_latency_ms_bucket[5m])) > 50
+        for: 1m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "Trading engine execution latency is critically high"
+          description: "Trading engine P95 execution latency ({{ $value }}ms) exceeds 50ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-latency"
+
+      - alert: TradingSignalGenerationRate
+        expr: rate(trading_signals_generated_total[5m]) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Trading signal generation rate is low"
+          description: "Trading signal generation rate ({{ $value }}/sec) is below expected threshold"
+
+      - alert: OrderFillRateDropped
+        expr: (rate(trading_orders_filled_total[5m]) / rate(trading_orders_placed_total[5m])) * 100 < 90
+        for: 3m
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Order fill rate has dropped"
+          description: "Order fill rate ({{ $value }}%) is below 90% threshold"
+
+      - alert: OrderFillRateCritical
+        expr: (rate(trading_orders_filled_total[5m]) / rate(trading_orders_placed_total[5m])) * 100 < 70
+        for: 1m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "Order fill rate is critically low"
+          description: "Order fill rate ({{ $value }}%) is below 70% critical threshold"
+
+      # Trading P&L Alerts
+      - alert: TradingPnLDrop
+        expr: trading_pnl_usd < -10000
+        for: 0m
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Trading P&L has dropped significantly"
+          description: "Trading P&L ({{ $value }} USD) has dropped below -$10,000"
+
+      - alert: TradingPnLCritical
+        expr: trading_pnl_usd < -50000
+        for: 0m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "Trading P&L is critically negative"
+          description: "Trading P&L ({{ $value }} USD) has dropped below -$50,000 critical threshold"
+
+      # Slippage Alerts
+      - alert: HighSlippage
+        expr: histogram_quantile(0.95, rate(trading_slippage_bps_bucket[5m])) > 50
+        for: 2m
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "High slippage detected"
+          description: "P95 slippage ({{ $value }} bps) exceeds 50 bps threshold"
+
+      - alert: ExtremeSlippage
+        expr: histogram_quantile(0.95, rate(trading_slippage_bps_bucket[5m])) > 200
+        for: 1m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "Extreme slippage detected"
+          description: "P95 slippage ({{ $value }} bps) exceeds 200 bps critical threshold"
+
+  - name: risk_management
+    rules:
+      # VaR Alerts
+      - alert: VaRThresholdBreached
+        expr: risk_var_95_percent > 0.05
+        for: 1m
+        labels:
+          severity: critical
+          service: risk_management
+        annotations:
+          summary: "VaR threshold breached"
+          description: "95% VaR ({{ $value }}%) exceeds 5% threshold for portfolio {{ $labels.portfolio }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/var-breach"
+
+      - alert: VaRExtremeLevel
+        expr: risk_var_95_percent > 0.10
+        for: 0m
+        labels:
+          severity: critical
+          service: risk_management
+        annotations:
+          summary: "VaR at extreme level"
+          description: "95% VaR ({{ $value }}%) exceeds 10% extreme threshold for portfolio {{ $labels.portfolio }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/var-breach"
+
+      # Correlation Shock Alerts
+      - alert: CorrelationShockDetected
+        expr: risk_correlation_shock_level > 0.5
+        for: 0m
+        labels:
+          severity: critical
+          service: risk_management
+        annotations:
+          summary: "Correlation shock detected"
+          description: "Correlation shock level ({{ $value }}) indicates potential market stress for {{ $labels.asset_pair }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/correlation-shock"
+
+      # Margin Usage Alerts
+      - alert: HighMarginUsage
+        expr: risk_margin_usage_percent > 80
+        for: 2m
+        labels:
+          severity: warning
+          service: risk_management
+        annotations:
+          summary: "High margin usage detected"
+          description: "Margin usage ({{ $value }}%) exceeds 80% threshold for account {{ $labels.account }}"
+
+      - alert: CriticalMarginUsage
+        expr: risk_margin_usage_percent > 90
+        for: 1m
+        labels:
+          severity: critical
+          service: risk_management
+        annotations:
+          summary: "Critical margin usage detected"
+          description: "Margin usage ({{ $value }}%) exceeds 90% critical threshold for account {{ $labels.account }}"
+
+      # Kelly Fraction Alerts
+      - alert: KellyFractionExceeded
+        expr: risk_kelly_fraction > 0.25
+        for: 1m
+        labels:
+          severity: warning
+          service: risk_management
+        annotations:
+          summary: "Kelly fraction threshold exceeded"
+          description: "Kelly fraction ({{ $value }}) exceeds 25% threshold for strategy {{ $labels.strategy }}"
+
+      # Position Concentration Alerts
+      - alert: HighPositionConcentration
+        expr: risk_position_concentration_percent > 30
+        for: 2m
+        labels:
+          severity: warning
+          service: risk_management
+        annotations:
+          summary: "High position concentration detected"
+          description: "Position concentration ({{ $value }}%) exceeds 30% threshold for asset {{ $labels.asset }}"
+
+      # Drawdown Alerts
+      - alert: MaxDrawdownExceeded
+        expr: trading_drawdown_percent > 15
+        for: 1m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "Maximum drawdown exceeded"
+          description: "Drawdown ({{ $value }}%) exceeds 15% threshold for strategy {{ $labels.strategy }}"
+
+  - name: marl_agents
+    rules:
+      # MARL Agent Performance
+      - alert: MARLAgentHighLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_time_ms_bucket[5m])) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: marl_agents
+        annotations:
+          summary: "MARL agent inference latency is high"
+          description: "{{ $labels.agent_type }} agent P95 inference time ({{ $value }}ms) exceeds 10ms threshold"
+
+      - alert: MARLAgentVeryHighLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_time_ms_bucket[5m])) > 20
+        for: 1m
+        labels:
+          severity: critical
+          service: marl_agents
+        annotations:
+          summary: "MARL agent inference latency is critically high"
+          description: "{{ $labels.agent_type }} agent P95 inference time ({{ $value }}ms) exceeds 20ms critical threshold"
+
+      # MARL Agent Accuracy
+      - alert: MARLAgentLowAccuracy
+        expr: marl_agent_accuracy_percent < 70
+        for: 5m
+        labels:
+          severity: warning
+          service: marl_agents
+        annotations:
+          summary: "MARL agent accuracy is low"
+          description: "{{ $labels.agent_type }} agent accuracy ({{ $value }}%) is below 70% threshold"
+
+      - alert: MARLAgentVeryLowAccuracy
+        expr: marl_agent_accuracy_percent < 60
+        for: 3m
+        labels:
+          severity: critical
+          service: marl_agents
+        annotations:
+          summary: "MARL agent accuracy is critically low"
+          description: "{{ $labels.agent_type }} agent accuracy ({{ $value }}%) is below 60% critical threshold"
+
+      # MARL Agent Errors
+      - alert: MARLAgentHighErrorRate
+        expr: rate(marl_agent_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: marl_agents
+        annotations:
+          summary: "MARL agent error rate is high"
+          description: "{{ $labels.agent_type }} agent error rate ({{ $value }}/sec) exceeds 0.1/sec threshold"
+
+      # MARL Agent Consensus
+      - alert: MARLAgentLowConsensus
+        expr: marl_agent_consensus_score < 0.7
+        for: 3m
+        labels:
+          severity: warning
+          service: marl_agents
+        annotations:
+          summary: "MARL agent consensus is low"
+          description: "Agent consensus score ({{ $value }}) is below 0.7 threshold for {{ $labels.decision_type }}"
+
+  - name: business_metrics
+    rules:
+      # Business Performance
+      - alert: LowDailyRevenue
+        expr: business_revenue_usd{timeframe="daily"} < 5000
+        for: 1h
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Daily revenue is low"
+          description: "Daily revenue ({{ $value }} USD) is below $5,000 threshold"
+
+      - alert: NegativeDailyRevenue
+        expr: business_revenue_usd{timeframe="daily"} < 0
+        for: 30m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "Daily revenue is negative"
+          description: "Daily revenue ({{ $value }} USD) is negative"
+
+      - alert: LowActiveStrategies
+        expr: business_active_strategies < 3
+        for: 10m
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Number of active strategies is low"
+          description: "Only {{ $value }} strategies are currently active"
+
+      - alert: NoActiveStrategies
+        expr: business_active_strategies == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: trading_engine
+        annotations:
+          summary: "No active trading strategies"
+          description: "No trading strategies are currently active"
+
+      # Trading Volume
+      - alert: LowTradingVolume
+        expr: business_trade_volume_usd{timeframe="daily"} < 100000
+        for: 2h
+        labels:
+          severity: warning
+          service: trading_engine
+        annotations:
+          summary: "Daily trading volume is low"
+          description: "Daily trading volume ({{ $value }} USD) is below $100,000 threshold"
+
+  - name: data_pipeline
+    rules:
+      # Data Pipeline Performance
+      - alert: DataPipelineHighLatency
+        expr: histogram_quantile(0.95, rate(data_pipeline_latency_ms_bucket[5m])) > 500
+        for: 2m
+        labels:
+          severity: warning
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline latency is high"
+          description: "{{ $labels.pipeline_stage }} P95 latency ({{ $value }}ms) exceeds 500ms threshold"
+
+      - alert: DataPipelineVeryHighLatency
+        expr: histogram_quantile(0.95, rate(data_pipeline_latency_ms_bucket[5m])) > 2000
+        for: 1m
+        labels:
+          severity: critical
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline latency is critically high"
+          description: "{{ $labels.pipeline_stage }} P95 latency ({{ $value }}ms) exceeds 2000ms critical threshold"
+
+      # Data Pipeline Throughput
+      - alert: DataPipelineLowThroughput
+        expr: data_pipeline_throughput_msgs_per_sec < 100
+        for: 3m
+        labels:
+          severity: warning
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline throughput is low"
+          description: "{{ $labels.pipeline_stage }} throughput ({{ $value }} msgs/sec) is below 100 msgs/sec threshold"
+
+      - alert: DataPipelineVeryLowThroughput
+        expr: data_pipeline_throughput_msgs_per_sec < 50
+        for: 1m
+        labels:
+          severity: critical
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline throughput is critically low"
+          description: "{{ $labels.pipeline_stage }} throughput ({{ $value }} msgs/sec) is below 50 msgs/sec critical threshold"
+
+      # Data Quality
+      - alert: DataQualityDegraded
+        expr: data_quality_score < 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: data_pipeline
+        annotations:
+          summary: "Data quality has degraded"
+          description: "Data quality score ({{ $value }}) is below 0.9 threshold for {{ $labels.data_source }}"
+
+      - alert: DataQualityPoor
+        expr: data_quality_score < 0.8
+        for: 2m
+        labels:
+          severity: critical
+          service: data_pipeline
+        annotations:
+          summary: "Data quality is poor"
+          description: "Data quality score ({{ $value }}) is below 0.8 critical threshold for {{ $labels.data_source }}"
+
+      # Queue Size
+      - alert: DataPipelineQueueBacklog
+        expr: data_pipeline_queue_size > 10000
+        for: 2m
+        labels:
+          severity: warning
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline queue backlog detected"
+          description: "Queue {{ $labels.queue_name }} size ({{ $value }}) exceeds 10,000 threshold"
+
+      - alert: DataPipelineQueueCritical
+        expr: data_pipeline_queue_size > 50000
+        for: 1m
+        labels:
+          severity: critical
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline queue backlog is critical"
+          description: "Queue {{ $labels.queue_name }} size ({{ $value }}) exceeds 50,000 critical threshold"

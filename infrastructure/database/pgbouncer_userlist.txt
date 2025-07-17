@@ -1,0 +1,4 @@
+"admin" "SCRAM-SHA-256$4096:salt$hash:hash"
+"stats" "SCRAM-SHA-256$4096:salt$hash:hash"
+"grandmodel_user" "SCRAM-SHA-256$4096:salt$hash:hash"
+"replicator" "SCRAM-SHA-256$4096:salt$hash:hash"

@@ -1,0 +1,23 @@
+{
+  "patroni_api_url": "http://localhost:8008",
+  "postgres": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "grandmodel",
+    "user": "grandmodel",
+    "password": "your_password_here"
+  },
+  "check_interval": 1,
+  "alert_threshold_seconds": 30,
+  "monitoring": {
+    "max_events": 10000,
+    "max_rto_measurements": 1000,
+    "export_interval_minutes": 60
+  },
+  "alerts": {
+    "rto_threshold": 30,
+    "consecutive_failures": 3,
+    "webhook_url": "",
+    "email_recipients": []
+  }
+}

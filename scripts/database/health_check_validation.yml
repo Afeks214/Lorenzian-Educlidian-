@@ -1,0 +1,125 @@
+# Health Check Validation Configuration
+# AGENT 1: DATABASE RTO SPECIALIST - Validation Configuration
+# Target: Validate 1s health check intervals and <30s RTO
+
+database_endpoints:
+  primary:
+    host: postgres-primary
+    port: 5432
+    database: grandmodel
+    user: grandmodel
+    password: ${POSTGRES_PASSWORD}
+  
+  standby:
+    host: postgres-standby
+    port: 5432
+    database: grandmodel
+    user: grandmodel
+    password: ${POSTGRES_PASSWORD}
+  
+  pgbouncer:
+    host: pgbouncer
+    port: 6432
+    database: grandmodel
+    user: grandmodel
+    password: ${POSTGRES_PASSWORD}
+
+patroni_endpoints:
+  primary: http://patroni-primary:8008
+  standby: http://patroni-standby:8009
+
+# Test configuration
+test_iterations: 20
+test_interval: 1  # seconds
+timeout: 5  # seconds
+
+# Performance thresholds (milliseconds)
+performance_thresholds:
+  pg_isready: 100
+  patroni_health: 200
+  connection_test: 500
+  pgbouncer_health: 100
+  etcd_health: 100
+  sub_second_check: 500
+
+# RTO targets (milliseconds)
+rto_targets:
+  health_check_detection: 1000    # 1 second
+  patroni_failover: 15000         # 15 seconds
+  connection_recovery: 30000      # 30 seconds
+  full_recovery: 30000            # 30 seconds
+
+# Health check intervals to validate
+expected_intervals:
+  docker_healthcheck: 1000        # 1 second
+  patroni_loop_wait: 2000         # 2 seconds  
+  patroni_ttl: 10000              # 10 seconds
+  health_monitor_interval: 1000   # 1 second
+  sub_second_interval: 500        # 0.5 seconds
+
+# Alert thresholds
+alert_thresholds:
+  success_rate_warning: 95        # %
+  success_rate_critical: 90       # %
+  response_time_warning: 80       # % of threshold
+  response_time_critical: 100     # % of threshold
+  rto_warning: 80                 # % of target
+  rto_critical: 100               # % of target
+
+# Validation scenarios
+validation_scenarios:
+  - name: "Normal Operations"
+    description: "Validate health checks under normal conditions"
+    tests:
+      - pg_isready
+      - patroni_health
+      - connection_pool
+      - pgbouncer_health
+    
+  - name: "High Load"
+    description: "Validate health checks under high connection load"
+    setup:
+      - create_connection_load: 80  # % of max connections
+    tests:
+      - pg_isready
+      - patroni_health
+      - connection_pool
+    
+  - name: "Network Latency"
+    description: "Validate health checks with network latency"
+    setup:
+      - network_delay: 50  # ms
+    tests:
+      - pg_isready
+      - patroni_health
+      - connection_pool
+    
+  - name: "Failure Detection"
+    description: "Validate failure detection speed"
+    setup:
+      - simulate_failure: true
+    tests:
+      - failure_detection_time
+      - recovery_time
+
+# Monitoring integration
+monitoring:
+  prometheus_enabled: true
+  prometheus_port: 8000
+  grafana_dashboard: true
+  alerting_enabled: true
+  
+# Reporting
+reporting:
+  log_level: INFO
+  report_format: json
+  report_directory: /var/log/health_validation
+  retention_days: 30
+  
+# Integration with existing monitoring
+integration:
+  health_monitor_endpoint: http://db-health-monitor:8000
+  patroni_api_endpoints:
+    - http://patroni-primary:8008
+    - http://patroni-standby:8009
+  etcd_endpoint: http://etcd:2379

@@ -1,0 +1,90 @@
+{
+  "metadata_version": "1.0",
+  "timestamp": "20250711_100352",
+  "checkpoint_path": "models/tactical/checkpoints/tactical_marl_ep192_upd9_20250711_100352.pt",
+  "training_state": {
+    "update_count": 9,
+    "episode_count": 192,
+    "timestamp": "20250711_100352"
+  },
+  "model_architecture": {
+    "model_type": "TacticalMARLSystem",
+    "total_parameters": 1555162,
+    "trainable_parameters": 1555162,
+    "input_shape": [
+      60,
+      7
+    ],
+    "action_dim": 3,
+    "agent_parameters": {
+      "fvg": 155115,
+      "momentum": 155115,
+      "entry": 155115
+    },
+    "critic_parameters": 1089817
+  },
+  "performance_metrics": {
+    "episode_reward": 11.632000000000001,
+    "total_episodes": 300,
+    "training_date": "2025-07-11T10:03:52.002350"
+  },
+  "optimizers": {
+    "fvg_actor": {
+      "type": "Adam",
+      "learning_rate": 0.0003,
+      "parameter_groups": 1
+    },
+    "momentum_actor": {
+      "type": "Adam",
+      "learning_rate": 0.0003,
+      "parameter_groups": 1
+    },
+    "entry_actor": {
+      "type": "Adam",
+      "learning_rate": 0.0003,
+      "parameter_groups": 1
+    },
+    "critic": {
+      "type": "Adam",
+      "learning_rate": 0.0003,
+      "parameter_groups": 1
+    }
+  },
+  "schedulers": {
+    "fvg_actor": {
+      "type": "StepLR",
+      "last_lr": 0.0003
+    },
+    "momentum_actor": {
+      "type": "StepLR",
+      "last_lr": 0.0003
+    },
+    "entry_actor": {
+      "type": "StepLR",
+      "last_lr": 0.0003
+    },
+    "critic": {
+      "type": "StepLR",
+      "last_lr": 0.0003
+    }
+  },
+  "buffer_state": {
+    "capacity": 10000,
+    "size": 10000,
+    "utilization": 1.0,
+    "total_samples": 288,
+    "beta": 0.40121727907889804,
+    "alpha": 0.48659250045378855
+  },
+  "additional_info": {
+    "entropy_scheduler_state": {
+      "current_entropy": 0.006540367369081289,
+      "episode_count": 184
+    },
+    "gae_state": {
+      "advantage_mean": 0.001763437117788961,
+      "advantage_std": 0.917076972452887,
+      "advantage_count": 9
+    }
+  }
+}

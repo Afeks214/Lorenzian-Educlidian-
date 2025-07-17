@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-07-14T15:03:38.079517",
+  "data_rows": 500,
+  "validation_results": {
+    "mean_reward": 7.000000000000007,
+    "std_reward": 0.1490711984999852,
+    "avg_inference_time_ms": 2.0758497639799316,
+    "max_inference_time_ms": 9.229895000316901,
+    "latency_violations": 0,
+    "total_inferences": 250,
+    "total_time_ms": 518.9624409949829,
+    "validation_episodes": 5
+  },
+  "performance_metrics": {
+    "avg_inference_time_ms": 2.730808059932315,
+    "max_inference_time_ms": 11.486917999718571,
+    "latency_target_met": 

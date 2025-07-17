@@ -1,0 +1,8 @@
+{
+  "test_type": "static_analysis",
+  "session_id": "redteam_1752571315",
+  "timestamp": "2025-07-15T09:21:55.044805",
+  "target": "http://localhost:8001",
+  "static_issues": [],
+  "total_issues": 0
+}

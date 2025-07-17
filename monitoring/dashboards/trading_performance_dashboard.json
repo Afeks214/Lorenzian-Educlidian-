@@ -1,0 +1,432 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Trading Performance Dashboard",
+    "description": "Real-time trading performance monitoring with comprehensive metrics",
+    "tags": ["trading", "performance", "marl", "risk", "real-time"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m"],
+      "time_options": ["1h", "3h", "6h", "12h", "24h", "2d", "7d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Portfolio P&L Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(trading_pnl_usd)",
+            "legendFormat": "Total P&L",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(trading_pnl_usd) - sum(trading_pnl_usd offset 1h)",
+            "legendFormat": "1h Change",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": -10000},
+                {"color": "yellow", "value": -1000},
+                {"color": "green", "value": 0},
+                {"color": "super-light-green", "value": 10000}
+              ]
+            },
+            "unit": "currencyUSD"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Active Positions",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(trading_position_size > 0)",
+            "legendFormat": "Long Positions",
+            "refId": "A"
+          },
+          {
+            "expr": "count(trading_position_size < 0)",
+            "legendFormat": "Short Positions",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Real-time P&L by Strategy",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "trading_pnl_usd",
+            "legendFormat": "{{strategy}} - {{asset}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "currencyUSD",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "pointSize": 5,
+              "stacking": {
+                "mode": "none",
+                "group": "A"
+              }
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "min", "max"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Trading Signals Generated",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(trading_signals_generated_total[1h])",
+            "legendFormat": "{{strategy}} - {{signal_type}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "Order Execution Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(sum(increase(trading_orders_filled_total[1h])) / sum(increase(trading_orders_placed_total[1h]))) * 100",
+            "legendFormat": "Fill Rate %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 90},
+                {"color": "green", "value": 95},
+                {"color": "super-light-green", "value": 99}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Trading Volume",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(business_trade_volume_usd{timeframe=\"daily\"})",
+            "legendFormat": "Daily Volume",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "currencyUSD"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "Execution Latency Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(trading_execution_latency_ms_bucket[5m]))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.90, rate(trading_execution_latency_ms_bucket[5m]))",
+            "legendFormat": "P90",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(trading_execution_latency_ms_bucket[5m]))",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "ms"
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "values": ["current", "max"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "Slippage Analysis",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(trading_slippage_bps_bucket[5m]))",
+            "legendFormat": "P50 Slippage",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(trading_slippage_bps_bucket[5m]))",
+            "legendFormat": "P95 Slippage",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 9,
+        "title": "Strategy Performance Metrics",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "trading_sharpe_ratio",
+            "legendFormat": "{{strategy}}",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "trading_win_rate_percent",
+            "legendFormat": "{{strategy}}",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "trading_drawdown_percent",
+            "legendFormat": "{{strategy}}",
+            "refId": "C",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 50},
+                {"color": "green", "value": 70}
+              ]
+            }
+          }
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Sharpe Ratio"
+            }
+          ]
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+      },
+      {
+        "id": 10,
+        "title": "MARL Agent Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "marl_agent_accuracy_percent",
+            "legendFormat": "{{agent_type}} Accuracy",
+            "refId": "A"
+          },
+          {
+            "expr": "marl_agent_consensus_score",
+            "legendFormat": "{{decision_type}} Consensus",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "min", "max"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40}
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "strategy",
+          "type": "query",
+          "query": "label_values(trading_pnl_usd, strategy)",
+          "refresh": "on_time_range_change",
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "asset",
+          "type": "query",
+          "query": "label_values(trading_pnl_usd, asset)",
+          "refresh": "on_time_range_change",
+          "includeAll": true,
+          "allValue": ".*"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*Trading.*\"}",
+          "iconColor": "red",
+          "name": "Trading Alerts",
+          "showIn": 0,
+          "step": "5s",
+          "titleFormat": "{{alertname}}",
+          "type": "alert"
+        }
+      ]
+    }
+  }
+}

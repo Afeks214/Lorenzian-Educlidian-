@@ -1,0 +1,575 @@
+# GrandModel Production Monitoring Configuration - Agent 20 Implementation
+# Enterprise-grade monitoring with Prometheus, Grafana, Jaeger, and Istio
+
+---
+# Prometheus Service Monitor for Strategic Agent
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: strategic-monitor
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+  endpoints:
+  - port: metrics
+    interval: 15s
+    path: /metrics
+    scrapeTimeout: 10s
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: go_.*
+      action: drop
+    - sourceLabels: [__name__]
+      regex: promhttp_.*
+      action: drop
+
+---
+# Prometheus Service Monitor for Tactical Agent
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tactical-monitor
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: tactical
+  endpoints:
+  - port: metrics
+    interval: 10s
+    path: /metrics
+    scrapeTimeout: 8s
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: go_.*
+      action: drop
+
+---
+# Prometheus Service Monitor for Risk Agent
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: risk-monitor
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent20
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: risk
+  endpoints:
+  - port: metrics
+    interval: 5s
+    path: /metrics
+    scrapeTimeout: 5s
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: go_.*
+      action: drop
+
+---
+# Prometheus Alert Rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: grandmodel-alerts
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent20
+spec:
+  groups:
+  - name: grandmodel.strategic
+    rules:
+    - alert: StrategicAgentDown
+      expr: up{job="strategic-service"} == 0
+      for: 30s
+      labels:
+        severity: critical
+        component: strategic
+      annotations:
+        summary: "Strategic agent is down"
+        description: "Strategic agent has been down for more than 30 seconds"
+    
+    - alert: StrategicHighLatency
+      expr: histogram_quantile(0.95, strategic_latency_seconds_bucket) > 0.002
+      for: 1m
+      labels:
+        severity: warning
+        component: strategic
+      annotations:
+        summary: "Strategic agent high latency"
+        description: "Strategic agent P95 latency is {{ $value }}s"
+    
+    - alert: StrategicHighErrorRate
+      expr: rate(strategic_errors_total[5m]) > 0.01
+      for: 2m
+      labels:
+        severity: critical
+        component: strategic
+      annotations:
+        summary: "Strategic agent high error rate"
+        description: "Strategic agent error rate is {{ $value | humanizePercentage }}"
+
+  - name: grandmodel.tactical
+    rules:
+    - alert: TacticalAgentDown
+      expr: up{job="tactical-service"} == 0
+      for: 15s
+      labels:
+        severity: critical
+        component: tactical
+      annotations:
+        summary: "Tactical agent is down"
+        description: "Tactical agent has been down for more than 15 seconds"
+    
+    - alert: TacticalHighLatency
+      expr: histogram_quantile(0.95, tactical_latency_seconds_bucket) > 0.001
+      for: 30s
+      labels:
+        severity: warning
+        component: tactical
+      annotations:
+        summary: "Tactical agent high latency"
+        description: "Tactical agent P95 latency is {{ $value }}s"
+    
+    - alert: TacticalQueueBacklog
+      expr: tactical_queue_depth > 100
+      for: 1m
+      labels:
+        severity: warning
+        component: tactical
+      annotations:
+        summary: "Tactical agent queue backlog"
+        description: "Tactical agent queue depth is {{ $value }}"
+
+  - name: grandmodel.risk
+    rules:
+    - alert: RiskAgentDown
+      expr: up{job="risk-service"} == 0
+      for: 10s
+      labels:
+        severity: critical
+        component: risk
+      annotations:
+        summary: "Risk agent is down"
+        description: "Risk agent has been down for more than 10 seconds"
+    
+    - alert: VaRCalculationSlow
+      expr: histogram_quantile(0.95, risk_var_calculation_seconds_bucket) > 0.005
+      for: 30s
+      labels:
+        severity: warning
+        component: risk
+      annotations:
+        summary: "VaR calculation slow"
+        description: "VaR calculation P95 time is {{ $value }}s"
+    
+    - alert: CorrelationShockDetected
+      expr: risk_correlation_shock_alert == 1
+      for: 0s
+      labels:
+        severity: critical
+        component: risk
+      annotations:
+        summary: "Correlation shock detected"
+        description: "Risk system detected a correlation shock event"
+    
+    - alert: RiskLimitBreach
+      expr: risk_var_current > risk_var_limit * 0.9
+      for: 5s
+      labels:
+        severity: warning
+        component: risk
+      annotations:
+        summary: "Risk limit approaching"
+        description: "Current VaR is {{ $value | humanizePercentage }} of limit"
+
+  - name: grandmodel.system
+    rules:
+    - alert: HighMemoryUsage
+      expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage"
+        description: "Container {{ $labels.container }} is using {{ $value | humanizePercentage }} of memory"
+    
+    - alert: HighCPUUsage
+      expr: (rate(container_cpu_usage_seconds_total[5m]) / container_spec_cpu_quota * 100) > 80
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage"
+        description: "Container {{ $labels.container }} is using {{ $value }}% CPU"
+
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grandmodel-dashboard
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent20
+    grafana_dashboard: "1"
+data:
+  grandmodel-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "GrandModel Production Overview",
+        "tags": ["grandmodel", "production", "agent20"],
+        "timezone": "browser",
+        "refresh": "10s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Strategic Agent Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, strategic_latency_seconds_bucket)",
+                "legendFormat": "P95 Latency"
+              },
+              {
+                "expr": "rate(strategic_requests_total[5m])",
+                "legendFormat": "Request Rate"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Tactical Agent Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, tactical_latency_seconds_bucket)",
+                "legendFormat": "P95 Latency"
+              },
+              {
+                "expr": "tactical_queue_depth",
+                "legendFormat": "Queue Depth"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Risk Management Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "risk_var_current",
+                "legendFormat": "Current VaR"
+              },
+              {
+                "expr": "risk_var_limit",
+                "legendFormat": "VaR Limit"
+              },
+              {
+                "expr": "risk_correlation_shock_alert",
+                "legendFormat": "Correlation Shocks"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "System Resources",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "(container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100",
+                "legendFormat": "Memory Usage %"
+              },
+              {
+                "expr": "(rate(container_cpu_usage_seconds_total[5m]) / container_spec_cpu_quota) * 100",
+                "legendFormat": "CPU Usage %"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ]
+      }
+    }
+
+---
+# Jaeger Tracing Configuration
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: grandmodel-jaeger
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent20
+spec:
+  strategy: production
+  storage:
+    type: elasticsearch
+    elasticsearch:
+      nodeCount: 3
+      redundancyPolicy: SingleRedundancy
+      resources:
+        requests:
+          cpu: 200m
+          memory: 4Gi
+        limits:
+          cpu: 1000m
+          memory: 8Gi
+  collector:
+    maxReplicas: 5
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+  query:
+    replicas: 2
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+---
+# Istio Virtual Service
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grandmodel-vs
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent20
+spec:
+  hosts:
+  - grandmodel.production.local
+  gateways:
+  - grandmodel-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /api/strategic
+    route:
+    - destination:
+        host: strategic-service
+        port:
+          number: 8000
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 3s
+  - match:
+    - uri:
+        prefix: /api/tactical
+    route:
+    - destination:
+        host: tactical-service
+        port:
+          number: 8000
+    timeout: 5s
+    retries:
+      attempts: 5
+      perTryTimeout: 1s
+  - match:
+    - uri:
+        prefix: /api/risk
+    route:
+    - destination:
+        host: risk-service
+        port:
+          number: 8000
+    timeout: 10s
+    retries:
+      attempts: 2
+      perTryTimeout: 5s
+
+---
+# Istio Destination Rule
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: grandmodel-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent20
+spec:
+  host: "*.grandmodel.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_CONN
+    outlierDetection:
+      consecutiveGatewayErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+
+---
+# Pod Disruption Budget for Strategic Agent
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: strategic-pdb
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+
+---
+# Pod Disruption Budget for Tactical Agent
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tactical-pdb
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  minAvailable: 3
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: tactical
+
+---
+# Pod Disruption Budget for Risk Agent
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: risk-pdb
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent20
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: risk
+
+---
+# Network Policy for Strategic Agent
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: strategic-network-policy
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  podSelector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: grandmodel
+          component: gateway
+    - podSelector:
+        matchLabels:
+          app: grandmodel
+          component: tactical
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8080
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: grandmodel
+          component: risk
+    ports:
+    - protocol: TCP
+      port: 8000
+  - to:
+    - podSelector:
+        matchLabels:
+          app: grandmodel
+          component: data-pipeline
+    ports:
+    - protocol: TCP
+      port: 8000
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53

@@ -1,0 +1,153 @@
+{
+  "validation_info": {
+    "start_time": "2025-07-15T16:38:12.538964",
+    "system_info": {
+      "cpu_count": 2,
+      "memory_total_gb": 7.757411956787109,
+      "python_version": "3.12.3",
+      "timestamp": "2025-07-15T16:38:12.538935"
+    },
+    "end_time": "2025-07-15T16:38:14.050089",
+    "total_time_seconds": 1.5111231803894043
+  },
+  "tests": {
+    "data_loading_synthetic_5year_5min.csv": {
+      "success": true,
+      "total_records": 525888,
+      "processing_time_seconds": 0.4906795024871826,
+      "peak_memory_mb": 3.96484375,
+      "throughput_records_per_second": 1071754.5716386167,
+      "memory_per_record_kb": 0.007720275039552148
+    },
+    "data_loading_synthetic_5year_30min.csv": {
+      "success": true,
+      "total_records": 87648,
+      "processing_time_seconds": 0.08619809150695801,
+      "peak_memory_mb": 4.0,
+      "throughput_records_per_second": 1016820.6565562412,
+      "memory_per_record_kb": 0.046732384081781674
+    },
+    "data_loading_stress_test_dataset.csv": {
+      "success": true,
+      "total_records": 105120,
+      "processing_time_seconds": 0.09607577323913574,
+      "peak_memory_mb": -0.80859375,
+      "throughput_records_per_second": 1094136.393139953,
+      "memory_per_record_kb": -0.007876712328767124
+    },
+    "training_simulation_10000": {
+      "success": true,
+      "dataset_size": 10000,
+      "epochs": 5,
+      "total_time_seconds": 0.013930559158325195,
+      "time_per_epoch_seconds": 0.002786111831665039,
+      "peak_memory_mb": 0.0,
+      "throughput_records_per_second": 3589231.3748309915
+    },
+    "training_simulation_50000": {
+      "success": true,
+      "dataset_size": 50000,
+      "epochs": 5,
+      "total_time_seconds": 0.05830836296081543,
+      "time_per_epoch_seconds": 0.011661672592163086,
+      "peak_memory_mb": 0.0,
+      "throughput_records_per_second": 4287549.629338861
+    },
+    "training_simulation_100000": {
+      "success": true,
+      "dataset_size": 100000,
+      "epochs": 5,
+      "total_time_seconds": 0.12156057357788086,
+      "time_per_epoch_seconds": 0.02431211471557617,
+      "peak_memory_mb": 0.0,
+      "throughput_records_per_second": 4113175.7220581253
+    },
+    "training_simulation_500000": {
+      "success": true,
+      "dataset_size": 500000,
+      "epochs": 5,
+      "total_time_seconds": 0.5960628986358643,
+      "time_per_epoch_seconds": 0.11921257972717285,
+      "peak_memory_mb": -0.0078125,
+      "throughput_records_per_second": 4194188.240404565
+    },
+    "memory_scalability": {
+      "success": true,
+      "scalability_data": [
+        {
+          "size": 1000,
+          "memory_used_mb": 0.0,
+          "memory_per_record_kb": 0.0
+        },
+        {
+          "size": 5000,
+          "memory_used_mb": 0.0,
+          "memory_per_record_kb": 0.0
+        },
+        {
+          "size": 10000,
+          "memory_used_mb": 0.0,
+          "memory_per_record_kb": 0.0
+        },
+        {
+          "size": 50000,
+          "memory_used_mb": 1.69921875,
+          "memory_per_record_kb": 0.0348
+        },
+        {
+          "size": 100000,
+          "memory_used_mb": 7.58984375,
+          "memory_per_record_kb": 0.07772
+        }
+      ],
+      "memory_scaling_slope": 7.527245143925338e-05,
+      "memory_scaling_intercept": -0.6412328877832125,
+      "projections": {
+        "5min_1year": 7.2714072075111025,
+        "5min_5years": 38.92196758868836,
+        "30min_1year": 0.6775404614325067,
+        "30min_5years": 5.952633858295383
+      }
+    }
+  },
+  "projections": {
+    "5min_5years": {
+      "dataset_size": 525600,
+      "processing_time_hours": 0.0014600000000000001,
+      "processing_time_days": 6.083333333333334e-05,
+      "memory_requirement_gb": 2.506256103515625,
+      "storage_requirement_gb": 0.04895031452178955,
+      "feasibility": "feasible",
+      "recommendations": []
+    },
+    "30min_5years": {
+      "dataset_size": 87600,
+      "processing_time_hours": 0.00024333333333333333,
+      "processing_time_days": 1.0138888888888888e-05,
+      "memory_requirement_gb": 0.4177093505859375,
+      "storage_requirement_gb": 0.008158385753631592,
+      "feasibility": "feasible",
+      "recommendations": []
+    },
+    "1min_5years": {
+      "dataset_size": 2628000,
+      "processing_time_hours": 0.0073,
+      "processing_time_days": 0.00030416666666666667,
+      "memory_requirement_gb": 12.531280517578125,
+      "storage_requirement_gb": 0.24475157260894775,
+      "feasibility": "feasible",
+      "recommendations": [
+        "Use memory-mapped files or chunked processing"
+      ]
+    }
+  },
+  "assessment": {
+    "total_tests": 8,
+    "passed_tests": 8,
+    "success_rate": 100.0,
+    "overall_status": "EXCELLENT",
+    "readiness_for_5year_datasets": "READY",
+    "critical_issues": [],
+    "warnings": []
+  }
+}

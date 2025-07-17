@@ -1,0 +1,14 @@
+[
+  {
+    "checkpoint_path": "models/tactical/checkpoints/tactical_marl_ep192_upd9_20250711_100352.pt",
+    "metadata_path": "models/tactical/metadata/tactical_marl_ep192_upd9_20250711_100352.json",
+    "timestamp": "20250711_100352",
+    "episode_count": 192,
+    "update_count": 9,
+    "metrics": {
+      "episode_reward": 11.632000000000001,
+      "total_episodes": 300,
+      "training_date": "2025-07-11T10:03:52.002350"
+    }
+  }
+]

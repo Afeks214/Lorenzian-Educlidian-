@@ -1,0 +1,70 @@
+# GrandModel Kubernetes Namespace - Agent 5 Production Deployment
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grandmodel
+  labels:
+    name: grandmodel
+    environment: production
+    managed-by: agent5
+    version: "1.0.0"
+  annotations:
+    description: "GrandModel Strategic/Tactical MARL Trading System"
+    contact: "Agent 5 - System Integration & Production Deployment Validation"
+    created-by: "agent5-kubernetes-deployment"
+---
+# Resource Quota for the namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: grandmodel-resource-quota
+  namespace: grandmodel
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+    services: "10"
+    secrets: "20"
+    configmaps: "20"
+---
+# Network Policy for security isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: grandmodel-network-policy
+  namespace: grandmodel
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: grandmodel
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+  - from: []
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 6379

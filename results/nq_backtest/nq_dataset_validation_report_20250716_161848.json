@@ -1,0 +1,506 @@
+{
+  "summary": {
+    "analysis_timestamp": "2025-07-16T16:18:48.550383",
+    "total_timeframes_analyzed": 2,
+    "successful_analyses": 0,
+    "total_data_rows": 0,
+    "average_quality_score": 0,
+    "average_coverage_percentage": 0,
+    "overall_status": "POOR"
+  },
+  "detailed_analysis": {
+    "file_analysis": {
+      "available_files": [
+        "NQ - 30 min - ETH.csv",
+        "@NQ - 5 min - ETH.csv"
+      ],
+      "file_sizes": {
+        "NQ - 30 min - ETH.csv": 2.98,
+        "@NQ - 5 min - ETH.csv": 17.22
+      },
+      "last_modified": {
+        "NQ - 30 min - ETH.csv": "2025-07-16T08:10:26.275606",
+        "@NQ - 5 min - ETH.csv": "2025-07-16T08:04:39.695353"
+      },
+      "estimated_records": {
+        "NQ - 30 min - ETH.csv": 45829,
+        "@NQ - 5 min - ETH.csv": 264501
+      }
+    },
+    "30min": {
+      "timeframe": "30min",
+      "start_time": "2025-07-16T16:18:38.296459",
+      "data_quality": {
+        "total_rows": 56083,
+        "total_columns": 30,
+        "null_counts": {
+          "timestamp": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "open": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "high": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "low": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "close": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "volume": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "returns": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "log_returns": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "sma_10": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "sma_30": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "ema_10": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "ema_30": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_middle": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_upper": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_lower": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_width": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "rsi": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "volatility_10": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "volatility_30": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "vol_ratio": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "realized_vol": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "tr": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "atr": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "hour": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "day_of_week": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "month": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "quarter": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "market_open": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "pre_market": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "after_market": {
+            "count": 0,
+            "percentage": 0.0
+          }
+        },
+        "data_types": {
+          "timestamp": "object",
+          "open": "float32",
+          "high": "float32",
+          "low": "float32",
+          "close": "float32",
+          "volume": "int64",
+          "returns": "float32",
+          "log_returns": "float32",
+          "sma_10": "float64",
+          "sma_30": "float64",
+          "ema_10": "float64",
+          "ema_30": "float64",
+          "bb_middle": "float64",
+          "bb_upper": "float64",
+          "bb_lower": "float64",
+          "bb_width": "float64",
+          "rsi": "float64",
+          "volatility_10": "float64",
+          "volatility_30": "float64",
+          "vol_ratio": "float64",
+          "realized_vol": "float64",
+          "tr": "float32",
+          "atr": "float64",
+          "hour": "float64",
+          "day_of_week": "float64",
+          "month": "float64",
+          "quarter": "float64",
+          "market_open": "bool",
+          "pre_market": "bool",
+          "after_market": "bool"
+        },
+        "price_validation": {
+          "open": {
+            "min_price": 9785.5,
+            "max_price": 22910.25,
+            "mean_price": 15275.8583984375,
+            "std_price": 3346.906982421875,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "high": {
+            "min_price": 9830.0,
+            "max_price": 22934.75,
+            "mean_price": 15294.2529296875,
+            "std_price": 3347.9970703125,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "low": {
+            "min_price": 9728.75,
+            "max_price": 22903.0,
+            "mean_price": 15256.5302734375,
+            "std_price": 3345.743896484375,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "close": {
+            "min_price": 9792.25,
+            "max_price": 22911.25,
+            "mean_price": 15275.9794921875,
+            "std_price": 3346.927978515625,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "ohlc_consistency": {
+            "high_above_low": "True",
+            "open_close_within_range": "True"
+          }
+        },
+        "volume_validation": {
+          "min_volume": 0,
+          "max_volume": 157408,
+          "mean_volume": 11806.171353172977,
+          "zero_volume_bars": 51,
+          "negative_volume_bars": 0
+        },
+        "outlier_detection": {
+          "close": {
+            "outlier_count": 0,
+            "outlier_percentage": 0.0,
+            "lower_bound": 3880.625,
+            "upper_bound": 27053.625
+          },
+          "volume": {
+            "outlier_count": 5259,
+            "outlier_percentage": 9.38,
+            "lower_bound": -19216.75,
+            "upper_bound": 36793.25
+          }
+        },
+        "quality_score": 100.0
+      },
+      "temporal_analysis": {},
+      "statistical_analysis": {},
+      "market_session_analysis": {},
+      "performance_metrics": {},
+      "status": "error",
+      "error": "time data \"0\" doesn't match format \"%d/%m/%Y %H:%M:%S\", at position 33941. You might want to try:\n    - passing `format` if your strings have a consistent format;\n    - passing `format='ISO8601'` if your strings are all ISO8601 but not necessarily in exactly the same format;\n    - passing `format='mixed'`, and the format will be inferred for each element individually. You might want to use `dayfirst` alongside this."
+    },
+    "5min": {
+      "timeframe": "5min",
+      "start_time": "2025-07-16T16:18:40.917248",
+      "data_quality": {
+        "total_rows": 327655,
+        "total_columns": 30,
+        "null_counts": {
+          "timestamp": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "open": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "high": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "low": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "close": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "volume": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "returns": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "log_returns": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "sma_10": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "sma_30": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "ema_10": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "ema_30": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_middle": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_upper": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_lower": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "bb_width": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "rsi": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "volatility_10": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "volatility_30": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "vol_ratio": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "realized_vol": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "tr": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "atr": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "hour": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "day_of_week": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "month": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "quarter": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "market_open": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "pre_market": {
+            "count": 0,
+            "percentage": 0.0
+          },
+          "after_market": {
+            "count": 0,
+            "percentage": 0.0
+          }
+        },
+        "data_types": {
+          "timestamp": "object",
+          "open": "float32",
+          "high": "float32",
+          "low": "float32",
+          "close": "float32",
+          "volume": "int64",
+          "returns": "float32",
+          "log_returns": "float32",
+          "sma_10": "float64",
+          "sma_30": "float64",
+          "ema_10": "float64",
+          "ema_30": "float64",
+          "bb_middle": "float64",
+          "bb_upper": "float64",
+          "bb_lower": "float64",
+          "bb_width": "float64",
+          "rsi": "float64",
+          "volatility_10": "float64",
+          "volatility_30": "float64",
+          "vol_ratio": "float64",
+          "realized_vol": "float64",
+          "tr": "float32",
+          "atr": "float64",
+          "hour": "float64",
+          "day_of_week": "float64",
+          "month": "float64",
+          "quarter": "float64",
+          "market_open": "bool",
+          "pre_market": "bool",
+          "after_market": "bool"
+        },
+        "price_validation": {
+          "open": {
+            "min_price": 9754.5,
+            "max_price": 22930.25,
+            "mean_price": 15203.9267578125,
+            "std_price": 3350.17724609375,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "high": {
+            "min_price": 9760.75,
+            "max_price": 22934.75,
+            "mean_price": 15211.4384765625,
+            "std_price": 3350.65478515625,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "low": {
+            "min_price": 9728.75,
+            "max_price": 22906.75,
+            "mean_price": 15196.197265625,
+            "std_price": 3349.582763671875,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "close": {
+            "min_price": 9754.75,
+            "max_price": 22930.0,
+            "mean_price": 15203.9345703125,
+            "std_price": 3350.17578125,
+            "negative_values": 0,
+            "zero_values": 0
+          },
+          "ohlc_consistency": {
+            "high_above_low": "True",
+            "open_close_within_range": "True"
+          }
+        },
+        "volume_validation": {
+          "min_volume": 0,
+          "max_volume": 38480,
+          "mean_volume": 2020.8037966763823,
+          "zero_volume_bars": 66,
+          "negative_volume_bars": 0
+        },
+        "outlier_detection": {
+          "close": {
+            "outlier_count": 0,
+            "outlier_percentage": 0.0,
+            "lower_bound": 4645.125,
+            "upper_bound": 25670.125
+          },
+          "volume": {
+            "outlier_count": 30649,
+            "outlier_percentage": 9.35,
+            "lower_bound": -3227.5,
+            "upper_bound": 6128.5
+          }
+        },
+        "quality_score": 100.0
+      },
+      "temporal_analysis": {},
+      "statistical_analysis": {},
+      "market_session_analysis": {},
+      "performance_metrics": {},
+      "status": "error",
+      "error": "time data \"0\" doesn't match format \"%d/%m/%Y %H:%M:%S\", at position 198371. You might want to try:\n    - passing `format` if your strings have a consistent format;\n    - passing `format='ISO8601'` if your strings are all ISO8601 but not necessarily in exactly the same format;\n    - passing `format='mixed'`, and the format will be inferred for each element individually. You might want to use `dayfirst` alongside this."
+    },
+    "cross_validation": {
+      "status": "skipped",
+      "reason": "insufficient_timeframes"
+    }
+  },
+  "recommendations": [
+    "Consider data cleaning to improve quality scores",
+    "Fill missing data gaps to improve coverage"
+  ],
+  "quality_assessment": {},
+  "production_readiness": {
+    "criteria": {
+      "minimum_quality_score": 70,
+      "minimum_coverage": 80,
+      "maximum_acceptable_gaps": 20,
+      "minimum_data_points": 100000
+    },
+    "timeframe_readiness": {},
+    "overall_production_ready": true
+  }
+}

@@ -1,0 +1,227 @@
+# GrandModel MARL Training Configuration
+# Comprehensive settings for tactical and strategic MAPPO training
+
+# Global Training Settings
+global:
+  project_name: "GrandModel"
+  version: "1.0.0"
+  environment: "colab"
+  random_seed: 42
+  device: "auto"  # auto, cuda, cpu
+  mixed_precision: true
+  gradient_accumulation_steps: 2
+
+# Data Configuration
+data:
+  tactical:
+    file: "NQ - 5 min - ETH.csv"
+    timeframe: "5min"
+    features: 7
+    lookback_bars: 60
+  strategic:
+    file: "NQ - 30 min - ETH.csv" 
+    timeframe: "30min"
+    features: 13
+    lookback_bars: 48
+
+# Tactical MAPPO Configuration
+tactical:
+  model:
+    state_dim: 7
+    action_dim: 5
+    n_agents: 3
+    hidden_dim: 256
+    dropout_rate: 0.2
+    
+  training:
+    num_episodes: 200
+    episode_length: 1000
+    lr_actor: 3.0e-4
+    lr_critic: 1.0e-3
+    gamma: 0.99
+    eps_clip: 0.2
+    k_epochs: 4
+    batch_size: 32
+    buffer_size: 10000
+    gae_lambda: 0.95
+    
+  agents:
+    - name: "tactical_agent"
+      role: "Short-term trading decisions"
+    - name: "risk_agent" 
+      role: "Risk management and position sizing"
+    - name: "execution_agent"
+      role: "Order execution optimization"
+      
+  actions:
+    - {id: 0, name: "HOLD", description: "Maintain current position"}
+    - {id: 1, name: "BUY_SMALL", description: "Small long position increase"}
+    - {id: 2, name: "BUY_LARGE", description: "Large long position increase"}
+    - {id: 3, name: "SELL_SMALL", description: "Small position reduction"}
+    - {id: 4, name: "SELL_LARGE", description: "Large position reduction"}
+
+# Strategic MAPPO Configuration  
+strategic:
+  model:
+    state_dim: 13
+    action_dim: 7
+    n_agents: 3
+    hidden_dim: 512
+    dropout_rate: 0.3
+    batch_norm: true
+    
+  training:
+    num_episodes: 300
+    episode_length: 500
+    lr_actor: 1.0e-4
+    lr_critic: 3.0e-4
+    gamma: 0.995
+    eps_clip: 0.1
+    k_epochs: 8
+    batch_size: 16
+    buffer_size: 50000
+    gae_lambda: 0.98
+    
+  agents:
+    - name: "strategic_agent"
+      role: "Long-term market strategy and position management"
+    - name: "portfolio_manager"
+      role: "Portfolio optimization and risk management"
+    - name: "regime_detector"
+      role: "Market regime identification and adaptation"
+      
+  actions:
+    - {id: 0, name: "HOLD", description: "Maintain current positions"}
+    - {id: 1, name: "BUY_CONSERVATIVE", description: "Small long position increase"}
+    - {id: 2, name: "BUY_AGGRESSIVE", description: "Large long position increase"}
+    - {id: 3, name: "SELL_CONSERVATIVE", description: "Small position reduction"}
+    - {id: 4, name: "SELL_AGGRESSIVE", description: "Large position reduction"}
+    - {id: 5, name: "REDUCE_RISK", description: "Lower portfolio risk exposure"}
+    - {id: 6, name: "INCREASE_RISK", description: "Higher portfolio risk exposure"}
+
+# Training Schedule Configuration
+schedule:
+  tactical:
+    save_frequency: 25
+    plot_frequency: 50
+    validation_frequency: 100
+    early_stopping_patience: 50
+    target_reward: 100.0
+    
+  strategic:
+    save_frequency: 20
+    plot_frequency: 30
+    validation_frequency: 50
+    early_stopping_patience: 75
+    target_reward: 200.0
+    target_sharpe: 2.0
+    max_drawdown_threshold: -0.15
+
+# Market Configuration
+market:
+  instrument: "NQ"
+  description: "NASDAQ-100 E-mini Futures"
+  tick_size: 0.25
+  point_value: 20.0
+  margin_requirement: 50000.0
+  trading_hours: "23:00-22:00 ET"
+  
+  regimes:
+    - {name: "BULL_TREND", description: "Strong upward trend"}
+    - {name: "BEAR_TREND", description: "Strong downward trend"}
+    - {name: "VOLATILE", description: "High volatility environment"}
+    - {name: "CONSOLIDATION", description: "Low volatility, sideways movement"}
+    - {name: "CRISIS", description: "Extreme market stress"}
+    - {name: "NORMAL", description: "Standard market conditions"}
+
+# Risk Management Configuration
+risk:
+  max_position_size: 10.0
+  max_leverage: 3.0
+  stop_loss_pct: 0.02
+  take_profit_pct: 0.04
+  max_daily_loss: 0.05
+  max_drawdown: 0.15
+  var_confidence: 0.95
+  var_horizon_days: 1
+
+# Performance Metrics Configuration
+metrics:
+  primary:
+    - "episode_reward"
+    - "sharpe_ratio"
+    - "portfolio_value"
+    - "max_drawdown"
+    
+  secondary:
+    - "win_rate"
+    - "profit_factor"
+    - "calmar_ratio"
+    - "information_ratio"
+    - "sortino_ratio"
+    
+  tracking:
+    - "actor_loss"
+    - "critic_loss"
+    - "memory_usage"
+    - "training_time"
+
+# Export Configuration
+export:
+  base_path: "exports"
+  create_subdirs: true
+  subdirs:
+    - "models"
+    - "checkpoints"  
+    - "plots"
+    - "logs"
+    - "validation"
+    
+  files:
+    - "model_config.json"
+    - "training_statistics.json"
+    - "validation_results.json"
+    - "README.md"
+    - "deploy_model.py"
+    
+  backup:
+    google_drive: true
+    drive_path: "GrandModel_Exports"
+
+# GPU Optimization Configuration
+gpu:
+  auto_detect_batch_size: true
+  memory_fraction: 0.9
+  enable_cudnn_benchmark: true
+  gradient_clipping: 0.5
+  memory_monitoring: true
+  clear_cache_frequency: 20
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_logging: true
+  console_logging: true
+  
+  files:
+    training: "training.log"
+    validation: "validation.log"
+    performance: "performance.log"
+    errors: "errors.log"
+
+# Validation Configuration
+validation:
+  data_split: 0.8  # 80% train, 20% validation
+  n_episodes: 10
+  episode_length: 150
+  metrics_save: true
+  statistical_tests: true
+  significance_level: 0.05
+
+# Integration Configuration
+integration:
+  tactical_strategic_sync: true
+  cross_timeframe_validation: true
+  hierarchical_communication: false  # Future feature
+  real_time_adaptation: false        # Future feature

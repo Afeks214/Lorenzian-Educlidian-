@@ -1,0 +1,105 @@
+{
+  "report_metadata": {
+    "generation_time": "2025-07-16T20:58:28.152792+00:00",
+    "agent": "Agent 2 - Data Preparation Specialist",
+    "version": "1.0.0"
+  },
+  "data_files": {
+    "5m": "/home/QuantNova/GrandModel/data/historical/NQ - 5 min.csv",
+    "30m": "/home/QuantNova/GrandModel/data/historical/NQ - 30 min.csv"
+  },
+  "file_availability": {
+    "5m": false,
+    "30m": false
+  },
+  "validation_results": {
+    "5m": {
+      "timeframe": "5m",
+      "total_rows": 8641,
+      "date_range": {
+        "start": "2025-06-16 20:58:27",
+        "end": "2025-07-16 20:58:27"
+      },
+      "missing_values": {
+        "Open": 0,
+        "High": 0,
+        "Low": 0,
+        "Close": 0,
+        "Volume": 0
+      },
+      "data_quality": {
+        "price_range": {
+          "min": 8595.15416257008,
+          "max": 203723.4089211941
+        },
+        "volume_stats": {
+          "min": 100,
+          "max": 9999,
+          "mean": 5030.72630482583
+        }
+      },
+      "timestamp_issues": {
+        "duplicates": 0,
+        "gaps": 0
+      },
+      "price_validation": {
+        "negative_prices": 0,
+        "zero_volume": 0,
+        "hlc_consistency": 0,
+        "lhc_consistency": 0
+      }
+    },
+    "30m": {
+      "timeframe": "30m",
+      "total_rows": 1441,
+      "date_range": {
+        "start": "2025-06-16 20:58:27",
+        "end": "2025-07-16 20:58:27"
+      },
+      "missing_values": {
+        "Open": 0,
+        "High": 0,
+        "Low": 0,
+        "Close": 0,
+        "Volume": 0
+      },
+      "data_quality": {
+        "price_range": {
+          "min": 11536.029174742009,
+          "max": 55894.67194800083
+        },
+        "volume_stats": {
+          "min": 107,
+          "max": 9995,
+          "mean": 4964.793199167245
+        }
+      },
+      "timestamp_issues": {
+        "duplicates": 0,
+        "gaps": 0
+      },
+      "price_validation": {
+        "negative_prices": 0,
+        "zero_volume": 0,
+        "hlc_consistency": 0,
+        "lhc_consistency": 0
+      }
+    }
+  },
+  "summary": {
+    "5m": {
+      "total_issues": 0,
+      "data_quality_score": 100.0
+    },
+    "30m": {
+      "total_issues": 0,
+      "data_quality_score": 100.0
+    }
+  },
+  "recommendations": [
+    "Data quality is excellent - ready for production backtesting",
+    "Consider implementing real-time data validation for live trading",
+    "Monitor data feed quality and implement automated alerts",
+    "Regularly validate data consistency across different timeframes"
+  ]
+}

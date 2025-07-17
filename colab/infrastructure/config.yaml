@@ -1,0 +1,267 @@
+# Training Infrastructure Configuration
+# Complete configuration for the training infrastructure system
+
+# System Configuration
+system:
+  project_root: "/home/QuantNova/GrandModel"
+  colab_dir: "/home/QuantNova/GrandModel/colab"
+  infrastructure_dir: "/home/QuantNova/GrandModel/colab/infrastructure"
+  
+# Directory Structure
+directories:
+  exports:
+    base: "/home/QuantNova/GrandModel/colab/exports"
+    models: "/home/QuantNova/GrandModel/colab/exports/models"
+    checkpoints: "/home/QuantNova/GrandModel/colab/exports/checkpoints"
+    logs: "/home/QuantNova/GrandModel/colab/exports/logs"
+    deployments: "/home/QuantNova/GrandModel/colab/exports/deployments"
+    plots: "/home/QuantNova/GrandModel/colab/exports/plots"
+    validation: "/home/QuantNova/GrandModel/colab/exports/validation"
+    artifacts: "/home/QuantNova/GrandModel/colab/exports/artifacts"
+    backups: "/home/QuantNova/GrandModel/colab/exports/backups"
+  
+  logs:
+    base: "/home/QuantNova/GrandModel/colab/logs"
+    training: "/home/QuantNova/GrandModel/colab/logs/training"
+    validation: "/home/QuantNova/GrandModel/colab/logs/validation"
+    errors: "/home/QuantNova/GrandModel/colab/logs/errors"
+    performance: "/home/QuantNova/GrandModel/colab/logs/performance"
+    system: "/home/QuantNova/GrandModel/colab/logs/system"
+    debug: "/home/QuantNova/GrandModel/colab/logs/debug"
+    audit: "/home/QuantNova/GrandModel/colab/logs/audit"
+  
+  infrastructure:
+    base: "/home/QuantNova/GrandModel/colab/infrastructure"
+    monitoring: "/home/QuantNova/GrandModel/colab/infrastructure/monitoring"
+    optimization: "/home/QuantNova/GrandModel/colab/infrastructure/optimization"
+    backup: "/home/QuantNova/GrandModel/colab/infrastructure/backup"
+    testing: "/home/QuantNova/GrandModel/colab/infrastructure/testing"
+    deployment: "/home/QuantNova/GrandModel/colab/infrastructure/deployment"
+
+# Training Configuration
+training:
+  default_model: "tactical_mappo"
+  default_batch_size: 32
+  default_learning_rate: 0.001
+  default_epochs: 100
+  checkpoint_interval: 10
+  validation_interval: 5
+  
+# Monitoring Configuration
+monitoring:
+  enabled: true
+  system_monitoring_interval: 30.0
+  performance_logging: true
+  alert_thresholds:
+    cpu_percent: 90.0
+    memory_percent: 85.0
+    gpu_utilization: 95.0
+    gpu_memory_percent: 90.0
+    gpu_temperature: 85.0
+    training_time_per_step: 10.0
+    gradient_norm: 100.0
+  
+# GPU Optimization Configuration
+gpu_optimization:
+  enabled: true
+  mixed_precision: true
+  model_compilation: true
+  gradient_checkpointing: false
+  use_flash_attention: true
+  allow_tf32: true
+  benchmark_cudnn: true
+  deterministic: false
+  memory_fraction: 0.9
+  pin_memory: true
+  non_blocking: true
+  
+# Memory Optimization Configuration
+memory_optimization:
+  enabled: true
+  max_memory_percent: 85.0
+  gc_threshold: 70.0
+  monitoring_interval: 30.0
+  automatic_gc: true
+  cache_size_limit: 1073741824  # 1GB
+  checkpoint_memory_limit: 80.0
+  
+# Backup System Configuration
+backup_system:
+  enabled: true
+  max_checkpoints: 10
+  max_backups: 5
+  backup_interval_hours: 24
+  checkpoint_interval_steps: 1000
+  compress_backups: true
+  verify_backups: true
+  backup_retention_days: 7
+  auto_backup: true
+  backup_formats: ["torch", "pickle", "json"]
+  
+# Testing Configuration
+testing:
+  enabled: true
+  run_pre_training_tests: true
+  run_post_training_tests: true
+  parallel_testing: true
+  test_timeout: 300
+  performance_benchmarks: true
+  
+# Deployment Configuration
+deployment:
+  auto_setup_environment: true
+  dependency_checking: true
+  system_validation: true
+  error_recovery: true
+  deployment_logging: true
+  
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  max_file_size: 10485760  # 10MB
+  backup_count: 5
+  console_logging: true
+  file_logging: true
+  
+# Data Loading Configuration
+data_loading:
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 2
+  drop_last: true
+  shuffle: true
+  
+# Performance Targets
+performance_targets:
+  gpu_utilization: 85.0
+  memory_efficiency: 70.0
+  training_speed: 1000  # samples/second
+  cpu_usage: 80.0
+  memory_usage: 85.0
+  io_wait: 10.0
+  checkpoint_save_time: 1.0
+  
+# Security Configuration
+security:
+  enable_checksum_verification: true
+  secure_temporary_files: true
+  log_sensitive_data: false
+  encrypt_checkpoints: false
+  
+# Environment Variables
+environment:
+  CUDA_VISIBLE_DEVICES: "0,1,2,3"
+  CUDA_LAUNCH_BLOCKING: "0"
+  CUDA_CACHE_DISABLE: "0"
+  TORCH_CUDNN_V8_API_ENABLED: "1"
+  OMP_NUM_THREADS: "8"
+  
+# Model-Specific Configurations
+models:
+  tactical_mappo:
+    batch_size: 32
+    learning_rate: 0.001
+    optimizer: "adam"
+    weight_decay: 0.0001
+    scheduler: "onecycle"
+    mixed_precision: true
+    
+  strategic_mappo:
+    batch_size: 64
+    learning_rate: 0.0005
+    optimizer: "adam"
+    weight_decay: 0.0001
+    scheduler: "cosine"
+    mixed_precision: true
+    
+  risk_management:
+    batch_size: 128
+    learning_rate: 0.0001
+    optimizer: "adamw"
+    weight_decay: 0.01
+    scheduler: "warmup"
+    mixed_precision: true
+    
+  execution_engine:
+    batch_size: 256
+    learning_rate: 0.0002
+    optimizer: "adam"
+    weight_decay: 0.0001
+    scheduler: "step"
+    mixed_precision: true
+    
+  xai_explanations:
+    batch_size: 16
+    learning_rate: 0.0001
+    optimizer: "adamw"
+    weight_decay: 0.01
+    scheduler: "polynomial"
+    mixed_precision: true
+
+# Hardware-Specific Optimizations
+hardware_optimizations:
+  a100:
+    enable_tf32: true
+    batch_size_multiplier: 2
+    memory_fraction: 0.95
+    
+  h100:
+    enable_tf32: true
+    batch_size_multiplier: 3
+    memory_fraction: 0.95
+    
+  v100:
+    enable_tf32: false
+    batch_size_multiplier: 1
+    memory_fraction: 0.9
+    
+  rtx_3090:
+    enable_tf32: false
+    batch_size_multiplier: 1
+    memory_fraction: 0.85
+    
+# Optimization Phases
+optimization_phases:
+  phase1_essential:
+    - "mixed_precision"
+    - "batch_size_optimization"
+    - "data_loading_optimization"
+    - "basic_monitoring"
+    
+  phase2_performance:
+    - "model_compilation"
+    - "gradient_checkpointing"
+    - "learning_rate_scheduling"
+    - "system_optimizations"
+    
+  phase3_advanced:
+    - "distributed_training"
+    - "custom_kernels"
+    - "memory_optimization"
+    - "comprehensive_profiling"
+    
+  phase4_production:
+    - "continuous_monitoring"
+    - "automated_tuning"
+    - "hardware_specific"
+    - "scaling_optimizations"
+    
+# Feature Flags
+features:
+  enable_monitoring: true
+  enable_gpu_optimization: true
+  enable_memory_optimization: true
+  enable_backup_system: true
+  enable_testing: true
+  enable_deployment_automation: true
+  enable_performance_profiling: true
+  enable_automated_optimization: true
+  enable_distributed_training: false
+  enable_model_compilation: true
+  enable_mixed_precision: true
+  enable_gradient_checkpointing: false
+  enable_flash_attention: true
+  enable_automatic_recovery: true
+  enable_comprehensive_logging: true

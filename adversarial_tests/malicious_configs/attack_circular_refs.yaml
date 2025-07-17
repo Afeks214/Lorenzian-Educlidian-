@@ -1,0 +1,190 @@
+agents:
+  mlmi_expert:
+    buffer_size: -10000
+    dropout_rate: -.inf
+    features:
+    - 0
+    - 1
+    - 9
+    - 10
+    learning_rate: ${training.batch_size}
+    update_frequency: -100
+  nwrqk_expert:
+    buffer_size: 10000
+    dropout_rate: 0.1
+    features:
+    - 2
+    - 3
+    - 4
+    - 5
+    hidden_dims:
+    - 256
+    - 128
+    - 64
+    learning_rate: 3e-4
+    update_frequency: 100
+  regime_expert:
+    buffer_size: 10000
+    dropout_rate: 0.15
+    features:
+    - 10
+    - 11
+    - 12
+    hidden_dims:
+    - 256
+    - 128
+    - 64
+    learning_rate: 2e-4
+    update_frequency: 100
+circular_ref_a: &id001
+  ref: &id002
+    ref: *id001
+circular_ref_b: *id002
+curriculum:
+  enabled: true
+  stages:
+  - complexity: 0.3
+    episodes: 1000
+    name: basic
+    reward_scale: 1.0
+    synergy_probability: 5.5
+  - complexity: 0.6
+    episodes: 2000
+    name: intermediate
+    reward_scale: 1.2
+    synergy_probability: 0.2
+  - complexity: 1.0
+    episodes: 3000
+    name: advanced
+    reward_scale: 1.0
+    synergy_probability: 0.3
+ensemble:
+  confidence_threshold: 0.65
+  learning_rate: 0.0
+  weight_decay: 1e-4
+  weights:
+  - .nan
+  - 0.35
+  - 0.25
+environment:
+  cooldown_bars: 5
+  feature_indices:
+    mlmi_expert:
+    - 0
+    - 1
+    - 9
+    - 10
+    nwrqk_expert:
+    - 2
+    - 3
+    - 4
+    - 5
+    regime_expert:
+    - 10
+    - 11
+    - 12
+  time_window: 10
+integration:
+  matrix_assembler:
+    expected_shape:
+    - 48
+    - 13
+    feature_timeout_ms: 999999999999
+  synergy_detector:
+    confidence_threshold: 0.5
+    required_fields:
+    - synergy_type
+    - direction
+    - confidence
+  tactical_marl:
+    decision_timeout_ms: 999999999999
+    forward_all_decisions: true
+    include_uncertainty: true
+  vector_database:
+    batch_size: 100
+    embedding_dimension: 256
+    store_decisions: true
+model:
+  actor:
+    activation: relu
+    dropout: 0.1
+    hidden_dims:
+    - 256
+    - 128
+    - 64
+    temperature_init: 1.0
+  critic:
+    activation: relu
+    dropout: 0.1
+    hidden_dims:
+    - 512
+    - 256
+    - 128
+    n_agents: 3
+monitoring:
+  alerts:
+    high_latency_threshold_ms: 10
+    low_performance_threshold: 0.6
+    memory_usage_threshold: 80
+  metrics:
+    include_distributions: true
+    log_frequency: 100
+    track_agent_individual: true
+  wandb:
+    enabled: true
+    entity: trading-team
+    project: grandmodel-strategic-marl
+optimization:
+  batch_inference: true
+  compile_model: true
+  device: cpu
+  max_batch_size: 32
+  mixed_precision: false
+performance:
+  max_drawdown_backtest: 0.15
+  max_inference_latency_ms: 5.0
+  max_memory_usage_mb: 512
+  min_accuracy_6month: 0.75
+  min_sharpe_ratio: 1.5
+rewards:
+  alpha: 1.0
+  beta: 0.2
+  delta: 5.0e-324
+  gamma: -0.3
+  max_drawdown: .inf
+  pnl_normalizer: 0.0
+  position_limit: 1.0
+  reward_clipping:
+  - -10.0
+  - 10.0
+  use_running_stats: true
+  volatility_penalty: 0.05
+safety:
+  emergency_simple_policy: true
+  enable_fallback: true
+  failure_cooldown_minutes: 10
+  fallback_action: neutral
+  fallback_confidence: 0.5
+  max_consecutive_failures: 5
+  reduce_complexity_on_latency: true
+seed: 42
+training:
+  batch_size: ${agents.mlmi_expert.learning_rate}
+  buffer_capacity: -100000
+  checkpoint_dir: models/strategic_marl_30m
+  checkpoint_freq: 1000
+  entropy_coef: 0.01
+  gae_lambda: 0.95
+  grad_clip: .inf
+  keep_last: 10
+  max_steps_per_episode: 1000
+  min_buffer_size: 1000
+  n_epochs:
+    max: 15
+    min: 5
+  ppo_clip: 0.2
+  priority_alpha: 0.6
+  priority_beta_end: 1.0
+  priority_beta_start: 0.4
+  target_kl: 1.0e-323
+  value_loss_coef: 0.5

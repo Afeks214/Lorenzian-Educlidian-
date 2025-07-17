@@ -1,0 +1,41 @@
+{
+  "analysis_timestamp": "2025-07-17T08:13:32.615197",
+  "data_span_years": 5.007529089664613,
+  "total_records_5min": 354747,
+  "total_records_30min": 59217,
+  "overall_quality_score": 99.89216453604661,
+  "price_range_5min": [
+    33.9,
+    129.17
+  ],
+  "price_range_30min": [
+    33.99,
+    128.9
+  ],
+  "volume_stats_5min": {
+    "min": 1,
+    "max": 33509,
+    "mean": 835.2053435265133
+  },
+  "volume_stats_30min": {
+    "min": 1,
+    "max": 86068,
+    "mean": 5003.3797895874495
+  },
+  "data_quality": {
+    "missing_values_5min": 1953,
+    "missing_values_30min": 279,
+    "duplicates_5min": 0,
+    "duplicates_30min": 0,
+    "ohlc_valid_5min": true,
+    "ohlc_valid_30min": true,
+    "volume_valid_5min": true,
+    "volume_valid_30min": true
+  },
+  "train_test_split": {
+    "train_records": 283797,
+    "test_records": 4958,
+    "train_percentage": 79.99983086537729,
+    "test_percentage": 1.3976157656019643
+  },
+  "backtesting_ready": 

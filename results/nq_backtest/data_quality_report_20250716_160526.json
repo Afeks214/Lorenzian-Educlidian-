@@ -1,0 +1,17 @@
+{
+  "completeness": {
+    "total_bars": 327655,
+    "missing_data": {},
+    "zero_data": {},
+    "completeness_score": 100
+  },
+  "timestamps": {
+    "is_chronological": true,
+    "duplicate_count": "0",
+    "total_intervals": 327654,
+    "regular_5min_intervals": "323173",
+    "irregular_intervals": "4481",
+    "gaps_count": 4481,
+    "largest_gap": "4 days 00:00:00",
+    "interval_distribution": {
+      

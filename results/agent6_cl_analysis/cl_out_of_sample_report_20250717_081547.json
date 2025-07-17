@@ -1,0 +1,358 @@
+{
+  "metadata": {
+    "timestamp": "20250717_081547",
+    "agent": "AGENT_6_CL_OUT_OF_SAMPLE_TESTING",
+    "mission": "Conduct rigorous out-of-sample testing for CL crude oil",
+    "status": "COMPLETED"
+  },
+  "data_summary": {
+    "testing_approach": "Walk-forward analysis with 6-month training, 3-month testing windows",
+    "total_walk_forward_periods": 6,
+    "multi_timeframe_validation": [
+      "30min",
+      "5min"
+    ]
+  },
+  "walk_forward_results": {
+    "CL_MOMENTUM": {
+      "total_periods": 6,
+      "profitable_periods": 3,
+      "average_return": -3.2015655304326938,
+      "total_return": -19.209393182596163,
+      "best_period": 22.146596740159133,
+      "worst_period": -27.124298961430732,
+      "consistency_score": -0.1811378284467512
+    },
+    "CL_MEAN_REVERSION": {
+      "total_periods": 6,
+      "profitable_periods": 4,
+      "average_return": 9.11484730859837,
+      "total_return": 54.68908385159022,
+      "best_period": 52.028515303043946,
+      "worst_period": -26.195802267402,
+      "consistency_score": 0.34314133569361654
+    },
+    "CL_VOLATILITY_BREAKOUT": {
+      "total_periods": 6,
+      "profitable_periods": 4,
+      "average_return": 5.653415448800454,
+      "total_return": 33.920492692802725,
+      "best_period": 27.55889592367201,
+      "worst_period": -25.742620383798158,
+      "consistency_score": 0.33256706686145276
+    },
+    "CL_REGIME_ADAPTIVE": {
+      "total_periods": 6,
+      "profitable_periods": 0,
+      "average_return": -13.563959390749467,
+      "total_return": -81.3837563444968,
+      "best_period": -2.0479734286677416,
+      "worst_period": -25.88028137298959,
+      "consistency_score": -1.9344258901716345
+    }
+  },
+  "multi_timeframe_validation": {
+    "30min": {
+      "CL_MOMENTUM": {
+        "total_return": -49.145971905882114,
+        "sharpe_ratio": -0.0690061977732423,
+        "max_drawdown": 60.23029750598224,
+        "total_trades": 917,
+        "win_rate": 33.151581243184296,
+        "regime": "sideways"
+      },
+      "CL_MEAN_REVERSION": {
+        "total_return": 76.89432556850515,
+        "sharpe_ratio": 0.10483232025172251,
+        "max_drawdown": 30.72844822354044,
+        "total_trades": 605,
+        "win_rate": 64.62809917355372,
+        "regime": "sideways"
+      },
+      "CL_VOLATILITY_BREAKOUT": {
+        "total_return": -27.436733362401515,
+        "sharpe_ratio": -0.018288907775211107,
+        "max_drawdown": 62.49378992700271,
+        "total_trades": 1974,
+        "win_rate": 37.436676798378926,
+        "regime": "sideways"
+      },
+      "CL_REGIME_ADAPTIVE": {
+        "total_return": -66.52822527430713,
+        "sharpe_ratio": -0.11414135663681961,
+        "max_drawdown": 68.79208795260674,
+        "total_trades": 130,
+        "win_rate": 36.92307692307693,
+        "regime": "sideways"
+      }
+    },
+    "5min": {
+      "CL_MOMENTUM": {
+        "total_return": -9.536341068891808,
+        "sharpe_ratio": -0.09586882322950364,
+        "max_drawdown": 16.861951180607058,
+        "total_trades": 227,
+        "win_rate": 27.75330396475771,
+        "regime": "sideways"
+      },
+      "CL_MEAN_REVERSION": {
+        "total_return": -4.788592180416483,
+        "sharpe_ratio": -0.034469246641239425,
+        "max_drawdown": 21.329303354270554,
+        "total_trades": 137,
+        "win_rate": 67.15328467153284,
+        "regime": "sideways"
+      },
+      "CL_VOLATILITY_BREAKOUT": {
+        "total_return": 22.581015721626986,
+        "sharpe_ratio": 0.2366893643837147,
+        "max_drawdown": 14.278745277939365,
+        "total_trades": 346,
+        "win_rate": 40.7514450867052,
+        "regime": "sideways"
+      },
+      "CL_REGIME_ADAPTIVE": {
+        "total_return": -44.78415963246658,
+        "sharpe_ratio": -0.5173524185594947,
+        "max_drawdown": 44.99104662801522,
+        "total_trades": 7,
+        "win_rate": 0.0,
+        "regime": "sideways"
+      }
+    }
+  },
+  "performance_consistency": {
+    "CL_MOMENTUM": {
+      "return_statistics": {
+        "mean": -3.2015655304326938,
+        "std": 17.67474832775669,
+        "min": -27.124298961430732,
+        "max": 22.146596740159133,
+        "consistency_ratio": -0.1811378284467512
+      },
+      "sharpe_statistics": {
+        "mean": -0.018844203730261785,
+        "positive_periods": 3,
+        "total_periods": 6
+      },
+      "trading_activity": {
+        "average_trades": 110.0,
+        "total_trades": "660"
+      },
+      "regime_performance": {
+        "bull": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "bear": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "sideways": {
+          "mean_return": -3.2015655304326938,
+          "period_count": 6
+        }
+      }
+    },
+    "CL_MEAN_REVERSION": {
+      "return_statistics": {
+        "mean": 9.11484730859837,
+        "std": 26.56295339695483,
+        "min": -26.195802267402,
+        "max": 52.028515303043946,
+        "consistency_ratio": 0.34314133569361654
+      },
+      "sharpe_statistics": {
+        "mean": 0.08180624119851868,
+        "positive_periods": 4,
+        "total_periods": 6
+      },
+      "trading_activity": {
+        "average_trades": 73.16666666666667,
+        "total_trades": "439"
+      },
+      "regime_performance": {
+        "bull": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "bear": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "sideways": {
+          "mean_return": 9.11484730859837,
+          "period_count": 6
+        }
+      }
+    },
+    "CL_VOLATILITY_BREAKOUT": {
+      "return_statistics": {
+        "mean": 5.653415448800454,
+        "std": 16.999324383360136,
+        "min": -25.742620383798158,
+        "max": 27.55889592367201,
+        "consistency_ratio": 0.33256706686145276
+      },
+      "sharpe_statistics": {
+        "mean": 0.08790191755350306,
+        "positive_periods": 4,
+        "total_periods": 6
+      },
+      "trading_activity": {
+        "average_trades": 244.5,
+        "total_trades": "1467"
+      },
+      "regime_performance": {
+        "bull": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "bear": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "sideways": {
+          "mean_return": 5.653415448800454,
+          "period_count": 6
+        }
+      }
+    },
+    "CL_REGIME_ADAPTIVE": {
+      "return_statistics": {
+        "mean": -13.563959390749467,
+        "std": 7.011878542189066,
+        "min": -25.88028137298959,
+        "max": -2.0479734286677416,
+        "consistency_ratio": -1.9344258901716345
+      },
+      "sharpe_statistics": {
+        "mean": -0.12114246920618645,
+        "positive_periods": 2,
+        "total_periods": 6
+      },
+      "trading_activity": {
+        "average_trades": 10.166666666666666,
+        "total_trades": "61"
+      },
+      "regime_performance": {
+        "bull": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "bear": {
+          "mean_return": 0,
+          "period_count": 0
+        },
+        "sideways": {
+          "mean_return": -13.563959390749467,
+          "period_count": 6
+        }
+      }
+    }
+  },
+  "best_strategies": [
+    {
+      "strategy": "CL_REGIME_ADAPTIVE",
+      "score": 26.23847421870244,
+      "average_return": -13.563959390749467,
+      "consistency_score": -1.9344258901716345
+    },
+    {
+      "strategy": "CL_MEAN_REVERSION",
+      "score": 3.1276808801158102,
+      "average_return": 9.11484730859837,
+      "consistency_score": 0.34314133569361654
+    },
+    {
+      "strategy": "CL_VOLATILITY_BREAKOUT",
+      "score": 1.8801397935567907,
+      "average_return": 5.653415448800454,
+      "consistency_score": 0.33256706686145276
+    },
+    {
+      "strategy": "CL_MOMENTUM",
+      "score": 0.5799246278125493,
+      "average_return": -3.2015655304326938,
+      "consistency_score": -0.1811378284467512
+    }
+  ],
+  "oil_market_insights": {
+    "regime_insights": {
+      "sideways": {
+        "period_count": 24,
+        "average_return": -0.4993155409458341,
+        "success_rate": 0.4583333333333333
+      }
+    },
+    "market_observations": [
+      "CL crude oil shows distinct behavior across different price regimes",
+      "Volatility levels significantly impact strategy performance",
+      "Volume confirmation improves signal quality"
+    ]
+  },
+  "trustworthiness_assessment": {
+    "CL_MOMENTUM": {
+      "trustworthiness_score": 0.0,
+      "positive_factors": [],
+      "negative_factors": [
+        "Low proportion of profitable periods",
+        "Poor return consistency",
+        "Inconsistent risk-adjusted returns"
+      ],
+      "recommendation": "CAUTION"
+    },
+    "CL_MEAN_REVERSION": {
+      "trustworthiness_score": 0.3333333333333333,
+      "positive_factors": [
+        "High proportion of profitable periods"
+      ],
+      "negative_factors": [
+        "Poor return consistency",
+        "Inconsistent risk-adjusted returns"
+      ],
+      "recommendation": "CAUTION"
+    },
+    "CL_VOLATILITY_BREAKOUT": {
+      "trustworthiness_score": 0.3333333333333333,
+      "positive_factors": [
+        "High proportion of profitable periods"
+      ],
+      "negative_factors": [
+        "Poor return consistency",
+        "Inconsistent risk-adjusted returns"
+      ],
+      "recommendation": "CAUTION"
+    },
+    "CL_REGIME_ADAPTIVE": {
+      "trustworthiness_score": 0.0,
+      "positive_factors": [],
+      "negative_factors": [
+        "Low proportion of profitable periods",
+        "Poor return consistency",
+        "Inconsistent risk-adjusted returns"
+      ],
+      "recommendation": "CAUTION"
+    }
+  },
+  "recommendations": {
+    "deployment_recommendations": [
+      "Start with reduced position sizes during high volatility periods",
+      "Monitor oil inventory reports and geopolitical events",
+      "Consider regime detection for dynamic strategy selection",
+      "Implement proper risk management with stop losses"
+    ],
+    "risk_warnings": [
+      "CL crude oil is highly volatile - use appropriate position sizing",
+      "Oil market regimes can change rapidly due to external factors",
+      "Consider correlation with broader commodity markets",
+      "Monitor overnight gaps and extended trading sessions"
+    ],
+    "further_analysis": [
+      "Implement real-time regime detection",
+      "Add correlation analysis with other energy commodities",
+      "Develop sector-specific risk models",
+      "Consider seasonal patterns in oil demand"
+    ]
+  }
+}

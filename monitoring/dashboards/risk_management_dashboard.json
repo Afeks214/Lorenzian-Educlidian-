@@ -1,0 +1,501 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Risk Management Dashboard",
+    "description": "Comprehensive risk monitoring with VaR, correlation tracking, and compliance metrics",
+    "tags": ["risk", "var", "correlation", "compliance", "portfolio"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m"],
+      "time_options": ["1h", "3h", "6h", "12h", "24h", "2d", "7d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Portfolio VaR Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "risk_var_95_percent",
+            "legendFormat": "{{portfolio}} VaR 95%",
+            "refId": "A"
+          },
+          {
+            "expr": "risk_var_99_percent",
+            "legendFormat": "{{portfolio}} VaR 99%",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 2},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Risk Alerts Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(risk_alerts_triggered_total[1h])",
+            "legendFormat": "{{alert_type}} - {{severity}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "VaR Tracking Over Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "risk_var_95_percent",
+            "legendFormat": "{{portfolio}} VaR 95% ({{timeframe}})",
+            "refId": "A"
+          },
+          {
+            "expr": "risk_var_99_percent",
+            "legendFormat": "{{portfolio}} VaR 99% ({{timeframe}})",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "pointSize": 5
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Correlation Shock Detection",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "risk_correlation_shock_level",
+            "legendFormat": "{{asset_pair}} Correlation Shock",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "Margin Usage",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "risk_margin_usage_percent",
+            "legendFormat": "{{account}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 85}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Kelly Fraction by Strategy",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "risk_kelly_fraction",
+            "legendFormat": "{{strategy}} - {{asset}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percentunit",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 7,
+        "title": "Position Concentration",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "risk_position_concentration_percent",
+            "legendFormat": "{{asset}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["value", "percent"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "Asset Volatility",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "risk_volatility_percent",
+            "legendFormat": "{{asset}} ({{timeframe}})",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max"]
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+      },
+      {
+        "id": 9,
+        "title": "Risk Metrics Summary Table",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "risk_var_95_percent",
+            "legendFormat": "{{portfolio}}",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "risk_var_99_percent",
+            "legendFormat": "{{portfolio}}",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "risk_margin_usage_percent",
+            "legendFormat": "{{account}}",
+            "refId": "C",
+            "format": "table"
+          },
+          {
+            "expr": "max(risk_kelly_fraction) by (strategy)",
+            "legendFormat": "{{strategy}}",
+            "refId": "D",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 95}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "VaR 95%"
+            }
+          ]
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40}
+      },
+      {
+        "id": 10,
+        "title": "Risk Alert Timeline",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"risk_alerts\"} |= \"alert\"",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "showCommonLabels": false,
+          "wrapLogMessage": false,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40}
+      },
+      {
+        "id": 11,
+        "title": "Risk Limits Compliance",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(count(risk_var_95_percent < 0.05) / count(risk_var_95_percent)) * 100",
+            "legendFormat": "VaR Compliance",
+            "refId": "A"
+          },
+          {
+            "expr": "(count(risk_margin_usage_percent < 80) / count(risk_margin_usage_percent)) * 100",
+            "legendFormat": "Margin Compliance",
+            "refId": "B"
+          },
+          {
+            "expr": "(count(risk_kelly_fraction < 0.25) / count(risk_kelly_fraction)) * 100",
+            "legendFormat": "Kelly Compliance",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 95},
+                {"color": "green", "value": 99}
+              ]
+            },
+            "unit": "percent"
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "value"
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 48}
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "portfolio",
+          "type": "query",
+          "query": "label_values(risk_var_95_percent, portfolio)",
+          "refresh": "on_time_range_change",
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "asset",
+          "type": "query",
+          "query": "label_values(risk_volatility_percent, asset)",
+          "refresh": "on_time_range_change",
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "strategy",
+          "type": "query",
+          "query": "label_values(risk_kelly_fraction, strategy)",
+          "refresh": "on_time_range_change",
+          "includeAll": true,
+          "allValue": ".*"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*Risk.*\"}",
+          "iconColor": "red",
+          "name": "Risk Alerts",
+          "showIn": 0,
+          "step": "5s",
+          "titleFormat": "{{alertname}}",
+          "type": "alert"
+        },
+        {
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*Correlation.*\"}",
+          "iconColor": "orange",
+          "name": "Correlation Alerts",
+          "showIn": 0,
+          "step": "5s",
+          "titleFormat": "{{alertname}}",
+          "type": "alert"
+        }
+      ]
+    }
+  }
+}

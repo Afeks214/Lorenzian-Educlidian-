@@ -1,0 +1,252 @@
+# Database Health Alerting Rules
+# AGENT 1: DATABASE RTO SPECIALIST - 1s Interval Alerts
+# Target: Alert on health check failures for <30s RTO
+
+groups:
+  - name: database_health_1s_intervals
+    interval: 1s
+    rules:
+      # Critical: Database connection failure
+      - alert: DatabaseConnectionFailure
+        expr: db_health_checks_total{status="failed"} > 0
+        for: 2s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Database connection failure detected"
+          description: "Database {{ $labels.database }} failed health check for {{ $value }} seconds"
+          runbook_url: "https://wiki.company.com/database-failure-runbook"
+          
+      # Critical: High response time (>500ms)
+      - alert: DatabaseHighResponseTime
+        expr: rate(db_response_time_seconds_sum[1s]) / rate(db_response_time_seconds_count[1s]) > 0.5
+        for: 3s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Database response time is too high"
+          description: "Database {{ $labels.database }} response time is {{ $value }}s (>500ms)"
+          runbook_url: "https://wiki.company.com/database-performance-runbook"
+          
+      # Warning: Elevated response time (>200ms)
+      - alert: DatabaseElevatedResponseTime
+        expr: rate(db_response_time_seconds_sum[1s]) / rate(db_response_time_seconds_count[1s]) > 0.2
+        for: 5s
+        labels:
+          severity: warning
+          team: database
+          rto_impact: medium
+        annotations:
+          summary: "Database response time is elevated"
+          description: "Database {{ $labels.database }} response time is {{ $value }}s (>200ms)"
+          
+      # Critical: Connection pool utilization >95%
+      - alert: ConnectionPoolCriticalUtilization
+        expr: db_pool_utilization_percent > 95
+        for: 2s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Connection pool utilization critical"
+          description: "Pool {{ $labels.pool_name }} utilization is {{ $value }}% (>95%)"
+          runbook_url: "https://wiki.company.com/connection-pool-runbook"
+          
+      # Warning: Connection pool utilization >80%
+      - alert: ConnectionPoolHighUtilization
+        expr: db_pool_utilization_percent > 80
+        for: 10s
+        labels:
+          severity: warning
+          team: database
+          rto_impact: medium
+        annotations:
+          summary: "Connection pool utilization high"
+          description: "Pool {{ $labels.pool_name }} utilization is {{ $value }}% (>80%)"
+          
+      # Critical: Patroni node down
+      - alert: PatroniNodeDown
+        expr: up{job="patroni"} == 0
+        for: 1s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Patroni node is down"
+          description: "Patroni node {{ $labels.instance }} is down"
+          runbook_url: "https://wiki.company.com/patroni-failure-runbook"
+          
+      # Critical: Replication lag >1MB
+      - alert: ReplicationLagCritical
+        expr: db_replication_lag_bytes > 1048576
+        for: 5s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Replication lag is critical"
+          description: "Database {{ $labels.database }} replication lag is {{ $value }} bytes (>1MB)"
+          runbook_url: "https://wiki.company.com/replication-lag-runbook"
+          
+      # Warning: Replication lag >512KB
+      - alert: ReplicationLagWarning
+        expr: db_replication_lag_bytes > 524288
+        for: 10s
+        labels:
+          severity: warning
+          team: database
+          rto_impact: medium
+        annotations:
+          summary: "Replication lag is elevated"
+          description: "Database {{ $labels.database }} replication lag is {{ $value }} bytes (>512KB)"
+          
+      # Critical: Health check success rate <90%
+      - alert: HealthCheckSuccessRateCritical
+        expr: rate(db_health_checks_total{status="healthy"}[10s]) / rate(db_health_checks_total[10s]) < 0.9
+        for: 10s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Health check success rate critical"
+          description: "Database {{ $labels.database }} health check success rate is {{ $value }}% (<90%)"
+          runbook_url: "https://wiki.company.com/health-check-failures-runbook"
+          
+      # Warning: Health check success rate <95%
+      - alert: HealthCheckSuccessRateWarning
+        expr: rate(db_health_checks_total{status="healthy"}[10s]) / rate(db_health_checks_total[10s]) < 0.95
+        for: 30s
+        labels:
+          severity: warning
+          team: database
+          rto_impact: medium
+        annotations:
+          summary: "Health check success rate low"
+          description: "Database {{ $labels.database }} health check success rate is {{ $value }}% (<95%)"
+          
+      # Critical: Connection pool errors increasing
+      - alert: ConnectionPoolErrorsIncreasing
+        expr: increase(db_pool_errors_total[10s]) > 0
+        for: 1s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Connection pool errors detected"
+          description: "Pool {{ $labels.pool_name }} has {{ $value }} errors in the last 10 seconds"
+          runbook_url: "https://wiki.company.com/connection-pool-errors-runbook"
+          
+      # Critical: Database failure rate >10% in 1 minute
+      - alert: DatabaseFailureRateHigh
+        expr: rate(db_failures_total[60s]) > 0.1
+        for: 5s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Database failure rate is high"
+          description: "Database {{ $labels.database }} failure rate is {{ $value }}/s (>10%)"
+          runbook_url: "https://wiki.company.com/database-failure-rate-runbook"
+
+  - name: database_rto_sla_monitoring
+    interval: 1s
+    rules:
+      # RTO SLA: Detection time >1s
+      - alert: RTODetectionTimeSLABreach
+        expr: histogram_quantile(0.95, rate(db_response_time_seconds_bucket[1s])) > 1
+        for: 3s
+        labels:
+          severity: critical
+          team: database
+          sla: rto_detection
+        annotations:
+          summary: "RTO detection time SLA breach"
+          description: "95th percentile detection time is {{ $value }}s (>1s SLA)"
+          runbook_url: "https://wiki.company.com/rto-sla-runbook"
+          
+      # RTO SLA: Recovery time >30s
+      - alert: RTORecoveryTimeSLABreach
+        expr: histogram_quantile(0.99, rate(db_response_time_seconds_bucket[30s])) > 30
+        for: 1s
+        labels:
+          severity: critical
+          team: database
+          sla: rto_recovery
+        annotations:
+          summary: "RTO recovery time SLA breach"
+          description: "99th percentile recovery time is {{ $value }}s (>30s SLA)"
+          runbook_url: "https://wiki.company.com/rto-sla-runbook"
+          
+      # Health check interval validation
+      - alert: HealthCheckIntervalTooSlow
+        expr: avg_over_time(db_health_check_interval_seconds[60s]) > 1
+        for: 5s
+        labels:
+          severity: warning
+          team: database
+          optimization: health_check_interval
+        annotations:
+          summary: "Health check interval too slow"
+          description: "Average health check interval is {{ $value }}s (>1s target)"
+          
+      # Sub-second monitoring validation
+      - alert: SubSecondMonitoringDown
+        expr: up{job="sub_second_monitor"} == 0
+        for: 1s
+        labels:
+          severity: critical
+          team: database
+          rto_impact: high
+        annotations:
+          summary: "Sub-second monitoring is down"
+          description: "Sub-second health monitoring system is not responding"
+          runbook_url: "https://wiki.company.com/sub-second-monitoring-runbook"
+
+  - name: database_optimization_recommendations
+    interval: 10s
+    rules:
+      # Recommendation: Increase connection pool size
+      - alert: RecommendConnectionPoolIncrease
+        expr: db_pool_utilization_percent > 75
+        for: 300s
+        labels:
+          severity: info
+          team: database
+          recommendation: scale_up
+        annotations:
+          summary: "Consider increasing connection pool size"
+          description: "Pool {{ $labels.pool_name }} utilization is consistently {{ $value }}% (>75%)"
+          
+      # Recommendation: Optimize query performance
+      - alert: RecommendQueryOptimization
+        expr: rate(db_response_time_seconds_sum[1s]) / rate(db_response_time_seconds_count[1s]) > 0.1
+        for: 600s
+        labels:
+          severity: info
+          team: database
+          recommendation: optimize_queries
+        annotations:
+          summary: "Consider query optimization"
+          description: "Database {{ $labels.database }} avg response time is consistently {{ $value }}s (>100ms)"
+          
+      # Recommendation: Review replication settings
+      - alert: RecommendReplicationReview
+        expr: db_replication_lag_bytes > 262144
+        for: 300s
+        labels:
+          severity: info
+          team: database
+          recommendation: review_replication
+        annotations:
+          summary: "Consider reviewing replication settings"
+          description: "Database {{ $labels.database }} replication lag is consistently {{ $value }} bytes (>256KB)"

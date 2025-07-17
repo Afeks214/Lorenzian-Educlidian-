@@ -1,0 +1,68 @@
+# Testing Environment Configuration Overrides
+
+system:
+  environment: testing
+  ssl_enabled: false
+  backup_enabled: false
+  debug: true
+  log_level: DEBUG
+
+database:
+  host: ${DB_HOST:localhost}
+  port: ${DB_PORT:5433}
+  name: ${DB_NAME:grandmodel_test}
+  username: ${DB_USERNAME:grandmodel_test}
+  password: ${SECRET:db_password_test}
+  ssl_mode: disable
+  connection_pool:
+    min_connections: 1
+    max_connections: 10
+
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6380}
+  password: ${SECRET:redis_password_test}
+  ssl: false
+  cluster_enabled: false
+
+security:
+  jwt_secret_key: ${SECRET:jwt_secret_test}
+  api_rate_limit: 100000
+  cors_origins: ["*"]
+  encryption_key: ${SECRET:encryption_key_test}
+
+monitoring:
+  prometheus_port: 9092
+  enable_profiling: false
+  metrics_interval: 5
+  health_check_interval: 5
+
+risk_management:
+  max_position_size: 10000
+  max_daily_loss: 1000
+  max_drawdown_percent: 20
+  stop_loss_percent: 5.0
+  position_sizing_method: "fixed"
+  var_confidence: 0.90
+
+data_handler:
+  type: "backtest"
+  backtest_file: "tests/data/test_data.csv"
+  replay_speed: 0  # As fast as possible
+  
+execution:
+  order_type: "market"
+  slippage_ticks: 0
+  commission_per_contract: 0
+  max_order_size: 1
+  timeout_seconds: 5
+
+logging:
+  level: DEBUG
+  format: pretty
+  handlers:
+    - console
+  file:
+    path: logs/testing.log
+    max_size: 1MB
+    backup_count: 1

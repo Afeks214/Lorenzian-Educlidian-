@@ -1,0 +1,644 @@
+# GrandModel Production Docker Compose - Agent 5 Enhanced Configuration
+# Comprehensive production deployment with monitoring, security, and scalability
+
+version: '3.8'
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  grandmodel-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+  
+  monitoring-network:
+    driver: bridge
+    internal: false
+  
+  database-network:
+    driver: bridge
+    internal: true
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  # Application data
+  grandmodel-data:
+    driver: local
+  grandmodel-logs:
+    driver: local
+  grandmodel-models:
+    driver: local
+  grandmodel-backups:
+    driver: local
+  
+  # Monitoring data
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  
+  # Database data
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+# ============================================================================
+# Services
+# ============================================================================
+services:
+  
+  # ============================================================================
+  # Core Application Services
+  # ============================================================================
+  
+  # Strategic MARL Agent
+  strategic-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: strategic-agent
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: grandmodel/strategic-agent:latest
+    container_name: grandmodel-strategic
+    hostname: strategic-agent
+    restart: unless-stopped
+    
+    environment:
+      - AGENT_TYPE=strategic
+      - MODEL_PATH=/app/models/strategic
+      - LOG_LEVEL=INFO
+      - METRICS_ENABLED=true
+      - HEALTH_CHECK_INTERVAL=30
+      - PERFORMANCE_TARGET_MS=2
+      
+    ports:
+      - "8001:8000"  # Strategic API
+      - "9091:9090"  # Strategic metrics
+      
+    volumes:
+      - grandmodel-data:/app/data
+      - grandmodel-logs:/app/logs
+      - grandmodel-models:/app/models
+      - grandmodel-backups:/app/backups
+      
+    networks:
+      - grandmodel-network
+      - monitoring-network
+      
+    depends_on:
+      - redis-cache
+      - postgres-db
+      
+    healthcheck:
+      test: ["CMD", "python3", "health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 120s
+        
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service,agent_type"
+  
+  # Tactical MARL Agent
+  tactical-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: tactical-agent
+    image: grandmodel/tactical-agent:latest
+    container_name: grandmodel-tactical
+    hostname: tactical-agent
+    restart: unless-stopped
+    
+    environment:
+      - AGENT_TYPE=tactical
+      - MODEL_PATH=/app/models/tactical
+      - LOG_LEVEL=INFO
+      - METRICS_ENABLED=true
+      - HEALTH_CHECK_INTERVAL=30
+      - PERFORMANCE_TARGET_MS=2
+      
+    ports:
+      - "8002:8000"  # Tactical API
+      - "9092:9090"  # Tactical metrics
+      
+    volumes:
+      - grandmodel-data:/app/data
+      - grandmodel-logs:/app/logs
+      - grandmodel-models:/app/models
+      - grandmodel-backups:/app/backups
+      
+    networks:
+      - grandmodel-network
+      - monitoring-network
+      
+    depends_on:
+      - redis-cache
+      - postgres-db
+      - strategic-agent
+      
+    healthcheck:
+      test: ["CMD", "python3", "health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 120s
+        
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service,agent_type"
+  
+  # Risk Management Agent
+  risk-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: risk-agent
+    image: grandmodel/risk-agent:latest
+    container_name: grandmodel-risk
+    hostname: risk-agent
+    restart: unless-stopped
+    
+    environment:
+      - AGENT_TYPE=risk
+      - MODEL_PATH=/app/models/risk
+      - LOG_LEVEL=INFO
+      - METRICS_ENABLED=true
+      - HEALTH_CHECK_INTERVAL=30
+      - VaR_TARGET=0.02
+      - KELLY_ENABLED=true
+      
+    ports:
+      - "8003:8000"  # Risk API
+      - "9093:9090"  # Risk metrics
+      
+    volumes:
+      - grandmodel-data:/app/data
+      - grandmodel-logs:/app/logs
+      - grandmodel-models:/app/models
+      - grandmodel-backups:/app/backups
+      
+    networks:
+      - grandmodel-network
+      - monitoring-network
+      
+    depends_on:
+      - redis-cache
+      - postgres-db
+      
+    healthcheck:
+      test: ["CMD", "python3", "health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 120s
+        
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service,agent_type"
+  
+  # ============================================================================
+  # Load Balancer & API Gateway
+  # ============================================================================
+  
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: grandmodel-gateway
+    restart: unless-stopped
+    
+    ports:
+      - "80:80"
+      - "443:443"
+      
+    volumes:
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/nginx/ssl:/etc/nginx/ssl:ro
+      - grandmodel-logs:/var/log/nginx
+      
+    networks:
+      - grandmodel-network
+      
+    depends_on:
+      - strategic-agent
+      - tactical-agent
+      - risk-agent
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+  
+  # ============================================================================
+  # Database Services
+  # ============================================================================
+  
+  # Redis Cache
+  redis-cache:
+    image: redis:7-alpine
+    container_name: grandmodel-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD environment variable is required}
+    
+    ports:
+      - "6379:6379"
+      
+    volumes:
+      - redis-data:/data
+      - ./configs/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      
+    networks:
+      - grandmodel-network
+      - database-network
+      
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+  
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: grandmodel-postgres
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-grandmodel}
+      - POSTGRES_USER=${POSTGRES_USER:-grandmodel}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD environment variable is required}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+      
+    ports:
+      - "5432:5432"
+      
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      
+    networks:
+      - database-network
+      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grandmodel}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+  
+  # ============================================================================
+  # Monitoring & Observability
+  # ============================================================================
+  
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: grandmodel-prometheus
+    restart: unless-stopped
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      
+    ports:
+      - "9090:9090"
+      
+    volumes:
+      - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+      
+    networks:
+      - monitoring-network
+      
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grandmodel-grafana
+    restart: unless-stopped
+    
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?GRAFANA_PASSWORD environment variable is required}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      
+    ports:
+      - "3000:3000"
+      
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      
+    networks:
+      - monitoring-network
+      
+    depends_on:
+      - prometheus
+      
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+  
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: grandmodel-alertmanager
+    restart: unless-stopped
+    
+    ports:
+      - "9093:9093"
+      
+    volumes:
+      - ./configs/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      
+    networks:
+      - monitoring-network
+      
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  
+  # ============================================================================
+  # Log Management
+  # ============================================================================
+  
+  # Elasticsearch (for log aggregation)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: grandmodel-elasticsearch
+    restart: unless-stopped
+    
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      
+    ports:
+      - "9200:9200"
+      
+    volumes:
+      - ./configs/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      
+    networks:
+      - monitoring-network
+      
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  # Kibana (for log visualization)  
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: grandmodel-kibana
+    restart: unless-stopped
+    
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      
+    ports:
+      - "5601:5601"
+      
+    volumes:
+      - ./configs/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      
+    networks:
+      - monitoring-network
+      
+    depends_on:
+      - elasticsearch
+      
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  
+  # ============================================================================
+  # Testing & Validation Services
+  # ============================================================================
+  
+  # Integration Testing
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: integration-testing
+    image: grandmodel/integration-tests:latest
+    container_name: grandmodel-tests
+    
+    environment:
+      - TESTING=true
+      - LOG_LEVEL=DEBUG
+      - TEST_TIMEOUT=300
+      - STRATEGIC_ENDPOINT=http://strategic-agent:8000
+      - TACTICAL_ENDPOINT=http://tactical-agent:8000
+      - RISK_ENDPOINT=http://risk-agent:8000
+      
+    volumes:
+      - grandmodel-logs:/app/logs
+      - ./test-results:/app/test-results
+      
+    networks:
+      - grandmodel-network
+      
+    depends_on:
+      - strategic-agent
+      - tactical-agent
+      - risk-agent
+      
+    profiles:
+      - testing
+      
+    command: |
+      sh -c "
+        echo 'Waiting for services to be ready...'
+        sleep 30
+        echo 'Running integration tests...'
+        python3 -m pytest tests/integration/ -v --tb=short --timeout=300 --junit-xml=/app/test-results/junit.xml
+      "
+  
+  # Performance Testing
+  performance-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: integration-testing
+    image: grandmodel/performance-tests:latest
+    container_name: grandmodel-performance
+    
+    environment:
+      - TESTING=true
+      - PERFORMANCE_TESTING=true
+      - TARGET_LATENCY_MS=5
+      - LOAD_TEST_DURATION=300
+      
+    volumes:
+      - grandmodel-logs:/app/logs
+      - ./performance-results:/app/performance-results
+      
+    networks:
+      - grandmodel-network
+      
+    depends_on:
+      - strategic-agent
+      - tactical-agent
+      - risk-agent
+      
+    profiles:
+      - performance
+      
+    command: |
+      sh -c "
+        echo 'Running performance validation...'
+        python3 tests/performance/test_inference_performance_validation.py
+      "
+
+# ============================================================================
+# Configuration Templates
+# ============================================================================
+
+# Example environment file (.env)
+# Copy this to .env and customize for your environment
+# POSTGRES_DB=grandmodel
+# POSTGRES_USER=grandmodel  
+# POSTGRES_PASSWORD=your_secure_password
+# REDIS_PASSWORD=your_redis_password
+# GRAFANA_USER=admin
+# GRAFANA_PASSWORD=your_grafana_password

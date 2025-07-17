@@ -1,0 +1,44 @@
+{
+  "execution_info": {
+    "timestamp": "2025-07-17T09:36:08.461580",
+    "mission": "COMPREHENSIVE_SYNERGY_PATTERNS",
+    "processing_time": 10.979317665100098,
+    "bars_processed": 5000,
+    "processing_rate": 455.40170641873993
+  },
+  "pattern_results": {
+    "total_signals": 0,
+    "long_signals": 0,
+    "short_signals": 0,
+    "signal_rate": 0.0,
+    "avg_confidence": 0.0,
+    "avg_strength": 0.0
+  },
+  "pattern_breakdown": {
+    "pattern_1": {
+      "count": 0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0
+    },
+    "pattern_2": {
+      "count": 0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0
+    },
+    "pattern_3": {
+      "count": 0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0
+    },
+    "pattern_4": {
+      "count": 0,
+      "avg_confidence": 0.0,
+      "avg_strength": 0.0
+    }
+  },
+  "indicator_stats": {
+    "mlmi_signals": 2,
+    "nwrqk_signals": 0,
+    "fvg_signals": 12
+  }
+}

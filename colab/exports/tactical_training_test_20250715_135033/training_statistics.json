@@ -1,0 +1,11 @@
+{
+  "episodes": 10,
+  "total_steps": 0,
+  "best_reward": 0.0,
+  "avg_reward_100": 0.0,
+  "latest_reward": 0.0,
+  "actor_loss": 0.0,
+  "critic_loss": 0.0,
+  "latency_violations": 0,
+  "avg_inference_time_ms": 0
+}

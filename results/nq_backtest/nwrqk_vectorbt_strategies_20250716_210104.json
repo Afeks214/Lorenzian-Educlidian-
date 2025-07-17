@@ -1,0 +1,23 @@
+{
+  "agent_info": {
+    "agent_name": "AGENT 4 - NW-RQK Strategy VectorBT Implementation Specialist",
+    "mission": "Implement NW-RQK-based strategies in vectorbt for professional backtesting",
+    "timestamp": "20250716_210104"
+  },
+  "strategy_1": {
+    "name": "NW-RQK \u2192 MLMI \u2192 FVG",
+    "total_return_pct": -41.524545279344196,
+    "sharpe_ratio": -1.478008337326984,
+    "win_rate_pct": 61.53846153846154,
+    "total_trades": 0,
+    "max_drawdown_pct": 72.90164381211191
+  },
+  "strategy_2": {
+    "name": "NW-RQK \u2192 FVG \u2192 MLMI",
+    "total_return_pct": 129.96078971395804,
+    "sharpe_ratio": 4.957496936501063,
+    "win_rate_pct": 55.81395348837209,
+    "total_trades": 0,
+    "max_drawdown_pct": 20.702776472811614
+  }
+}

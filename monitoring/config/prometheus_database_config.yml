@@ -1,0 +1,215 @@
+# Prometheus Configuration for Database Health Monitoring
+# AGENT 1: DATABASE RTO SPECIALIST - 1s Interval Monitoring
+# Target: Monitor database health at 1-second intervals for <30s RTO
+
+global:
+  scrape_interval: 1s
+  evaluation_interval: 1s
+  external_labels:
+    monitor: 'database-health-monitor'
+    environment: 'production'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rules files
+rule_files:
+  - "/etc/prometheus/rules/database_health_alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Database health monitor
+  - job_name: 'database-health-monitor'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['db-health-monitor:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: db-health-monitor:8000
+
+  # Patroni monitoring
+  - job_name: 'patroni'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    metrics_path: /metrics
+    static_configs:
+      - targets: 
+        - 'patroni-primary:8008'
+        - 'patroni-standby:8009'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):(.*)'
+        target_label: instance
+        replacement: '${1}'
+      - source_labels: [__address__]
+        regex: '([^:]+):(.*)'
+        target_label: patroni_port
+        replacement: '${2}'
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    static_configs:
+      - targets:
+        - 'postgres-exporter-primary:9187'
+        - 'postgres-exporter-standby:9187'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):(.*)'
+        target_label: instance
+        replacement: '${1}'
+
+  # pgBouncer Exporter
+  - job_name: 'pgbouncer-exporter'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    static_configs:
+      - targets: ['pgbouncer-exporter:9127']
+
+  # Connection Pool Monitor
+  - job_name: 'connection-pool-monitor'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['connection-pool-monitor:8001']
+
+  # Sub-second health monitor
+  - job_name: 'sub-second-monitor'
+    scrape_interval: 500ms
+    scrape_timeout: 250ms
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['sub-second-monitor:8002']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: sub-second-monitor:8002
+
+  # etcd monitoring
+  - job_name: 'etcd'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    static_configs:
+      - targets: ['etcd:2379']
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # Docker container monitoring
+  - job_name: 'docker-containers'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        target_label: container_name
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service_name
+
+  # Health check validation
+  - job_name: 'health-check-validation'
+    scrape_interval: 5s
+    scrape_timeout: 2s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['health-check-validator:8003']
+
+# Storage configuration for high-frequency data
+storage:
+  tsdb:
+    retention.time: 7d
+    retention.size: 10GB
+    # Optimize for high-frequency 1s data
+    min-block-duration: 1h
+    max-block-duration: 2h
+    # Reduce memory usage
+    head-chunks-write-queue-size: 1000
+    # Faster compaction
+    compaction.enabled: true
+
+# Remote write configuration (optional)
+remote_write:
+  - url: "http://long-term-storage:8086/api/v1/prom/write"
+    queue_config:
+      capacity: 2500
+      max_shards: 200
+      min_shards: 1
+      max_samples_per_send: 500
+      batch_send_deadline: 5s
+      min_backoff: 30ms
+      max_backoff: 100ms
+    metadata_config:
+      send: true
+      send_interval: 1s
+      max_samples_per_send: 2000
+
+# Recording rules for efficient queries
+recording_rules:
+  - name: database_health_1s_aggregations
+    interval: 1s
+    rules:
+      - record: db:health_success_rate:1s
+        expr: rate(db_health_checks_total{status="healthy"}[1s]) / rate(db_health_checks_total[1s])
+        
+      - record: db:response_time_avg:1s
+        expr: rate(db_response_time_seconds_sum[1s]) / rate(db_response_time_seconds_count[1s])
+        
+      - record: db:connection_utilization:1s
+        expr: (db_connections_active / db_connections_max) * 100
+        
+      - record: db:pool_utilization:1s
+        expr: db_pool_utilization_percent
+        
+      - record: db:replication_lag:1s
+        expr: db_replication_lag_bytes
+        
+      - record: db:failure_rate:1s
+        expr: rate(db_failures_total[1s])
+
+  - name: database_health_5s_aggregations
+    interval: 5s
+    rules:
+      - record: db:health_success_rate:5s
+        expr: rate(db_health_checks_total{status="healthy"}[5s]) / rate(db_health_checks_total[5s])
+        
+      - record: db:response_time_p95:5s
+        expr: histogram_quantile(0.95, rate(db_response_time_seconds_bucket[5s]))
+        
+      - record: db:response_time_p99:5s
+        expr: histogram_quantile(0.99, rate(db_response_time_seconds_bucket[5s]))
+        
+      - record: db:connection_pool_errors:5s
+        expr: rate(db_pool_errors_total[5s])
+
+  - name: database_rto_metrics
+    interval: 1s
+    rules:
+      - record: rto:detection_time:1s
+        expr: histogram_quantile(0.95, rate(db_response_time_seconds_bucket[1s]))
+        
+      - record: rto:recovery_time:30s
+        expr: histogram_quantile(0.99, rate(db_response_time_seconds_bucket[30s]))
+        
+      - record: rto:health_check_interval:1s
+        expr: avg_over_time(db_health_check_interval_seconds[1s])
+        
+      - record: rto:failure_detection_time:1s
+        expr: time() - db_last_successful_check_timestamp

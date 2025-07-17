@@ -1,0 +1,45 @@
+{
+  "execution_info": {
+    "timestamp": "20250717_082024",
+    "agent": "AGENT_2_CL_SYNERGY_FAST",
+    "mission": "CL Crude Oil Synergy Pattern Detection",
+    "data_period": {
+      "start_date": "2025-03-20 04:55:00",
+      "end_date": "2025-07-02 10:35:00",
+      "total_bars": 20000
+    }
+  },
+  "signal_results": {
+    "TYPE1_MLMI_NWRQK_FVG": {
+      "long_signals": 360,
+      "short_signals": 412,
+      "total_signals": 772
+    },
+    "TYPE2_MLMI_FVG_NWRQK": {
+      "long_signals": 199,
+      "short_signals": 288,
+      "total_signals": 487
+    },
+    "TYPE3_NWRQK_FVG_MLMI": {
+      "long_signals": 8,
+      "short_signals": 7,
+      "total_signals": 15
+    },
+    "TYPE4_NWRQK_MLMI_FVG": {
+      "long_signals": 74,
+      "short_signals": 126,
+      "total_signals": 200
+    }
+  },
+  "performance_metrics": {
+    "total_signals": 1474,
+    "execution_time": 2.9466493129730225,
+    "processing_rate": 6787.370289347732
+  },
+  "cl_market_adaptations": {
+    "mlmi_threshold": 0.15,
+    "nwrqk_slope_threshold": 0.08,
+    "fvg_min_gap": 0.05,
+    "signal_window": 10
+  }
+}

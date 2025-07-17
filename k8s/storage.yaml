@@ -1,0 +1,397 @@
+# GrandModel Kubernetes Storage - Agent 5 Production Storage Configuration
+# Storage Class for high-performance SSD storage
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: grandmodel-ssd
+  labels:
+    app: grandmodel
+    storage-type: ssd
+    managed-by: agent5
+provisioner: kubernetes.io/aws-ebs  # Change based on your cloud provider
+parameters:
+  type: gp3
+  iops: "3000"
+  throughput: "125"
+  encrypted: "true"
+  fsType: ext4
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+
+---
+# Storage Class for standard storage
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: grandmodel-standard
+  labels:
+    app: grandmodel
+    storage-type: standard
+    managed-by: agent5
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+  encrypted: "true"
+  fsType: ext4
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+
+---
+# Persistent Volume Claim for model storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: storage
+    storage-type: models
+    managed-by: agent5
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: grandmodel-ssd
+  resources:
+    requests:
+      storage: 10Gi
+  volumeMode: Filesystem
+
+---
+# Persistent Volume Claim for logs storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs-pvc
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: storage
+    storage-type: logs
+    managed-by: agent5
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: grandmodel-standard
+  resources:
+    requests:
+      storage: 20Gi
+  volumeMode: Filesystem
+
+---
+# Persistent Volume Claim for data storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pvc
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: storage
+    storage-type: data
+    managed-by: agent5
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: grandmodel-ssd
+  resources:
+    requests:
+      storage: 50Gi
+  volumeMode: Filesystem
+
+---
+# Persistent Volume Claim for metrics storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metrics-pvc
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: storage
+    storage-type: metrics
+    managed-by: agent5
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: grandmodel-ssd
+  resources:
+    requests:
+      storage: 30Gi
+  volumeMode: Filesystem
+
+---
+# Persistent Volume Claim for backup storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: storage
+    storage-type: backup
+    managed-by: agent5
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: grandmodel-standard
+  resources:
+    requests:
+      storage: 100Gi
+  volumeMode: Filesystem
+
+---
+# StatefulSet for PostgreSQL with persistent storage
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+  namespace: grandmodel
+  labels:
+    app: postgres
+    component: database
+    managed-by: agent5
+spec:
+  serviceName: postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      serviceAccountName: grandmodel-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          value: "grandmodel"
+        - name: POSTGRES_USER
+          value: "grandmodel"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U "grandmodel" -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - -e
+            - |
+              exec pg_isready -U "grandmodel" -h 127.0.0.1 -p 5432
+              [ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f /bitnami/postgresql/.initialized ]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: grandmodel-ssd
+      resources:
+        requests:
+          storage: 20Gi
+
+---
+# StatefulSet for Redis with persistent storage
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-statefulset
+  namespace: grandmodel
+  labels:
+    app: redis
+    component: cache
+    managed-by: agent5
+spec:
+  serviceName: redis-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      serviceAccountName: grandmodel-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: grandmodel-ssd
+      resources:
+        requests:
+          storage: 5Gi
+
+---
+# Headless service for PostgreSQL
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: grandmodel
+  labels:
+    app: postgres
+    service-type: headless
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: postgres
+
+---
+# Headless service for Redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-headless
+  namespace: grandmodel
+  labels:
+    app: redis
+    service-type: headless
+spec:
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  selector:
+    app: redis
+
+---
+# Backup CronJob for data persistence
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-cronjob
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: backup
+    managed-by: agent5
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: grandmodel
+            component: backup
+        spec:
+          serviceAccountName: grandmodel-sa
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting backup at $(date)"
+              pg_dump -h postgres-headless -U grandmodel -d grandmodel > /backup/grandmodel_$(date +%Y%m%d_%H%M%S).sql
+              echo "Backup completed at $(date)"
+              # Clean up old backups (keep last 7 days)
+              find /backup -name "grandmodel_*.sql" -type f -mtime +7 -delete
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc

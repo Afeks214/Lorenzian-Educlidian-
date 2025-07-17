@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-07-16T16:07:41.731214",
+  "overall_score": 100.0,
+  "rating": "HIGH TRUSTWORTHINESS \u2705",
+  "validation_time_seconds": 45.22571802139282,
+  "component_scores": {
+    "Data Pipeline": 100,
+    "Communication": 100,
+    "System Files": 100.0,
+    "Recent Results": 100
+  },
+  "critical_issues": [],
+  "validation_details": {
+    "data_pipeline": {
+      "data_loading": true,
+      "data_quality": true,
+      "indicator_calculation": true,
+      "issues": []
+    },
+    "communication": {
+      "event_bus": true,
+      "agent_communication": true,
+      "issues": []
+    },
+    "files": {
+      "config_files": 4,
+      "source_files": 4,
+      "data_files": 2,
+      "missing_files": [],
+      "issues": []
+    },
+    "results": {
+      "recent_backtests": 21,
+      "conversion_issues": [],
+      "performance_issues": [],
+      "issues": []
+    }
+  }
+}

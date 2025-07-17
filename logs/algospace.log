@@ -1,0 +1,17 @@
+2025-07-17 09:57:25,478 - core.kernel - INFO - AlgoSpace Kernel initialized with config path: config/settings.yaml
+2025-07-17 09:57:32,309 - core.kernel - INFO - AlgoSpace Kernel initialized with config path: config/settings.yaml
+2025-07-17 09:57:32,309 - core.kernel - INFO - === AlgoSpace System Initialization Starting ===
+2025-07-17 09:57:32,346 - core.minimal_config - INFO - Configuration loaded from config/settings.yaml
+2025-07-17 09:57:32,347 - core.kernel - INFO - Configuration loaded successfully
+2025-07-17 09:57:32,347 - core.kernel - INFO - 
+--- Phase 1: Component Instantiation ---
+2025-07-17 09:57:32,347 - core.kernel - INFO - Instantiating components for data handler type: backtest
+2025-07-17 09:57:32,347 - core.kernel - WARNING - BacktestDataHandler not available
+2025-07-17 09:57:32,347 - core.kernel - INFO - Total components instantiated: 0
+2025-07-17 09:57:32,347 - core.kernel - INFO - 
+--- Phase 2: Event Wiring ---
+2025-07-17 09:57:32,348 - core.kernel - INFO - Event wiring completed
+2025-07-17 09:57:32,348 - core.kernel - INFO - 
+--- Phase 3: Component Initialization ---
+2025-07-17 09:57:32,348 - core.kernel - INFO - 
+=== AlgoSpace Initialization Complete. System is READY. ===

@@ -1,0 +1,283 @@
+{
+  "execution_metadata": {
+    "timestamp": "20250716_210041",
+    "agent": "AGENT_5_VECTORBT_COMPREHENSIVE_BACKTEST",
+    "mission": "Execute comprehensive vectorbt backtesting for all 4 synergy strategies",
+    "data_period": {
+      "start_date": "2025-06-17 01:03:27.008126+00:00",
+      "end_date": "2025-06-30 23:58:27.008126+00:00",
+      "total_bars": 4020,
+      "timeframe": "5-minute"
+    },
+    "portfolio_config": {
+      "initial_cash": 100000,
+      "size_percent": 0.95,
+      "fees": 0.001,
+      "slippage": 0.0005
+    }
+  },
+  "strategy_results": {
+    "TYPE1": {
+      "strategy_description": "MLMI \u2192 FVG \u2192 NW-RQK (Momentum-Gap-Trend)",
+      "signal_analysis": {
+        "total_signals": 122,
+        "long_signals": 69,
+        "short_signals": 53,
+        "signal_ratio": 1.3018867924528301
+      },
+      "performance_metrics": {
+        "total_return_pct": 568.0608036841134,
+        "annualized_return_pct": 0.0,
+        "sharpe_ratio": 10.877189155123828,
+        "sortino_ratio": 15.99434115075534,
+        "calmar_ratio": 6.178721609039066e+21,
+        "max_drawdown_pct": 59.89961347837964,
+        "win_rate_pct": NaN,
+        "profit_factor": NaN,
+        "volatility_pct": 541.2782320149674,
+        "total_trades": 0,
+        "avg_trade_duration": "N/A",
+        "best_trade_pct": NaN,
+        "worst_trade_pct": NaN
+      },
+      "statistical_validation": {
+        "bootstrap_sharpe": {
+          "original_sharpe": 9.037962169833339,
+          "bootstrap_mean": 9.266052429791976,
+          "bootstrap_std": 4.368412989679778,
+          "confidence_interval": [
+            0.05266500181198162,
+            17.161456445768565
+          ],
+          "p_value": 0.024
+        },
+        "mean_return_test": {
+          "t_statistic": 2.1270957087858213,
+          "p_value": 0.03347286732492987,
+          "significant": "True"
+        },
+        "sample_size": 4020,
+        "total_return": 2.7097180584364398,
+        "annualized_return": 4892.0521843055485
+      }
+    },
+    "TYPE2": {
+      "strategy_description": "MLMI \u2192 NW-RQK \u2192 FVG (Momentum-Trend-Gap)",
+      "signal_analysis": {
+        "total_signals": 81,
+        "long_signals": 48,
+        "short_signals": 33,
+        "signal_ratio": 1.4545454545454546
+      },
+      "performance_metrics": {
+        "total_return_pct": 568.0608036841134,
+        "annualized_return_pct": 0.0,
+        "sharpe_ratio": 10.877189155123828,
+        "sortino_ratio": 15.99434115075534,
+        "calmar_ratio": 6.178721609039066e+21,
+        "max_drawdown_pct": 59.89961347837964,
+        "win_rate_pct": NaN,
+        "profit_factor": NaN,
+        "volatility_pct": 541.2782320149674,
+        "total_trades": 0,
+        "avg_trade_duration": "N/A",
+        "best_trade_pct": NaN,
+        "worst_trade_pct": NaN
+      },
+      "statistical_validation": {
+        "bootstrap_sharpe": {
+          "original_sharpe": 9.037962169833339,
+          "bootstrap_mean": 8.931109801540924,
+          "bootstrap_std": 4.319448337588303,
+          "confidence_interval": [
+            0.35431846297570835,
+            17.082843677385252
+          ],
+          "p_value": 0.022
+        },
+        "mean_return_test": {
+          "t_statistic": 2.1270957087858213,
+          "p_value": 0.03347286732492987,
+          "significant": "True"
+        },
+        "sample_size": 4020,
+        "total_return": 2.7097180584364398,
+        "annualized_return": 4892.0521843055485
+      }
+    },
+    "TYPE3": {
+      "strategy_description": "NW-RQK \u2192 MLMI \u2192 FVG (Trend-Momentum-Gap)",
+      "signal_analysis": {
+        "total_signals": 9,
+        "long_signals": 4,
+        "short_signals": 5,
+        "signal_ratio": 0.8
+      },
+      "performance_metrics": {
+        "total_return_pct": 412.92552915069535,
+        "annualized_return_pct": 0.0,
+        "sharpe_ratio": 10.00495202325061,
+        "sortino_ratio": 14.657125148843216,
+        "calmar_ratio": 6.171716217345204e+18,
+        "max_drawdown_pct": 59.839024028978386,
+        "win_rate_pct": NaN,
+        "profit_factor": NaN,
+        "volatility_pct": 513.5192161502437,
+        "total_trades": 0,
+        "avg_trade_duration": "N/A",
+        "best_trade_pct": NaN,
+        "worst_trade_pct": NaN
+      },
+      "statistical_validation": {
+        "bootstrap_sharpe": {
+          "original_sharpe": 8.31321186085477,
+          "bootstrap_mean": 8.369814998721273,
+          "bootstrap_std": 4.2908027376319025,
+          "confidence_interval": [
+            -0.3145916454275755,
+            16.847235985772436
+          ],
+          "p_value": 0.029
+        },
+        "mean_return_test": {
+          "t_statistic": 1.9565248164540228,
+          "p_value": 0.05047251592618628,
+          "significant": "False"
+        },
+        "sample_size": 4020,
+        "total_return": 2.3646048328204565,
+        "annualized_return": 4268.994038477051
+      }
+    },
+    "TYPE4": {
+      "strategy_description": "NW-RQK \u2192 FVG \u2192 MLMI (Trend-Gap-Momentum)",
+      "signal_analysis": {
+        "total_signals": 8,
+        "long_signals": 1,
+        "short_signals": 7,
+        "signal_ratio": 0.14285714285714285
+      },
+      "performance_metrics": {
+        "total_return_pct": 588.204502573312,
+        "annualized_return_pct": 0.0,
+        "sharpe_ratio": 10.992224728503638,
+        "sortino_ratio": 16.16617050674531,
+        "calmar_ratio": 1.3434491831346606e+22,
+        "max_drawdown_pct": 59.9054688836636,
+        "win_rate_pct": NaN,
+        "profit_factor": NaN,
+        "volatility_pct": 541.7944368303747,
+        "total_trades": 0,
+        "avg_trade_duration": "N/A",
+        "best_trade_pct": NaN,
+        "worst_trade_pct": NaN
+      },
+      "statistical_validation": {
+        "bootstrap_sharpe": {
+          "original_sharpe": 9.133546345631336,
+          "bootstrap_mean": 8.953051223426849,
+          "bootstrap_std": 4.275853637571648,
+          "confidence_interval": [
+            0.8899011367545692,
+            17.036115049302047
+          ],
+          "p_value": 0.018
+        },
+        "mean_return_test": {
+          "t_statistic": 2.149591564195172,
+          "p_value": 0.031647051271325964,
+          "significant": "True"
+        },
+        "sample_size": 4020,
+        "total_return": 2.7409871701876294,
+        "annualized_return": 4948.5045985954575
+      }
+    }
+  },
+  "comparative_analysis": {
+    "total_return_pct": {
+      "values": {
+        "TYPE1": 568.0608036841134,
+        "TYPE2": 568.0608036841134,
+        "TYPE3": 412.92552915069535,
+        "TYPE4": 588.204502573312
+      },
+      "best_strategy": "TYPE4",
+      "worst_strategy": "TYPE3",
+      "average": 534.3129097730585,
+      "spread": 175.27897342261662
+    },
+    "sharpe_ratio": {
+      "values": {
+        "TYPE1": 10.877189155123828,
+        "TYPE2": 10.877189155123828,
+        "TYPE3": 10.00495202325061,
+        "TYPE4": 10.992224728503638
+      },
+      "best_strategy": "TYPE4",
+      "worst_strategy": "TYPE3",
+      "average": 10.687888765500476,
+      "spread": 0.9872727052530283
+    },
+    "max_drawdown_pct": {
+      "values": {
+        "TYPE1": 59.89961347837964,
+        "TYPE2": 59.89961347837964,
+        "TYPE3": 59.839024028978386,
+        "TYPE4": 59.9054688836636
+      },
+      "best_strategy": "TYPE3",
+      "worst_strategy": "TYPE4",
+      "average": 59.88592996735032,
+      "spread": 0.06644485468521566
+    },
+    "win_rate_pct": {
+      "values": {
+        "TYPE1": NaN,
+        "TYPE2": NaN,
+        "TYPE3": NaN,
+        "TYPE4": NaN
+      },
+      "best_strategy": "TYPE1",
+      "worst_strategy": "TYPE1",
+      "average": NaN,
+      "spread": NaN
+    },
+    "profit_factor": {
+      "values": {
+        "TYPE1": NaN,
+        "TYPE2": NaN,
+        "TYPE3": NaN,
+        "TYPE4": NaN
+      },
+      "best_strategy": "TYPE1",
+      "worst_strategy": "TYPE1",
+      "average": NaN,
+      "spread": NaN
+    },
+    "volatility_pct": {
+      "values": {
+        "TYPE1": 541.2782320149674,
+        "TYPE2": 541.2782320149674,
+        "TYPE3": 513.5192161502437,
+        "TYPE4": 541.7944368303747
+      },
+      "best_strategy": "TYPE4",
+      "worst_strategy": "TYPE3",
+      "average": 534.4675292526383,
+      "spread": 28.275220680131042
+    }
+  },
+  "execution_summary": {
+    "total_strategies_tested": 4,
+    "total_signals_generated": 220,
+    "total_trades_executed": 0,
+    "average_performance": {
+      "return_pct": 534.3129097730585,
+      "sharpe_ratio": 10.687888765500476,
+      "max_drawdown_pct": 59.88592996735032
+    },
+    "execution_success": true,
+    "statistical_validation_success": true
+  }
+}

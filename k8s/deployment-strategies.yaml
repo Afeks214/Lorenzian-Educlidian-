@@ -1,0 +1,615 @@
+# GrandModel Deployment Strategies - Agent 20 Implementation
+# Blue-Green and Canary deployment strategies with automated rollback
+
+---
+# Blue-Green Deployment Configuration
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: strategic-rollout
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  replicas: 3
+  strategy:
+    blueGreen:
+      activeService: strategic-service-active
+      previewService: strategic-service-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+      prePromotionAnalysis:
+        templates:
+        - templateName: strategic-success-rate
+        args:
+        - name: service-name
+          value: strategic-service-preview
+      postPromotionAnalysis:
+        templates:
+        - templateName: strategic-success-rate
+        args:
+        - name: service-name
+          value: strategic-service-active
+      previewReplicaCount: 1
+      promotionPolicy:
+        timeoutSeconds: 300
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: strategic
+        version: v1.0.0
+    spec:
+      serviceAccountName: grandmodel-sa
+      containers:
+      - name: strategic-agent
+        image: grandmodel/strategic-agent:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8080
+          name: health
+        env:
+        - name: AGENT_TYPE
+          value: "strategic"
+        - name: DEPLOYMENT_TYPE
+          value: "blue-green"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 30
+
+---
+# Canary Deployment Configuration for Tactical Agent
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: tactical-rollout
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  replicas: 5
+  strategy:
+    canary:
+      maxSurge: "25%"
+      maxUnavailable: 0
+      analysis:
+        templates:
+        - templateName: tactical-success-rate
+        - templateName: tactical-latency
+        startingStep: 2
+        args:
+        - name: service-name
+          value: tactical-service
+      steps:
+      - setWeight: 20
+      - pause:
+          duration: 2m
+      - setWeight: 40
+      - pause:
+          duration: 5m
+      - analysis:
+          templates:
+          - templateName: tactical-success-rate
+          - templateName: tactical-latency
+          args:
+          - name: service-name
+            value: tactical-service
+      - setWeight: 60
+      - pause:
+          duration: 10m
+      - setWeight: 80
+      - pause:
+          duration: 10m
+      - analysis:
+          templates:
+          - templateName: tactical-success-rate
+          - templateName: tactical-latency
+          args:
+          - name: service-name
+            value: tactical-service
+      trafficRouting:
+        istio:
+          virtualService:
+            name: tactical-vs
+            routes:
+            - primary
+          destinationRule:
+            name: tactical-dr
+            canarySubsetName: canary
+            stableSubsetName: stable
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: tactical
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: tactical
+        version: v1.0.0
+    spec:
+      serviceAccountName: grandmodel-sa
+      containers:
+      - name: tactical-agent
+        image: grandmodel/tactical-agent:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8080
+          name: health
+        env:
+        - name: AGENT_TYPE
+          value: "tactical"
+        - name: DEPLOYMENT_TYPE
+          value: "canary"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 45
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 15
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 30
+
+---
+# Risk Agent with Rolling Update Strategy (Conservative)
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: risk-rollout
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent20
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      analysis:
+        templates:
+        - templateName: risk-var-accuracy
+        - templateName: risk-correlation-stability
+        startingStep: 1
+        args:
+        - name: service-name
+          value: risk-service
+      steps:
+      - setWeight: 33
+      - pause:
+          duration: 5m
+      - analysis:
+          templates:
+          - templateName: risk-var-accuracy
+          - templateName: risk-correlation-stability
+          args:
+          - name: service-name
+            value: risk-service
+      - setWeight: 66
+      - pause:
+          duration: 10m
+      - analysis:
+          templates:
+          - templateName: risk-var-accuracy
+          - templateName: risk-correlation-stability
+          args:
+          - name: service-name
+            value: risk-service
+      - setWeight: 100
+      - pause:
+          duration: 5m
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: risk
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: risk
+        version: v1.0.0
+    spec:
+      serviceAccountName: grandmodel-sa
+      containers:
+      - name: risk-agent
+        image: grandmodel/risk-agent:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8080
+          name: health
+        env:
+        - name: AGENT_TYPE
+          value: "risk"
+        - name: DEPLOYMENT_TYPE
+          value: "conservative-canary"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 20
+
+---
+# Analysis Templates for Strategic Agent
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: strategic-success-rate
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    interval: 30s
+    count: 5
+    successCondition: result[0] >= 0.99
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          sum(rate(strategic_requests_total{service="{{args.service-name}}", status!~"5.."}[5m])) /
+          sum(rate(strategic_requests_total{service="{{args.service-name}}"}[5m]))
+  - name: latency-p95
+    interval: 30s
+    count: 5
+    successCondition: result[0] <= 0.002
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          histogram_quantile(0.95, sum(rate(strategic_latency_seconds_bucket{service="{{args.service-name}}"}[5m])) by (le))
+
+---
+# Analysis Templates for Tactical Agent
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: tactical-success-rate
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    interval: 15s
+    count: 8
+    successCondition: result[0] >= 0.99
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          sum(rate(tactical_requests_total{service="{{args.service-name}}", status!~"5.."}[2m])) /
+          sum(rate(tactical_requests_total{service="{{args.service-name}}"}[2m]))
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: tactical-latency
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: latency-p95
+    interval: 15s
+    count: 8
+    successCondition: result[0] <= 0.001
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          histogram_quantile(0.95, sum(rate(tactical_latency_seconds_bucket{service="{{args.service-name}}"}[2m])) by (le))
+
+---
+# Analysis Templates for Risk Agent
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: risk-var-accuracy
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent20
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: var-accuracy
+    interval: 60s
+    count: 10
+    successCondition: result[0] >= 0.95
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          risk_var_accuracy_ratio{service="{{args.service-name}}"}
+  - name: calculation-time
+    interval: 60s
+    count: 10
+    successCondition: result[0] <= 0.005
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          histogram_quantile(0.95, sum(rate(risk_var_calculation_seconds_bucket{service="{{args.service-name}}"}[5m])) by (le))
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: risk-correlation-stability
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent20
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: correlation-stability
+    interval: 60s
+    count: 10
+    successCondition: result[0] <= 0.1
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          risk_correlation_matrix_instability{service="{{args.service-name}}"}
+
+---
+# Services for Blue-Green Deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: strategic-service-active
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  selector:
+    app: grandmodel
+    component: strategic
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: strategic-service-preview
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent20
+spec:
+  selector:
+    app: grandmodel
+    component: strategic
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  type: ClusterIP
+
+---
+# Istio Virtual Service for Canary Deployment
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: tactical-vs
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  hosts:
+  - tactical-service
+  http:
+  - match:
+    - headers:
+        canary:
+          exact: "true"
+    route:
+    - destination:
+        host: tactical-service
+        subset: canary
+  - route:
+    - destination:
+        host: tactical-service
+        subset: stable
+
+---
+# Istio Destination Rule for Canary Deployment
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: tactical-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent20
+spec:
+  host: tactical-service
+  subsets:
+  - name: stable
+    labels:
+      app: grandmodel
+      component: tactical
+  - name: canary
+    labels:
+      app: grandmodel
+      component: tactical
+
+---
+# Automated Rollback Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rollback-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent20
+data:
+  rollback-policy.yaml: |
+    rollback_triggers:
+      - metric: error_rate
+        threshold: 0.05
+        duration: 2m
+        action: immediate_rollback
+      - metric: latency_p95
+        threshold: 0.01
+        duration: 5m
+        action: immediate_rollback
+      - metric: success_rate
+        threshold: 0.95
+        duration: 3m
+        action: immediate_rollback
+      - metric: correlation_shock
+        threshold: 1
+        duration: 0s
+        action: immediate_rollback
+    
+    rollback_procedures:
+      strategic:
+        method: blue_green_switch
+        timeout: 30s
+        verification_steps:
+          - health_check
+          - metric_validation
+      tactical:
+        method: canary_abort
+        timeout: 60s
+        verification_steps:
+          - health_check
+          - latency_check
+      risk:
+        method: immediate_rollback
+        timeout: 15s
+        verification_steps:
+          - health_check
+          - var_calculation_check
+          - correlation_stability_check

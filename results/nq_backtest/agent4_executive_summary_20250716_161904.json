@@ -1,0 +1,47 @@
+{
+  "analysis_overview": {
+    "total_strategies_analyzed": 2,
+    "analysis_period": "3-year comprehensive backtest",
+    "total_metrics_calculated": "50+ institutional-grade metrics per strategy",
+    "analysis_completion_time": "2025-07-16T16:19:04.213227"
+  },
+  "key_performance_insights": {
+    "best_total_return": {
+      "strategy": "Synergy_3Year",
+      "return_pct": -5.13499998416751
+    },
+    "best_risk_adjusted": {
+      "strategy": "Synergy_3Year",
+      "sharpe_ratio": 0.21302482792841343
+    },
+    "return_range": [
+      -15.509491345419535,
+      -5.13499998416751
+    ],
+    "average_return": -10.322245664793522,
+    "return_volatility": 5.187245680626013
+  },
+  "risk_assessment_summary": {
+    "high_risk_strategies": 0,
+    "medium_risk_strategies": 2,
+    "portfolio_diversification": "GOOD",
+    "overall_risk_level": "CONSERVATIVE PORTFOLIO"
+  },
+  "statistical_validation": {
+    "monte_carlo_completed": true,
+    "stress_testing_completed": true,
+    "confidence_intervals_calculated": true,
+    "normality_tests_performed": true
+  },
+  "strategic_recommendations": [
+    "Focus allocation on Synergy_3Year - highest performance score",
+    "Consider reducing allocation to VectorBT_Implementation - lowest performance",
+    "Synergy_3Year: Implement position sizing controls - high drawdown risk",
+    "Synergy_3Year: Review strategy parameters - poor risk-adjusted returns",
+    "Synergy_3Year: Optimize entry/exit signals - low win rate",
+    "VectorBT_Implementation: Implement position sizing controls - high drawdown risk",
+    "VectorBT_Implementation: Review strategy parameters - poor risk-adjusted returns",
+    "VectorBT_Implementation: Optimize entry/exit signals - low win rate"
+  ],
+  "overall_assessment": "POOR PERFORMANCE - Significant strategy revision required"
+}

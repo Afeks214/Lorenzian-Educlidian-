@@ -1,0 +1,76 @@
+# Production Environment Configuration Overrides
+
+system:
+  environment: production
+  ssl_enabled: true
+  backup_enabled: true
+  debug: false
+  log_level: INFO
+
+database:
+  host: ${DB_HOST:production.db.company.com}
+  port: ${DB_PORT:5432}
+  name: ${DB_NAME:grandmodel_prod}
+  username: ${DB_USERNAME:grandmodel_user}
+  password: ${SECRET:db_password}
+  ssl_mode: require
+  connection_pool:
+    min_connections: 10
+    max_connections: 100
+
+redis:
+  host: ${REDIS_HOST:redis.company.com}
+  port: ${REDIS_PORT:6379}
+  password: ${SECRET:redis_password}
+  ssl: true
+  cluster_enabled: true
+
+security:
+  jwt_secret_key: ${SECRET:jwt_secret}
+  api_rate_limit: 1000
+  cors_origins: []
+  encryption_key: ${SECRET:encryption_key}
+
+monitoring:
+  prometheus_port: 9090
+  enable_profiling: false
+  metrics_interval: 60
+  health_check_interval: 30
+
+risk_management:
+  max_position_size: 500000
+  max_daily_loss: 10000
+  max_drawdown_percent: 5
+  stop_loss_percent: 1.5
+  position_sizing_method: "kelly"
+  var_confidence: 0.99
+
+data_handler:
+  type: "rithmic"
+  live_settings:
+    user: ${SECRET:rithmic_user}
+    password: ${SECRET:rithmic_password}
+    system: ${SECRET:rithmic_system}
+    gateway: ${RITHMIC_GATEWAY:apis.rithmic.com:443}
+  
+execution:
+  order_type: "limit"
+  slippage_ticks: 0.5
+  commission_per_contract: 2.5
+  max_order_size: 10
+  timeout_seconds: 30
+
+logging:
+  level: INFO
+  format: json
+  handlers:
+    - console
+    - file
+    - elasticsearch
+  file:
+    path: /var/log/grandmodel/production.log
+    max_size: 100MB
+    backup_count: 10
+  elasticsearch:
+    host: ${ELASTICSEARCH_HOST:logs.company.com}
+    index: grandmodel-production

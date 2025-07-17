@@ -1,0 +1,76 @@
+{
+  "optimization_summary": {
+    "total_rows_processed": 383738,
+    "original_total_memory_mb": 67.33708953857422,
+    "optimized_total_memory_mb": 15.736577987670898,
+    "overall_memory_reduction_pct": 76.63014826523478,
+    "optimization_success": true
+  },
+  "performance_metrics": {
+    "30min": {
+      "rows": 56083,
+      "original_memory_mb": 9.841350555419922,
+      "optimized_memory_mb": 2.2999773025512695,
+      "memory_reduction_pct": 76.62945456927551
+    },
+    "5min": {
+      "rows": 327655,
+      "original_memory_mb": 57.4957389831543,
+      "optimized_memory_mb": 13.436600685119629,
+      "memory_reduction_pct": 76.63026700281837
+    }
+  },
+  "file_structure": {
+    "output_directory": "/home/QuantNova/GrandModel/data/optimized",
+    "files_created": [
+      {
+        "filename": "30min_optimized_dataframe.pkl",
+        "size_mb": 1.21,
+        "type": ".pkl"
+      },
+      {
+        "filename": "30min_precomputed_stats.json",
+        "size_mb": 0.0,
+        "type": ".json"
+      },
+      {
+        "filename": "5min_optimized_dataframe.pkl",
+        "size_mb": 6.35,
+        "type": ".pkl"
+      },
+      {
+        "filename": "5min_precomputed_stats.json",
+        "size_mb": 0.0,
+        "type": ".json"
+      },
+      {
+        "filename": "5min_timestamp_index.pkl",
+        "size_mb": 2.5,
+        "type": ".pkl"
+      },
+      {
+        "filename": "30min_timestamp_index.pkl",
+        "size_mb": 0.43,
+        "type": ".pkl"
+      },
+      {
+        "filename": "30min_numpy_arrays.pkl",
+        "size_mb": 2.3,
+        "type": ".pkl"
+      },
+      {
+        "filename": "5min_numpy_arrays.pkl",
+        "size_mb": 13.44,
+        "type": ".pkl"
+      }
+    ]
+  },
+  "usage_instructions": {
+    "loading_numpy_arrays": "arrays = pickle.load(open('/home/QuantNova/GrandModel/data/optimized/TIMEFRAME_numpy_arrays.pkl', 'rb'))",
+    "loading_dataframe": "df = joblib.load('/home/QuantNova/GrandModel/data/optimized/TIMEFRAME_optimized_dataframe.pkl')",
+    "accessing_ohlcv": "ohlcv = arrays['ohlcv']  # Shape: (n_bars, 5) for [open, high, low, close, volume]",
+    "accessing_returns": "returns = arrays['returns']  # 1D array of returns",
+    "performance_note": "Use numpy arrays for fastest backtesting performance"
+  },
+  "timestamp": "2025-07-16T16:26:32.454920"
+}

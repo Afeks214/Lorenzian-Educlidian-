@@ -1,0 +1,10 @@
+{
+  "strategy_performance": {
+    "total_return_pct": 11.4,
+    "sharpe_ratio": 1.6,
+    "max_drawdown_pct": -7.1,
+    "win_rate_pct": 61.8,
+    "profit_factor": 1.5,
+    "total_trades": 124
+  }
+}

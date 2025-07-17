@@ -1,0 +1,308 @@
+# Automated Recovery Configuration
+# ================================
+# Configuration for the recovery orchestration system
+
+# Global settings
+default_timeout: 300  # seconds
+max_concurrent_recoveries: 5
+validation_delay: 10  # seconds to wait before validating recovery
+retry_delay: 30  # seconds between retries
+
+# Health thresholds for triggering recovery
+health_thresholds:
+  cpu_critical: 95.0
+  cpu_high: 85.0
+  memory_critical: 95.0
+  memory_high: 85.0
+  disk_critical: 95.0
+  disk_high: 90.0
+  response_time_critical: 5000  # ms
+  response_time_high: 2000  # ms
+  error_rate_critical: 0.15
+  error_rate_high: 0.05
+
+# Recovery strategies for different failure types
+recovery_strategies:
+  
+  # High memory usage scenarios
+  high_memory_usage:
+    - strategy: clear_cache
+      priority: 1
+      timeout: 60
+      parameters:
+        cache_type: redis
+        cleanup_strategy: selective
+        key_pattern: "temp:*"
+    - strategy: increase_resources
+      priority: 2
+      timeout: 180
+      parameters:
+        resource_type: memory
+        increase_percentage: 50
+        max_memory: "4Gi"
+    - strategy: restart_service
+      priority: 3
+      timeout: 300
+      parameters:
+        restart_type: graceful
+        wait_for_ready: true
+
+  # High CPU usage scenarios  
+  high_cpu_usage:
+    - strategy: scale_horizontally
+      priority: 1
+      timeout: 240
+      parameters:
+        target_replicas: 2
+        max_replicas: 10
+        min_replicas: 1
+    - strategy: increase_resources
+      priority: 2
+      timeout: 180
+      parameters:
+        resource_type: cpu
+        increase_percentage: 50
+        max_cpu: "2000m"
+
+  # Service failure scenarios
+  service_failure:
+    - strategy: restart_service
+      priority: 1
+      timeout: 300
+      parameters:
+        restart_type: graceful
+        drain_connections: true
+        wait_for_ready: true
+    - strategy: scale_horizontally
+      priority: 2
+      timeout: 240
+      parameters:
+        target_replicas: 2
+        replace_failed_pods: true
+
+  # Performance degradation
+  performance_degradation:
+    - strategy: clear_cache
+      priority: 1
+      timeout: 60
+      parameters:
+        cache_type: redis
+        cleanup_strategy: expired
+    - strategy: restart_service
+      priority: 2
+      timeout: 300
+      parameters:
+        restart_type: rolling
+        max_unavailable: 1
+
+  # Network issues
+  network_issues:
+    - strategy: restart_service
+      priority: 1
+      timeout: 180
+      parameters:
+        restart_type: force
+        reset_connections: true
+    - strategy: scale_horizontally
+      priority: 2
+      timeout: 240
+      parameters:
+        target_replicas: 2
+        distribute_load: true
+
+  # Resource exhaustion
+  resource_exhaustion:
+    - strategy: cleanup_resources
+      priority: 1
+      timeout: 120
+      parameters:
+        cleanup_type: temporary_files
+        cleanup_logs: true
+        cleanup_cache: true
+    - strategy: increase_resources
+      priority: 2
+      timeout: 180
+      parameters:
+        resource_type: auto_detect
+        increase_percentage: 100
+    - strategy: scale_horizontally
+      priority: 3
+      timeout: 300
+      parameters:
+        target_replicas: 3
+        load_balance: true
+
+  # Database issues
+  database_issues:
+    - strategy: restart_service
+      priority: 1
+      timeout: 300
+      parameters:
+        restart_type: graceful
+        restart_dependencies: false
+    - strategy: clear_cache
+      priority: 2
+      timeout: 60
+      parameters:
+        cache_type: redis
+        cleanup_strategy: full
+        restart_redis: false
+
+  # Overload conditions
+  overload_condition:
+    - strategy: enable_circuit_breaker
+      priority: 1
+      timeout: 30
+      parameters:
+        failure_threshold: 5
+        timeout_duration: 60
+    - strategy: graceful_degradation
+      priority: 2
+      timeout: 60
+      parameters:
+        disable_features: ["non_essential"]
+        reduce_quality: true
+    - strategy: scale_horizontally
+      priority: 3
+      timeout: 300
+      parameters:
+        target_replicas: 5
+        urgent_scaling: true
+
+# Service-specific configurations
+service_configurations:
+  
+  strategic-agent:
+    max_memory: "2Gi"
+    max_cpu: "1000m"
+    max_replicas: 5
+    min_replicas: 1
+    critical_service: true
+    recovery_strategies:
+      - high_memory_usage
+      - high_cpu_usage
+      - service_failure
+  
+  tactical-agent:
+    max_memory: "2Gi" 
+    max_cpu: "1000m"
+    max_replicas: 8
+    min_replicas: 2
+    critical_service: true
+    recovery_strategies:
+      - performance_degradation
+      - overload_condition
+      - service_failure
+  
+  risk-agent:
+    max_memory: "1Gi"
+    max_cpu: "500m"
+    max_replicas: 3
+    min_replicas: 1
+    critical_service: true
+    recovery_strategies:
+      - high_memory_usage
+      - service_failure
+  
+  grandmodel:
+    max_memory: "8Gi"
+    max_cpu: "4000m"
+    max_replicas: 3
+    min_replicas: 1
+    critical_service: true
+    recovery_strategies:
+      - resource_exhaustion
+      - database_issues
+      - service_failure
+  
+  postgres:
+    max_memory: "4Gi"
+    max_cpu: "2000m"
+    max_replicas: 1  # Typically single instance
+    min_replicas: 1
+    critical_service: true
+    recovery_strategies:
+      - database_issues
+      - resource_exhaustion
+  
+  redis:
+    max_memory: "2Gi"
+    max_cpu: "1000m"  
+    max_replicas: 3
+    min_replicas: 1
+    critical_service: false
+    recovery_strategies:
+      - high_memory_usage
+      - service_failure
+
+# Rollback configurations
+rollback_configurations:
+  enable_rollback: true
+  rollback_timeout: 300
+  rollback_strategies:
+    increase_resources:
+      action: decrease_resources
+      parameters:
+        decrease_percentage: 50
+    scale_horizontally:
+      action: scale_down
+      parameters:
+        target_replicas: 1
+    restart_service:
+      action: none  # Can't rollback a restart
+
+# Integration settings
+integrations:
+  kubernetes:
+    enabled: true
+    namespace: grandmodel
+    context: production
+    
+  prometheus:
+    enabled: true
+    endpoint: http://prometheus:9090
+    query_timeout: 30
+    
+  alertmanager:
+    enabled: true
+    endpoint: http://alertmanager:9093
+    
+  grafana:
+    enabled: true
+    endpoint: http://grafana:3000
+
+# Notification settings
+notifications:
+  email:
+    enabled: false
+    smtp_server: ""
+    recipients: []
+    
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#alerts"
+    
+  webhook:
+    enabled: true
+    url: "http://grandmodel:8000/api/recovery/webhook"
+    
+  log:
+    enabled: true
+    level: INFO
+
+# Safety settings
+safety:
+  enable_dry_run: false
+  require_approval: false
+  max_recovery_attempts_per_hour: 10
+  cooldown_period: 300  # seconds
+  blackout_windows: []  # Can define maintenance windows
+
+# Monitoring and metrics
+monitoring:
+  enable_metrics: true
+  metrics_retention: 7d
+  success_rate_threshold: 0.8  # 80% success rate required
+  alert_on_failure: true
+  performance_tracking: true

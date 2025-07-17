@@ -1,0 +1,50 @@
+NQ 30-MIN ETH DATA QUALITY REPORT
+==================================================
+
+Data Processing Date: 2025-07-17 07:39:33
+Original Data File: NQ - 30 min - ETH.csv
+
+DATA SUMMARY:
+--------------------
+Total Records: 50,223
+Data Range: 2020-06-29 01:00:00 to 2024-12-31 23:30:00
+Data Completeness: 63.53%
+Expected Records: 79,053
+
+TRAINING/TESTING SPLIT:
+-------------------------
+Training Records: 23,575
+Testing Records: 26,648
+Training Period: 2020-06-29 01:00:00 to 2022-06-29 01:00:00
+Testing Period: 2022-06-29 01:30:00 to 2024-12-31 23:30:00
+
+PRICE STATISTICS:
+-----------------
+               Open          High           Low         Close
+count  50223.000000  50223.000000  50223.000000  50223.000000
+mean   14631.112598  14648.172720  14613.002768  14631.218441
+std     2889.232809   2888.433399   2889.765832   2889.215719
+min     9785.500000   9830.000000   9728.750000   9792.250000
+25%    12352.500000  12371.250000  12334.625000  12352.625000
+50%    14023.750000  14038.500000  14009.750000  14024.000000
+75%    15814.625000  15828.875000  15793.500000  15814.875000
+max    22424.500000  22425.750000  22415.500000  22424.500000
+
+VOLUME STATISTICS:
+------------------
+count     50223.000000
+mean      11727.935866
+std       17029.167953
+min           0.000000
+25%        1734.000000
+50%        3638.000000
+75%       15467.500000
+max      146000.000000
+Name: Volume, dtype: float64
+
+DATA INTEGRITY: PASSED
+OHLC Validation: PASSED
+Timestamp Validation: PASSED
+Missing Data Handling: COMPLETED
+Technical Indicators: ADDED
+Ready for Backtesting: YES

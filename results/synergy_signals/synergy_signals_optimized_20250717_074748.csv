@@ -1,0 +1,2 @@
+timestamp,pattern_type,direction,signal_strength,bars_to_complete,entry_price,high,low,volume,confidence
+2025-05-23 15:05:00,TYPE_3,SHORT,0.00607621565790262,5,20796.75,20819.25,20757.0,5380,0.15425335096053183
