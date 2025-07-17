@@ -33,6 +33,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 import threading
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from src.core.event_bus import EventBus, Event, EventType
 from src.core.events import Event as CoreEvent
@@ -158,13 +159,14 @@ class RiskLimits:
 
 class RiskManagementNetwork(nn.Module):
     """
-    Ultra-fast neural network for risk management decisions
+    Ultra-fast neural network for risk management decisions with MC Dropout
     
     Architecture: 15D input → 256→128→64→2 output
     Target inference time: <100μs
+    Supports MC Dropout for uncertainty estimation
     """
     
-    def __init__(self, input_dim: int = 15, hidden_dims: List[int] = None, output_dim: int = 2):
+    def __init__(self, input_dim: int = 15, hidden_dims: List[int] = None, output_dim: int = 2, dropout_rate: float = 0.1):
         super().__init__()
         
         if hidden_dims is None:
@@ -172,8 +174,9 @@ class RiskManagementNetwork(nn.Module):
             
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.dropout_rate = dropout_rate
         
-        # Build sequential network for maximum speed
+        # Build sequential network for maximum speed with MC Dropout
         layers = []
         prev_dim = input_dim
         
@@ -181,7 +184,8 @@ class RiskManagementNetwork(nn.Module):
             layers.extend([
                 nn.Linear(prev_dim, hidden_dim),
                 nn.ReLU(inplace=True),  # In-place for memory efficiency
-                nn.LayerNorm(hidden_dim)  # Stabilizes training
+                nn.LayerNorm(hidden_dim),  # Stabilizes training
+                nn.Dropout(dropout_rate)  # MC Dropout layer
             ])
             prev_dim = hidden_dim
             
@@ -199,6 +203,10 @@ class RiskManagementNetwork(nn.Module):
         # JIT compilation for speed
         self._compiled = False
         
+        # MC Dropout settings
+        self.mc_dropout_enabled = True
+        self.mc_samples = 1000
+        
     def _initialize_weights(self):
         """Initialize weights for fast convergence and stability"""
         for m in self.modules():
@@ -208,12 +216,13 @@ class RiskManagementNetwork(nn.Module):
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.01)
                     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, enable_dropout: bool = None) -> torch.Tensor:
         """
-        Forward pass with optimization for inference speed
+        Forward pass with optimization for inference speed and MC Dropout support
         
         Args:
             x: Input tensor [batch_size, 15] or [15] for single inference
+            enable_dropout: Whether to enable dropout (for MC sampling)
             
         Returns:
             Risk parameters [batch_size, 2] or [2]: [stop_loss_mult, take_profit_mult]
@@ -225,6 +234,13 @@ class RiskManagementNetwork(nn.Module):
         else:
             squeeze_output = False
             
+        # Set dropout mode based on enable_dropout parameter
+        if enable_dropout is not None:
+            if enable_dropout:
+                self.train()  # Enable dropout
+            else:
+                self.eval()  # Disable dropout
+        
         # Forward pass
         output = self.network(x)
         
@@ -253,12 +269,89 @@ class RiskManagementNetwork(nn.Module):
             except Exception as e:
                 logger.warning("Failed to compile network", error=str(e))
                 
-    def fast_inference(self, x: torch.Tensor) -> torch.Tensor:
-        """Ultra-fast inference path"""
-        if self._compiled and hasattr(self, 'traced_model'):
+    def fast_inference(self, x: torch.Tensor, enable_dropout: bool = False) -> torch.Tensor:
+        """Ultra-fast inference path with MC Dropout support"""
+        if self._compiled and hasattr(self, 'traced_model') and not enable_dropout:
             return self.traced_model(x.unsqueeze(0) if x.dim() == 1 else x)
         else:
-            return self.forward(x)
+            return self.forward(x, enable_dropout=enable_dropout)
+    
+    def mc_dropout_inference(self, x: torch.Tensor, num_samples: int = 1000) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Perform MC Dropout inference for uncertainty estimation
+        
+        Args:
+            x: Input tensor [batch_size, 15] or [15] for single inference
+            num_samples: Number of MC samples to generate
+            
+        Returns:
+            Tuple of (mean_predictions, prediction_uncertainty)
+        """
+        if not self.mc_dropout_enabled:
+            pred = self.fast_inference(x, enable_dropout=False)
+            return pred, torch.zeros_like(pred)
+        
+        # Collect MC samples
+        samples = []
+        original_training = self.training
+        
+        try:
+            # Enable dropout for MC sampling
+            self.train()
+            
+            for _ in range(num_samples):
+                with torch.no_grad():
+                    sample = self.forward(x, enable_dropout=True)
+                    samples.append(sample)
+            
+            # Stack samples and compute statistics
+            samples_tensor = torch.stack(samples)
+            
+            # Compute mean and variance across samples
+            mean_pred = torch.mean(samples_tensor, dim=0)
+            pred_variance = torch.var(samples_tensor, dim=0)
+            pred_uncertainty = torch.sqrt(pred_variance)
+            
+            return mean_pred, pred_uncertainty
+            
+        finally:
+            # Restore original training state
+            self.train(original_training)
+    
+    def batch_mc_dropout_inference(self, 
+                                 x_batch: List[torch.Tensor], 
+                                 num_samples: int = 1000,
+                                 batch_size: int = 50) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+        """
+        Perform batch MC Dropout inference for multiple inputs
+        
+        Args:
+            x_batch: List of input tensors
+            num_samples: Number of MC samples per input
+            batch_size: Batch size for processing
+            
+        Returns:
+            Tuple of (mean_predictions_list, uncertainties_list)
+        """
+        mean_predictions = []
+        uncertainties = []
+        
+        # Process in batches to manage memory
+        for i in range(0, len(x_batch), batch_size):
+            batch_inputs = x_batch[i:i+batch_size]
+            
+            batch_means = []
+            batch_uncertainties = []
+            
+            for x in batch_inputs:
+                mean_pred, uncertainty = self.mc_dropout_inference(x, num_samples)
+                batch_means.append(mean_pred)
+                batch_uncertainties.append(uncertainty)
+            
+            mean_predictions.extend(batch_means)
+            uncertainties.extend(batch_uncertainties)
+        
+        return mean_predictions, uncertainties
 
 
 class RiskMonitor:
@@ -831,6 +924,140 @@ class RiskManagementAgent:
                 f"decisions={self.risk_decisions_made}, "
                 f"emergencies={self.emergency_stops_executed}, "
                 f"current_risk={self.risk_monitor.last_risk_level.name_str if self.risk_monitor.last_risk_level else 'unknown'})")
+    
+    def batch_calculate_risk_parameters(self,
+                                       execution_contexts: List[ExecutionRiskContext],
+                                       current_prices: List[float],
+                                       position_sizes: List[float],
+                                       enable_mc_dropout: bool = True) -> List[Tuple[RiskParameters, Dict[str, Any]]]:
+        """
+        Batch process multiple risk parameter calculations with MC Dropout
+        
+        Args:
+            execution_contexts: List of execution risk contexts
+            current_prices: List of current prices
+            position_sizes: List of position sizes
+            enable_mc_dropout: Whether to use MC Dropout
+            
+        Returns:
+            List of (risk_parameters, decision_info) tuples
+        """
+        start_time = time.perf_counter()
+        
+        try:
+            num_contexts = len(execution_contexts)
+            
+            # Convert contexts to tensors
+            context_tensors = [ctx.to_tensor() for ctx in execution_contexts]
+            
+            # Batch MC Dropout inference if enabled
+            if enable_mc_dropout and self.mc_dropout_enabled:
+                with torch.no_grad():
+                    risk_multipliers_list, uncertainties = self.network.batch_mc_dropout_inference(
+                        context_tensors, self.mc_samples, self.superposition_batch_size
+                    )
+                    self.mc_dropout_calls += num_contexts
+            else:
+                risk_multipliers_list = []
+                uncertainties = []
+                with torch.no_grad():
+                    for tensor in context_tensors:
+                        multipliers = self.network.fast_inference(tensor)
+                        risk_multipliers_list.append(multipliers)
+                        uncertainties.append(torch.zeros_like(multipliers))
+            
+            # Process each risk parameter calculation
+            results = []
+            for i in range(num_contexts):
+                risk_multipliers = risk_multipliers_list[i]
+                uncertainty = uncertainties[i]
+                
+                # Handle tensor output properly
+                if risk_multipliers.dim() > 1:
+                    risk_multipliers = risk_multipliers.squeeze(0)
+                
+                risk_multipliers_np = risk_multipliers.numpy()
+                stop_loss_mult, take_profit_mult = risk_multipliers_np[0], risk_multipliers_np[1]
+                
+                # Get ATR value
+                atr_value = self._get_current_atr(execution_contexts[i])
+                
+                # Calculate stop/target prices
+                is_long_position = position_sizes[i] > 0
+                current_price = current_prices[i]
+                
+                if is_long_position:
+                    stop_loss_price = current_price - (atr_value * stop_loss_mult)
+                    take_profit_price = current_price + (atr_value * take_profit_mult)
+                else:
+                    stop_loss_price = current_price + (atr_value * stop_loss_mult)
+                    take_profit_price = current_price - (atr_value * take_profit_mult)
+                
+                # Perform risk checks
+                risk_level, violations = self.risk_monitor.check_risk_limits(execution_contexts[i])
+                
+                # Calculate confidence
+                base_confidence = self._calculate_confidence(execution_contexts[i], risk_level)
+                
+                # Adjust confidence based on uncertainty
+                if enable_mc_dropout and self.mc_dropout_enabled:
+                    mean_uncertainty = torch.mean(uncertainty).item()
+                    confidence = base_confidence * (1.0 - min(mean_uncertainty, 0.5))
+                else:
+                    confidence = base_confidence
+                    mean_uncertainty = 0.0
+                
+                # Create risk parameters
+                risk_parameters = RiskParameters(
+                    stop_loss_multiplier=stop_loss_mult,
+                    take_profit_multiplier=take_profit_mult,
+                    atr_value=atr_value,
+                    stop_loss_price=stop_loss_price,
+                    take_profit_price=take_profit_price,
+                    risk_level=risk_level,
+                    confidence=confidence,
+                    calculation_time_ns=0  # Set later
+                )
+                
+                # Create decision info
+                decision_info = {
+                    'stop_loss_multiplier': stop_loss_mult,
+                    'take_profit_multiplier': take_profit_mult,
+                    'atr_value': atr_value,
+                    'stop_loss_price': stop_loss_price,
+                    'take_profit_price': take_profit_price,
+                    'risk_level': risk_level.name_str,
+                    'confidence': confidence,
+                    'base_confidence': base_confidence,
+                    'uncertainty': uncertainty.numpy().tolist() if enable_mc_dropout else None,
+                    'mean_uncertainty': mean_uncertainty,
+                    'mc_dropout_used': enable_mc_dropout and self.mc_dropout_enabled,
+                    'violations': violations,
+                    'position_direction': 'long' if is_long_position else 'short',
+                    'batch_index': i
+                }
+                
+                results.append((risk_parameters, decision_info))
+            
+            # Update tracking
+            end_time = time.perf_counter()
+            batch_time_ms = (end_time - start_time) * 1000
+            self.batch_processing_times.append(batch_time_ms)
+            self.risk_decisions_made += num_contexts
+            
+            logger.info("Batch risk parameter calculation completed",
+                       batch_size=num_contexts,
+                       processing_time_ms=batch_time_ms,
+                       avg_time_per_calculation_ms=batch_time_ms / num_contexts,
+                       mc_dropout_enabled=enable_mc_dropout)
+            
+            return results
+            
+        except Exception as e:
+            logger.error("Error in batch risk parameter calculation", error=str(e))
+            # Return emergency defaults
+            return [(self._get_emergency_risk_parameters(current_prices[i], position_sizes[i]), {'error': str(e), 'batch_index': i}) 
+                   for i in range(len(execution_contexts))]
 
 
 # Factory function for easy instantiation

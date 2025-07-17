@@ -351,7 +351,9 @@ class ComprehensiveDataQualityMonitor:
         # Initialize scorecard
         scorecard = QualityScorecard(
             scorecard_id=scorecard_id,
-            timestamp=start_time
+            timestamp=start_time,
+            overall_quality_score=0.0,
+            weighted_quality_score=0.0
         )
         
         try:

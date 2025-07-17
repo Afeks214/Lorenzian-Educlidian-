@@ -1,0 +1,294 @@
+{
+  "timestamp": "2025-07-17T15:05:53.745579",
+  "test_configuration": {
+    "iterations": 5,
+    "total_time_seconds": 0.5480045650001557,
+    "avg_time_per_iteration_ms": 109.60091300003114
+  },
+  "performance_summary": {
+    "monitoring_active": true,
+    "monitoring_mode": "realtime",
+    "target_latency_ms": 5.0,
+    "total_metrics": 15,
+    "registered_components": 3,
+    "recent_violations": 0,
+    "component_statistics": {
+      "superposition_validator": {
+        "total_calls": 5,
+        "violations": 1,
+        "violation_rate": 0.2,
+        "avg_latency_ms": 2.561382600106299,
+        "p95_latency_ms": 7.392964999780814,
+        "p99_latency_ms": 8.672256199679396,
+        "expected_latency_ms": 5.0,
+        "adaptive_threshold_ms": 5.0,
+        "critical_path": true
+      },
+      "cascade_integrity_checker": {
+        "total_calls": 5,
+        "violations": 0,
+        "violation_rate": 0.0,
+        "avg_latency_ms": 1.395812400005525,
+        "p95_latency_ms": 4.038716199647751,
+        "p99_latency_ms": 4.713938439599588,
+        "expected_latency_ms": 8.0,
+        "adaptive_threshold_ms": 8.0,
+        "critical_path": true
+      },
+      "quality_metrics": {
+        "total_calls": 5,
+        "violations": 0,
+        "violation_rate": 0.0,
+        "avg_latency_ms": 0.08728079992579296,
+        "p95_latency_ms": 0.09532100048090797,
+        "p99_latency_ms": 0.09618500051146839,
+        "expected_latency_ms": 3.0,
+        "adaptive_threshold_ms": 3.0,
+        "critical_path": false
+      }
+    },
+    "system_health": {
+      "avg_cpu_usage": 83.33333333333333,
+      "avg_memory_usage": 60.71666666666667,
+      "avg_gpu_usage": 0.0,
+      "avg_gpu_memory_usage": 0.0
+    },
+    "optimization_suggestions": [
+      "Enable parallel processing for superposition_validator",
+      "Consider GPU acceleration for superposition_validator"
+    ],
+    "alert_summary": {
+      "total_alerts_last_hour": 4,
+      "critical_alerts_last_hour": 1,
+      "warning_alerts_last_hour": 2
+    }
+  },
+  "cascade_topology": {
+    "nodes": 4,
+    "edges": 4,
+    "is_acyclic": true,
+    "levels": {
+      "strategic": 1,
+      "tactical": 1,
+      "execution": 1,
+      "risk_management": 1,
+      "coordination": 0
+    },
+    "critical_path_length": 8.0,
+    "average_connectivity": 2.0
+  },
+  "quality_summary": {
+    "status": "no_data"
+  },
+  "validation_statistics": {
+    "total_validations": 35,
+    "passed_validations": 22,
+    "validation_pass_rate": 0.6285714285714286,
+    "avg_validation_score": 0.8485714285714286,
+    "cascade_health_rate": 1.0,
+    "avg_cascade_latency_ms": 8.0,
+    "max_cascade_latency_ms": 8.0
+  },
+  "system_health": {
+    "health_score": 75.0,
+    "health_level": "good",
+    "issues": [
+      "Quality assessment system inactive"
+    ],
+    "monitoring_active": true
+  },
+  "final_quality_report": {
+    "timestamp": "2025-07-17T15:05:53.745462",
+    "overall_quality": "acceptable",
+    "dimension_scores": {
+      "consistency": 0.6576713470662773,
+      "coherence": 0.322631919420708,
+      "calibration": 0.5,
+      "stability": 0.9985975835334313,
+      "diversity": 0.4958460782849434,
+      "confidence": 0.8394134044365241,
+      "performance": 0.76875,
+      "risk_adjusted": 0.78125
+    },
+    "metrics": [
+      {
+        "dimension": "consistency",
+        "name": "Decision Consistency",
+        "value": 0.8826942480474337,
+        "level": "good",
+        "threshold": 0.8,
+        "description": "Consistency of decision values over time",
+        "timestamp": "2025-07-17T15:05:53.735432",
+        "metadata": {
+          "decision_std": 0.034822468991357096,
+          "decision_mean": 0.2968521768001655,
+          "coefficient_of_variation": 0.11730575195256632
+        }
+      },
+      {
+        "dimension": "consistency",
+        "name": "Probability Consistency",
+        "value": 0.7219564607501903,
+        "level": "acceptable",
+        "threshold": 0.8,
+        "description": "Consistency of probability distributions",
+        "timestamp": "2025-07-17T15:05:53.742123",
+        "metadata": {}
+      },
+      {
+        "dimension": "consistency",
+        "name": "Agent Contribution Consistency",
+        "value": 0.36836333240120794,
+        "level": "unacceptable",
+        "threshold": 0.8,
+        "description": "Consistency of agent contributions",
+        "timestamp": "2025-07-17T15:05:53.742403",
+        "metadata": {}
+      },
+      {
+        "dimension": "coherence",
+        "name": "Probability Coherence",
+        "value": 0.578088171931082,
+        "level": "acceptable",
+        "threshold": 0.7,
+        "description": "Coherence of probability distributions",
+        "timestamp": "2025-07-17T15:05:53.742515",
+        "metadata": {}
+      },
+      {
+        "dimension": "coherence",
+        "name": "Ensemble Coherence",
+        "value": 0.06717566691033403,
+        "level": "unacceptable",
+        "threshold": 0.7,
+        "description": "Coherence between agent contributions",
+        "timestamp": "2025-07-17T15:05:53.743105",
+        "metadata": {}
+      },
+      {
+        "dimension": "calibration",
+        "name": "Confidence Calibration",
+        "value": 0.5,
+        "level": "poor",
+        "threshold": 0.75,
+        "description": "Calibration of confidence scores",
+        "timestamp": "2025-07-17T15:05:53.743118",
+        "metadata": {}
+      },
+      {
+        "dimension": "stability",
+        "name": "Temporal Stability",
+        "value": 0.9971951670668625,
+        "level": "good",
+        "threshold": 0.85,
+        "description": "Stability of decisions over time",
+        "timestamp": "2025-07-17T15:05:53.743171",
+        "metadata": {}
+      },
+      {
+        "dimension": "stability",
+        "name": "Confidence Stability",
+        "value": 1.0,
+        "level": "good",
+        "threshold": 0.85,
+        "description": "Stability of confidence scores",
+        "timestamp": "2025-07-17T15:05:53.743225",
+        "metadata": {}
+      },
+      {
+        "dimension": "diversity",
+        "name": "Agent Contribution Diversity",
+        "value": 0.769466408728427,
+        "level": "excellent",
+        "threshold": 0.5,
+        "description": "Diversity of agent contributions",
+        "timestamp": "2025-07-17T15:05:53.744839",
+        "metadata": {}
+      },
+      {
+        "dimension": "diversity",
+        "name": "Decision Diversity",
+        "value": 0.22222574784145993,
+        "level": "unacceptable",
+        "threshold": 0.5,
+        "description": "Diversity of decisions over time",
+        "timestamp": "2025-07-17T15:05:53.744921",
+        "metadata": {}
+      },
+      {
+        "dimension": "confidence",
+        "name": "Ensemble Confidence Quality",
+        "value": 0.7875,
+        "level": "excellent",
+        "threshold": 0.6,
+        "description": "Quality of ensemble confidence scores",
+        "timestamp": "2025-07-17T15:05:53.744966",
+        "metadata": {
+          "avg_confidence": 0.7875,
+          "confidence_std": 0.0
+        }
+      },
+      {
+        "dimension": "confidence",
+        "name": "Agent Confidence Agreement",
+        "value": 0.8913268088730483,
+        "level": "excellent",
+        "threshold": 0.6,
+        "description": "Agreement between agent confidence scores",
+        "timestamp": "2025-07-17T15:05:53.745176",
+        "metadata": {}
+      },
+      {
+        "dimension": "performance",
+        "name": "Decision Performance",
+        "value": 0.7875,
+        "level": "excellent",
+        "threshold": 0.6,
+        "description": "Performance quality of decisions",
+        "timestamp": "2025-07-17T15:05:53.745197",
+        "metadata": {}
+      },
+      {
+        "dimension": "performance",
+        "name": "Confidence-Performance Alignment",
+        "value": 0.75,
+        "level": "excellent",
+        "threshold": 0.6,
+        "description": "Alignment between confidence and performance",
+        "timestamp": "2025-07-17T15:05:53.745203",
+        "metadata": {}
+      },
+      {
+        "dimension": "risk_adjusted",
+        "name": "Risk-Adjusted Performance",
+        "value": 0.65,
+        "level": "acceptable",
+        "threshold": 0.7,
+        "description": "Risk-adjusted performance quality",
+        "timestamp": "2025-07-17T15:05:53.745209",
+        "metadata": {}
+      },
+      {
+        "dimension": "risk_adjusted",
+        "name": "Uncertainty Handling",
+        "value": 0.9125,
+        "level": "excellent",
+        "threshold": 0.7,
+        "description": "Quality of uncertainty handling",
+        "timestamp": "2025-07-17T15:05:53.745268",
+        "metadata": {}
+      }
+    ],
+    "recommendations": [
+      "Enhance probability coherence through better normalization",
+      "Enhance diversity through agent specialization",
+      "Improve calibration through confidence score adjustment",
+      "Improve decision consistency by enhancing agent coordination"
+    ],
+    "trend_analysis": {}
+  },
+  "recommendations": [
+    "Review validation thresholds - low pass rate detected",
+    "System health below optimal - investigate identified issues"
+  ]
+}

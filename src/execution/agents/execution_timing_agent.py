@@ -531,6 +531,113 @@ class ExecutionTimingAgent:
         
         self.event_bus.publish(event)
     
+    def batch_select_execution_strategies(self,
+                                        market_contexts: List[MarketMicrostructure],
+                                        order_quantities: List[float],
+                                        urgency_levels: List[float] = None,
+                                        enable_mc_dropout: bool = True) -> List[Tuple[ExecutionStrategy, MarketImpactResult]]:
+        """
+        Batch process multiple execution strategy selections with MC Dropout
+        
+        Args:
+            market_contexts: List of market microstructure contexts
+            order_quantities: List of order quantities
+            urgency_levels: List of urgency levels (optional)
+            enable_mc_dropout: Whether to use MC Dropout
+            
+        Returns:
+            List of (strategy, impact_result) tuples
+        """
+        start_time = time.perf_counter()
+        
+        try:
+            num_contexts = len(market_contexts)
+            if urgency_levels is None:
+                urgency_levels = [0.5] * num_contexts
+            
+            # Convert contexts to tensors
+            context_tensors = [ctx.to_tensor() for ctx in market_contexts]
+            
+            # Batch MC Dropout inference if enabled
+            if enable_mc_dropout and self.mc_dropout_enabled:
+                with torch.no_grad():
+                    strategy_probs_list, uncertainties = self.network.batch_mc_dropout_inference(
+                        context_tensors, self.mc_samples, self.superposition_batch_size
+                    )
+                    self.mc_dropout_calls += num_contexts
+            else:
+                strategy_probs_list = []
+                uncertainties = []
+                with torch.no_grad():
+                    for tensor in context_tensors:
+                        probs = self.network.fast_inference(tensor)
+                        strategy_probs_list.append(probs)
+                        uncertainties.append(torch.zeros_like(probs))
+            
+            # Process each strategy selection
+            results = []
+            for i in range(num_contexts):
+                strategy_probs = strategy_probs_list[i]
+                uncertainty = uncertainties[i]
+                
+                # Apply urgency adjustment
+                adjusted_probs = self._apply_urgency_adjustment(strategy_probs, urgency_levels[i])
+                
+                # Select strategy
+                strategy_idx = torch.argmax(adjusted_probs).item()
+                selected_strategy = ExecutionStrategy(strategy_idx)
+                
+                # Calculate strategy confidence
+                strategy_confidence = adjusted_probs[strategy_idx].item()
+                
+                # Adjust confidence based on uncertainty
+                if enable_mc_dropout and self.mc_dropout_enabled:
+                    strategy_uncertainty = uncertainty[strategy_idx].item()
+                    strategy_confidence = strategy_confidence * (1.0 - min(strategy_uncertainty, 0.5))
+                
+                # Calculate market impact
+                time_to_execution = self._estimate_execution_time(selected_strategy)
+                impact_result = self.impact_model.calculate_total_impact(
+                    order_quantity=order_quantities[i],
+                    market_volume=market_contexts[i].current_volume,
+                    volatility=market_contexts[i].volatility_regime,
+                    time_to_execution=time_to_execution,
+                    strategy=selected_strategy
+                )
+                
+                # Add uncertainty information
+                impact_result.strategy_confidence = strategy_confidence
+                impact_result.strategy_uncertainty = torch.mean(uncertainty).item() if enable_mc_dropout else 0.0
+                impact_result.mc_dropout_used = enable_mc_dropout and self.mc_dropout_enabled
+                impact_result.batch_index = i
+                
+                results.append((selected_strategy, impact_result))
+            
+            # Update tracking
+            end_time = time.perf_counter()
+            batch_time_ms = (end_time - start_time) * 1000
+            self.batch_processing_times.append(batch_time_ms)
+            
+            # Update performance stats
+            for strategy, impact_result in results:
+                self.performance_stats['strategy_distribution'][strategy] += 1
+                self.performance_stats['impact_predictions'].append(impact_result.expected_slippage_bps)
+            
+            self.performance_stats['total_decisions'] += num_contexts
+            
+            logger.info("Batch execution strategy selection completed",
+                       batch_size=num_contexts,
+                       processing_time_ms=batch_time_ms,
+                       avg_time_per_decision_ms=batch_time_ms / num_contexts,
+                       mc_dropout_enabled=enable_mc_dropout)
+            
+            return results
+            
+        except Exception as e:
+            logger.error("Error in batch execution strategy selection", error=str(e))
+            # Return safe defaults
+            return [(ExecutionStrategy.IMMEDIATE, None) for _ in range(len(market_contexts))]
+    
     def update_from_actual_slippage(self, predicted_slippage_bps: float, actual_slippage_bps: float):
         """Update model based on actual execution results"""
         self.performance_stats['actual_slippages'].append(actual_slippage_bps)

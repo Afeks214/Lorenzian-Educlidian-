@@ -17,7 +17,19 @@ __author__ = "QuantNova GrandModel Team"
 
 from .unified_data_loader import UnifiedDataLoader
 from .memory_manager import MemoryManager, SharedMemoryPool
-from .data_flow_coordinator import DataFlowCoordinator
+from .data_flow_coordinator import (
+    DataFlowCoordinator,
+    EnhancedDataFlowCoordinator,
+    EnhancedDataStream,
+    DataStreamPriority,
+    AtomicCounter,
+    ThreadSafeDict,
+    DependencyGraph,
+    LockFreeQueue,
+    ConcurrencyMonitor,
+    EnhancedCoordinatorConfig,
+    create_enhanced_coordinator
+)
 from .performance_monitor import PerformanceMonitor, DataLoadingBenchmark
 from .scalability_manager import ScalabilityManager, MultiGPUProcessor
 
@@ -26,6 +38,16 @@ __all__ = [
     'MemoryManager',
     'SharedMemoryPool',
     'DataFlowCoordinator',
+    'EnhancedDataFlowCoordinator',
+    'EnhancedDataStream',
+    'DataStreamPriority',
+    'AtomicCounter',
+    'ThreadSafeDict',
+    'DependencyGraph',
+    'LockFreeQueue',
+    'ConcurrencyMonitor',
+    'EnhancedCoordinatorConfig',
+    'create_enhanced_coordinator',
     'PerformanceMonitor',
     'DataLoadingBenchmark',
     'ScalabilityManager',
