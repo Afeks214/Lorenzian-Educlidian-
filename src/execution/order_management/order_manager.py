@@ -14,6 +14,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import structlog
+from functools import wraps
 
 from ..core.events import EventBus, Event, EventType
 from .order_types import Order, OrderRequest, OrderUpdate, OrderStatus, OrderType
@@ -21,8 +22,48 @@ from .order_validator import OrderValidator, ValidationConfig
 from .execution_tracker import ExecutionTracker
 from ..routing.smart_router import SmartOrderRouter
 from ..analytics.risk_manager import PreTradeRiskManager
+from ..operations.operational_controls import OperationalControls
+from ..safety.kill_switch import get_kill_switch
 
 logger = structlog.get_logger()
+
+
+def require_system_active(func):
+    """
+    Decorator to ensure system is active before executing trading functions.
+    
+    Checks both kill switch and operational controls to ensure system safety.
+    Blocks execution if system is in emergency stop or maintenance mode.
+    """
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        # Check kill switch first
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            logger.error(f"BLOCKED: {func.__name__} - Kill switch is active")
+            # Don't execute the function, just return None or appropriate failure response
+            if func.__name__ == 'submit_order':
+                raise OrderSubmissionError("System is in emergency shutdown - kill switch active")
+            return False
+        
+        # Check operational controls
+        if hasattr(self, 'operational_controls') and self.operational_controls:
+            if self.operational_controls.emergency_stop:
+                logger.error(f"BLOCKED: {func.__name__} - Emergency stop is active")
+                if func.__name__ == 'submit_order':
+                    raise OrderSubmissionError("System is in emergency stop mode")
+                return False
+            
+            if self.operational_controls.maintenance_mode:
+                logger.warning(f"BLOCKED: {func.__name__} - System is in maintenance mode")
+                if func.__name__ == 'submit_order':
+                    raise OrderSubmissionError("System is in maintenance mode")
+                return False
+        
+        # System is active, proceed with execution
+        return await func(self, *args, **kwargs)
+    
+    return wrapper
 
 
 @dataclass
@@ -87,11 +128,15 @@ class OrderManager:
         event_bus: EventBus,
         smart_router: SmartOrderRouter,
         validator: Optional[OrderValidator] = None,
-        risk_manager: Optional[PreTradeRiskManager] = None
+        risk_manager: Optional[PreTradeRiskManager] = None,
+        operational_controls: Optional[OperationalControls] = None
     ):
         self.config = config
         self.event_bus = event_bus
         self.smart_router = smart_router
+        
+        # Initialize safety controls
+        self.operational_controls = operational_controls
         
         # Initialize components
         self.validator = validator or self._create_default_validator()
@@ -131,7 +176,7 @@ class OrderManager:
         self._start_background_tasks()
         
         logger.info(
-            "OrderManager initialized",
+            "OrderManager initialized with safety controls",
             max_concurrent_orders=config.max_concurrent_orders,
             worker_threads=config.worker_threads,
             enable_fast_path=config.enable_fast_path
@@ -165,6 +210,7 @@ class OrderManager:
         # Start order processing loop
         self.executor.submit(asyncio.run, self._order_processing_loop())
     
+    @require_system_active
     async def submit_order(self, order_request: OrderRequest) -> str:
         """
         Submit order for execution with ultra-low latency path.
@@ -354,6 +400,7 @@ class OrderManager:
             )
             raise
     
+    @require_system_active
     async def cancel_order(self, order_id: str, reason: str = "User requested") -> bool:
         """Cancel an active order"""
         with self.lock:
@@ -398,6 +445,7 @@ class OrderManager:
             logger.error("Order cancellation failed", order_id=order_id, error=str(e))
             return False
     
+    @require_system_active
     async def modify_order(self, order_update: OrderUpdate) -> bool:
         """Modify an existing order"""
         with self.lock:
@@ -595,7 +643,18 @@ class OrderManager:
     def get_performance_summary(self) -> Dict[str, Any]:
         """Get comprehensive performance summary"""
         with self.lock:
+            # Check system state
+            system_state = "active"
+            kill_switch = get_kill_switch()
+            if kill_switch and kill_switch.is_active():
+                system_state = "kill_switch_active"
+            elif self.operational_controls and self.operational_controls.emergency_stop:
+                system_state = "emergency_stop"
+            elif self.operational_controls and self.operational_controls.maintenance_mode:
+                system_state = "maintenance_mode"
+            
             summary = {
+                'system_state': system_state,
                 'order_counts': {
                     'total_orders': len(self.orders),
                     'active_orders': len(self.active_orders),

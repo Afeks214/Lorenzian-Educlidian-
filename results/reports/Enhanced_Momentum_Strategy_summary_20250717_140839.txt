@@ -1,0 +1,31 @@
+================================================================================
+INSTITUTIONAL STRATEGY ANALYSIS: Enhanced_Momentum_Strategy
+================================================================================
+Report Generated: 2025-07-17T14:08:34.210234
+
+EXECUTIVE SUMMARY
+----------------------------------------
+Overall Rating: 71.6/100
+Performance Score: 73.0/100
+Risk Score: 70.2/100
+Recommendation: BUY - Good performance with acceptable risk
+
+KEY PERFORMANCE METRICS
+----------------------------------------
+Total Return: 5.00%
+Annualized Return: 2062.35%
+Sharpe Ratio: 7.887
+Maximum Drawdown: 0.00%
+Win Rate: 25.0%
+
+KEY INSIGHTS
+----------------------------------------
+• Excellent risk-adjusted returns
+
+RECOMMENDATIONS
+----------------------------------------
+1. EXCELLENT SHARPE RATIO: Strategy demonstrates strong risk-adjusted performance
+2. LOW WIN RATE: Analyze losing trades for pattern improvements
+3. Error generating recommendations: 'int' object has no attribute 'get'
+
+================================================================================

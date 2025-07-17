@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional
 
 from .minimal_config import load_config
 from .event_bus import EventBus
+from .component_base import ComponentBase
 
 # Component imports - these will be replaced with actual imports as they are developed
 try:

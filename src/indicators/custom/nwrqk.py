@@ -10,6 +10,7 @@ from numba import jit, njit, prange, float64, int64, boolean
 from typing import Dict, Any
 from src.indicators.base import BaseIndicator
 from src.core.minimal_dependencies import EventBus, BarData
+from src.core.signal_alignment import SignalAlignmentEngine, SignalType, create_signal_alignment_engine
 
 
 @njit
@@ -132,6 +133,13 @@ class NWRQKCalculator(BaseIndicator):
         self.x_0 = config.get('x_0', 25)
         self.lag = config.get('lag', 2)
         self.smooth_colors = config.get('smooth_colors', False)
+        
+        # Initialize signal alignment engine
+        self.signal_engine = create_signal_alignment_engine(config.get('signal_alignment', {}))
+        
+        # Signal state tracking
+        self.last_signal_value = 0.0
+        self.last_signal_direction = 0
     
     
     def calculate_30m(self, bar: BarData) -> Dict[str, Any]:
@@ -174,6 +182,30 @@ class NWRQKCalculator(BaseIndicator):
         current_idx = len(df) - 1
         nwrqk_value = yhat1[current_idx] if not np.isnan(yhat1[current_idx]) else 0.0
         nwrqk_signal = int(df['alertStream'].iloc[current_idx]) if current_idx < len(df) else 0
+        
+        # Process signal through alignment engine
+        if nwrqk_signal != 0:
+            # Calculate signal strength based on rate of change
+            signal_strength = abs(nwrqk_value - self.last_signal_value) if self.last_signal_value != 0 else 0.1
+            
+            # Process through signal alignment engine
+            processed_signal = self.signal_engine.process_raw_signal(
+                signal_type=SignalType.NWRQK,
+                raw_value=nwrqk_signal * signal_strength,
+                timeframe="30m",
+                timestamp=bar.timestamp,
+                metadata={
+                    'yhat1': float(nwrqk_value),
+                    'yhat2': float(yhat2[current_idx]) if not np.isnan(yhat2[current_idx]) else 0.0,
+                    'bullish_cross': bool(bullish_cross[current_idx]),
+                    'bearish_cross': bool(bearish_cross[current_idx]),
+                    'smooth_colors': self.smooth_colors
+                }
+            )
+            
+            # Update state
+            self.last_signal_value = nwrqk_value
+            self.last_signal_direction = nwrqk_signal
         
         return {'nwrqk_value': float(nwrqk_value), 'nwrqk_signal': nwrqk_signal}
     

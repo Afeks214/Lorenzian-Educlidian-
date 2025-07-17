@@ -16,6 +16,7 @@ from datetime import datetime
 from src.risk.agents.base_risk_agent import BaseRiskAgent, RiskState, RiskAction, RiskMetrics
 from src.risk.core.kelly_calculator import KellyCalculator, KellyOutput
 from src.core.events import EventBus, Event, EventType
+from src.safety.trading_system_controller import get_controller
 
 logger = structlog.get_logger()
 
@@ -76,6 +77,15 @@ class PositionSizingAgent(BaseRiskAgent):
         self.risk_reductions = 0
         self.leverage_violations = 0
         
+        # Register with trading system controller
+        system_controller = get_controller()
+        if system_controller:
+            system_controller.register_component("position_sizing_agent", {
+                "max_leverage": self.max_leverage,
+                "var_limit": self.var_limit,
+                "correlation_threshold": self.correlation_threshold
+            })
+        
         logger.info("Position Sizing Agent initialized",
                    max_leverage=self.max_leverage,
                    var_limit=self.var_limit)
@@ -90,6 +100,21 @@ class PositionSizingAgent(BaseRiskAgent):
         Returns:
             Tuple of (action, confidence)
         """
+        # Check if system is ON before performing position sizing decisions
+        system_controller = get_controller()
+        if system_controller and not system_controller.is_system_on():
+            logger.info("System is OFF - blocking new position sizing decisions")
+            
+            # Return cached decision if available
+            cached_decision = system_controller.get_cached_value("position_sizing_decision")
+            if cached_decision:
+                logger.debug("Returning cached position sizing decision while system is OFF")
+                return cached_decision
+            
+            # Default to HOLD when system is OFF
+            logger.debug("No cached decision available - defaulting to HOLD while system is OFF")
+            return PositionSizingAction.HOLD, 0.5
+        
         try:
             # Analyze current risk levels
             risk_assessment = self._assess_risk_levels(risk_state)
@@ -102,6 +127,11 @@ class PositionSizingAgent(BaseRiskAgent):
             
             # Calculate confidence based on signal strength
             confidence = self._calculate_confidence(risk_assessment, kelly_recommendation)
+            
+            # Cache the decision for when system is OFF
+            if system_controller:
+                system_controller.cache_value("position_sizing_decision", (action, confidence), ttl_seconds=300)
+                logger.debug("Cached position sizing decision for OFF-system access")
             
             # Track decision
             self.sizing_decisions += 1

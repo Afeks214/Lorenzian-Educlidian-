@@ -12,6 +12,7 @@ from scipy.spatial import cKDTree
 from typing import Dict, Any
 from src.indicators.base import BaseIndicator
 from src.core.minimal_dependencies import EventBus, BarData
+from src.core.signal_alignment import SignalAlignmentEngine, SignalType, create_signal_alignment_engine
 
 
 # EXTRACTED: JIT-compiled MLMI data storage
@@ -128,6 +129,9 @@ class MLMICalculator(BaseIndicator):
         self.mlmi_data = MLMIDataFast()
         self.last_mlmi_value = 0.0
         self.last_mlmi_signal = 0
+        
+        # Initialize signal alignment engine
+        self.signal_engine = create_signal_alignment_engine(config.get('signal_alignment', {}))
     
     def calculate_5m(self, bar: BarData) -> Dict[str, Any]:
         return {}  # MLMI only uses 30m data
@@ -188,6 +192,23 @@ class MLMICalculator(BaseIndicator):
         
         self.last_mlmi_value = float(mlmi_value)
         self.last_mlmi_signal = int(mlmi_signal)
+        
+        # Process signal through alignment engine
+        if mlmi_signal != 0:
+            processed_signal = self.signal_engine.process_raw_signal(
+                signal_type=SignalType.MLMI,
+                raw_value=mlmi_value,
+                timeframe="30m",
+                timestamp=bar.timestamp,
+                metadata={
+                    'ma_bullish': bool(ma_bullish) if current_idx > 0 else False,
+                    'ma_bearish': bool(ma_bearish) if current_idx > 0 else False,
+                    'num_neighbors': self.num_neighbors,
+                    'training_samples': self.mlmi_data.size,
+                    'rsi_slow_wma': float(rsi_slow_wma[current_idx]) if not np.isnan(rsi_slow_wma[current_idx]) else 0.0,
+                    'rsi_quick_wma': float(rsi_quick_wma[current_idx]) if not np.isnan(rsi_quick_wma[current_idx]) else 0.0
+                }
+            )
         
         return {'mlmi_value': self.last_mlmi_value, 'mlmi_signal': self.last_mlmi_signal}
     

@@ -1,0 +1,687 @@
+{
+  "framework_metadata": {
+    "strategy_name": "Enhanced_Momentum_Strategy",
+    "backtest_date": "2025-07-17T14:08:39.206998",
+    "initial_capital": 100000,
+    "total_trades": 4,
+    "total_signals": 4
+  },
+  "data_quality": {
+    "analysis_timestamp": "2025-07-17T14:08:34.005381",
+    "data_overview": {
+      "total_rows": 253,
+      "total_columns": 5,
+      "date_range": {
+        "start_date": "2024-11-07 14:08:33.992379",
+        "end_date": "2025-07-17 14:08:33.992379",
+        "total_days": 252
+      },
+      "data_types": {
+        "Close": "float64",
+        "Open": "float64",
+        "High": "float64",
+        "Low": "float64",
+        "Volume": "int64"
+      },
+      "memory_usage_mb": 0.01,
+      "sufficient_data": true
+    },
+    "missing_data_analysis": {
+      "total_missing_cells": 0,
+      "missing_ratio": 0.0,
+      "acceptable_overall": "True",
+      "column_analysis": {
+        "Close": {
+          "missing_count": 0,
+          "missing_percentage": 0.0,
+          "acceptable": "True"
+        },
+        "Open": {
+          "missing_count": 0,
+          "missing_percentage": 0.0,
+          "acceptable": "True"
+        },
+        "High": {
+          "missing_count": 0,
+          "missing_percentage": 0.0,
+          "acceptable": "True"
+        },
+        "Low": {
+          "missing_count": 0,
+          "missing_percentage": 0.0,
+          "acceptable": "True"
+        },
+        "Volume": {
+          "missing_count": 0,
+          "missing_percentage": 0.0,
+          "acceptable": "True"
+        }
+      },
+      "missing_patterns": {},
+      "columns_with_issues": []
+    },
+    "outlier_analysis": {
+      "Open": {
+        "z_score_outliers": {
+          "count": 11,
+          "percentage": 4.3478260869565215,
+          "values": [
+            15006.587631397242,
+            15005.6784971143,
+            15004.86039271789,
+            15010.772852022177,
+            15015.178655372198,
+            15013.018349267597,
+            15015.585258017265,
+            15013.859663493404,
+            15012.298459002719,
+            15013.192946608477
+          ]
+        },
+        "iqr_outliers": {
+          "count": 44,
+          "percentage": 17.391304347826086,
+          "lower_bound": 14935.712521154226,
+          "upper_bound": 14948.582081288932
+        },
+        "modified_z_outliers": {
+          "count": 43,
+          "percentage": 16.99604743083004
+        },
+        "statistics": {
+          "mean": 14948.455534957659,
+          "median": 14941.33682778147,
+          "std": 18.77646531434818,
+          "min": 14933.684096874189,
+          "max": 15015.585258017265
+        }
+      },
+      "High": {
+        "z_score_outliers": {
+          "count": 3,
+          "percentage": 1.185770750988142,
+          "values": [
+            15073.801954517128,
+            15069.093280756493,
+            15082.06076927589
+          ]
+        },
+        "iqr_outliers": {
+          "count": 5,
+          "percentage": 1.9762845849802373,
+          "lower_bound": 14927.781254664704,
+          "upper_bound": 15053.617446174896
+        },
+        "modified_z_outliers": {
+          "count": 2,
+          "percentage": 0.7905138339920948
+        },
+        "statistics": {
+          "mean": 14992.323958587773,
+          "median": 14990.07583105031,
+          "std": 23.253646263908674,
+          "min": 14956.566174704507,
+          "max": 15082.06076927589
+        }
+      },
+      "Low": {
+        "z_score_outliers": {
+          "count": 4,
+          "percentage": 1.5810276679841897,
+          "values": [
+            14989.069610353066,
+            14987.31390196855,
+            14989.917798503202,
+            14992.160981781424
+          ]
+        },
+        "iqr_outliers": {
+          "count": 7,
+          "percentage": 2.766798418972332,
+          "lower_bound": 14832.509511985334,
+          "upper_bound": 14967.797984616727
+        },
+        "modified_z_outliers": {
+          "count": 1,
+          "percentage": 0.3952569169960474
+        },
+        "statistics": {
+          "mean": 14903.639661626195,
+          "median": 14903.154425774195,
+          "std": 25.75681616374754,
+          "min": 14866.18444210142,
+          "max": 14992.160981781424
+        }
+      },
+      "Close": {
+        "z_score_outliers": {
+          "count": 11,
+          "percentage": 4.3478260869565215,
+          "values": [
+            15006.587631397242,
+            15005.6784971143,
+            15004.86039271789,
+            15010.772852022177,
+            15015.178655372198,
+            15013.018349267597,
+            15015.585258017265,
+            15013.859663493404,
+            15012.298459002719,
+            15013.192946608477
+          ]
+        },
+        "iqr_outliers": {
+          "count": 43,
+          "percentage": 16.99604743083004,
+          "lower_bound": 14935.719875455328,
+          "upper_bound": 14948.569824120434
+        },
+        "modified_z_outliers": {
+          "count": 42,
+          "percentage": 16.600790513833992
+        },
+        "statistics": {
+          "mean": 14948.223844494236,
+          "median": 14941.33682778147,
+          "std": 18.49749459239946,
+          "min": 14933.684096874189,
+          "max": 15015.585258017265
+        }
+      },
+      "Volume": {
+        "z_score_outliers": {
+          "count": 0,
+          "percentage": 0.0,
+          "values": []
+        },
+        "iqr_outliers": {
+          "count": 0,
+          "percentage": 0.0,
+          "lower_bound": 223147.5,
+          "upper_bound": 1972231.5
+        },
+        "modified_z_outliers": {
+          "count": 0,
+          "percentage": 0.0
+        },
+        "statistics": {
+          "mean": 1105906.5494071147,
+          "median": 1133013.0,
+          "std": 240229.7168212674,
+          "min": 705108.0,
+          "max": 1497699.0
+        }
+      }
+    },
+    "consistency_checks": {
+      "price_consistency": {
+        "high_violations": 0,
+        "low_violations": 0,
+        "total_violations": 0,
+        "violation_percentage": 0.0
+      },
+      "volume_consistency": {
+        "negative_volume_count": 0,
+        "zero_volume_count": 0,
+        "negative_volume_percentage": 0.0,
+        "zero_volume_percentage": 0.0
+      },
+      "date_consistency": {
+        "non_chronological_count": 0,
+        "non_chronological_percentage": 0.0
+      },
+      "duplicates": {
+        "duplicate_rows": 0,
+        "duplicate_index": 0,
+        "duplicate_percentage": 0.0
+      },
+      "issues": [],
+      "has_issues": false
+    },
+    "statistical_anomalies": {
+      "Open": {
+        "extreme_returns": {
+          "count": 0,
+          "percentage": 0.0,
+          "max_positive": 0.0007089759595109157,
+          "max_negative": -0.0007292007330902406
+        },
+        "consecutive_extremes": {
+          "max_consecutive": 0,
+          "occurrences": 0
+        },
+        "volatility_spikes": {
+          "count": 19,
+          "percentage": 7.5396825396825395
+        },
+        "distribution_characteristics": {
+          "skewness": -0.7576531591532805,
+          "kurtosis": 5.589720972886825,
+          "is_highly_skewed": "False",
+          "has_fat_tails": "True"
+        }
+      },
+      "High": {
+        "extreme_returns": {
+          "count": 0,
+          "percentage": 0.0,
+          "max_positive": 0.0036655197857933253,
+          "max_negative": -0.0034934062146056988
+        },
+        "consecutive_extremes": {
+          "max_consecutive": 0,
+          "occurrences": 0
+        },
+        "volatility_spikes": {
+          "count": 0,
+          "percentage": 0.0
+        },
+        "distribution_characteristics": {
+          "skewness": 0.03585801399352637,
+          "kurtosis": -0.40429855981815654,
+          "is_highly_skewed": "False",
+          "has_fat_tails": "False"
+        }
+      },
+      "Low": {
+        "extreme_returns": {
+          "count": 0,
+          "percentage": 0.0,
+          "max_positive": 0.003635896015654838,
+          "max_negative": -0.0039565124015895625
+        },
+        "consecutive_extremes": {
+          "max_consecutive": 0,
+          "occurrences": 0
+        },
+        "volatility_spikes": {
+          "count": 11,
+          "percentage": 4.365079365079365
+        },
+        "distribution_characteristics": {
+          "skewness": -0.07772796177033253,
+          "kurtosis": -0.642530569416123,
+          "is_highly_skewed": "False",
+          "has_fat_tails": "False"
+        }
+      },
+      "Close": {
+        "extreme_returns": {
+          "count": 0,
+          "percentage": 0.0,
+          "max_positive": 0.0007089759595109157,
+          "max_negative": -0.0007292007330902406
+        },
+        "consecutive_extremes": {
+          "max_consecutive": 0,
+          "occurrences": 0
+        },
+        "volatility_spikes": {
+          "count": 19,
+          "percentage": 7.5396825396825395
+        },
+        "distribution_characteristics": {
+          "skewness": -0.7578873406904271,
+          "kurtosis": 5.589683009459927,
+          "is_highly_skewed": "False",
+          "has_fat_tails": "True"
+        }
+      }
+    },
+    "data_integrity": {
+      "completeness_score": 100.0,
+      "consistency_score": 100.0,
+      "accuracy_score": 97.70750988142292,
+      "overall_integrity_score": 99.23583662714098,
+      "critical_issues": [],
+      "warnings": []
+    },
+    "quality_score": 98.6,
+    "recommendations": [
+      "EXCELLENT DATA QUALITY: Data is suitable for institutional-grade analysis"
+    ],
+    "data_issues": []
+  },
+  "execution_summary": {
+    "total_signals": 4,
+    "executed_trades": 4,
+    "blocked_trades": 0,
+    "risk_adjustments": 0,
+    "execution_rate": 1.0
+  },
+  "performance_analysis": {
+    "performance_summary": {
+      "total_return": 0.050000000000000044,
+      "annualized_return": 20.62349257068413,
+      "annualized_volatility": 0.396862696659689,
+      "sharpe_ratio": 7.886858670125873,
+      "sortino_ratio": Infinity,
+      "calmar_ratio": Infinity
+    },
+    "drawdown_analysis": {
+      "max_drawdown": 0.0,
+      "max_drawdown_date": "2025-07-13T14:08:34.151002",
+      "avg_drawdown_duration_days": 0,
+      "max_drawdown_duration_days": 0,
+      "total_drawdown_periods": 0,
+      "drawdown_periods": []
+    },
+    "trade_statistics": {
+      "total_periods": 4,
+      "winning_periods": 1,
+      "losing_periods": 0,
+      "flat_periods": 3,
+      "win_rate": 0.25,
+      "average_win": 0.050000000000000044,
+      "average_loss": 0,
+      "win_loss_ratio": Infinity,
+      "profit_factor": Infinity,
+      "max_consecutive_wins": 1,
+      "max_consecutive_losses": 0,
+      "avg_consecutive_wins": 1.0,
+      "avg_consecutive_losses": 0
+    },
+    "time_analysis": {
+      "monthly_analysis": {
+        "total_months": 1,
+        "positive_months": 1,
+        "monthly_win_rate": 1.0,
+        "best_month": 0.050000000000000044,
+        "worst_month": 0.050000000000000044,
+        "best_month_date": "2025-07-31T00:00:00",
+        "worst_month_date": "2025-07-31T00:00:00",
+        "avg_monthly_return": 0.050000000000000044,
+        "monthly_volatility": NaN
+      },
+      "yearly_analysis": {
+        "yearly_returns": {
+          "2025": 0.050000000000000044
+        },
+        "best_year": 0.050000000000000044,
+        "worst_year": 0.050000000000000044,
+        "avg_yearly_return": 0.050000000000000044,
+        "yearly_volatility": NaN
+      }
+    },
+    "risk_metrics": {
+      "var_95": 0.0,
+      "var_99": 0.0,
+      "cvar_95": 0.0,
+      "cvar_99": 0.0,
+      "skewness": 1.9999999999999998,
+      "kurtosis": 4.0000000000000036,
+      "tail_ratio": Infinity,
+      "max_daily_loss": 0.0,
+      "max_daily_gain": 0.050000000000000044,
+      "downside_deviation": 0
+    },
+    "benchmark_comparison": {},
+    "analysis_timestamp": "2025-07-17T14:08:34.197502"
+  },
+  "risk_analysis": {
+    "current_metrics": {
+      "concentration_ratio": 1.0,
+      "exposure_ratio": 0.05,
+      "portfolio_volatility": 0.34369317712168834,
+      "var_95": 0.0,
+      "var_99": 0.0,
+      "total_positions": 1,
+      "risk_utilization": {
+        "position_size": 10.0,
+        "exposure": 0.05
+      }
+    },
+    "risk_report": {
+      "report_timestamp": "2025-07-17T14:08:34.197902",
+      "risk_limits": {
+        "max_position_size": 0.1,
+        "max_daily_loss": 0.02,
+        "max_total_exposure": 1.0,
+        "correlation_threshold": 0.7,
+        "var_confidence": 0.95
+      },
+      "risk_breaches": {
+        "total_breaches": 0,
+        "recent_breaches": [],
+        "breach_types": {}
+      },
+      "stress_test_summary": {},
+      "recommendations": [
+        "Risk management operating within acceptable parameters"
+      ]
+    },
+    "risk_breaches": 0,
+    "risk_utilization": {
+      "position_size": 10.0,
+      "exposure": 0.05
+    }
+  },
+  "stress_test_results": {
+    "test_timestamp": "2025-07-17T14:08:34.197938",
+    "scenarios": {
+      "Market Crash": {
+        "description": "20% market decline across all positions",
+        "stress_factors": {
+          "market": -0.2
+        },
+        "stressed_pnl": -1050.0,
+        "stressed_portfolio_value": 103950.0,
+        "loss_percentage": -0.01,
+        "breach_limits": "False"
+      },
+      "Tech Selloff": {
+        "description": "30% decline in tech stocks",
+        "stress_factors": {
+          "AAPL": -0.3,
+          "MSFT": -0.3,
+          "GOOGL": -0.3,
+          "AMZN": -0.3,
+          "TSLA": -0.35,
+          "market": -0.1
+        },
+        "stressed_pnl": -525.0,
+        "stressed_portfolio_value": 104475.0,
+        "loss_percentage": -0.005,
+        "breach_limits": "False"
+      },
+      "Interest Rate Shock": {
+        "description": "Sudden interest rate increase impact",
+        "stress_factors": {
+          "market": -0.15
+        },
+        "stressed_pnl": -787.5,
+        "stressed_portfolio_value": 104212.5,
+        "loss_percentage": -0.0075,
+        "breach_limits": "False"
+      },
+      "Volatility Spike": {
+        "description": "High volatility scenario",
+        "stress_factors": {
+          "market": -0.25
+        },
+        "stressed_pnl": -1312.5,
+        "stressed_portfolio_value": 103687.5,
+        "loss_percentage": -0.0125,
+        "breach_limits": "False"
+      },
+      "Sector Rotation": {
+        "description": "Large cap underperformance",
+        "stress_factors": {
+          "market": -0.12
+        },
+        "stressed_pnl": -630.0,
+        "stressed_portfolio_value": 104370.0,
+        "loss_percentage": -0.006,
+        "breach_limits": "False"
+      }
+    },
+    "summary": {
+      "worst_case_loss": -0.0125,
+      "average_loss": -0.0082,
+      "scenarios_breaching_limits": 0,
+      "total_scenarios": 5
+    }
+  },
+  "professional_reports": {
+    "comprehensive_report": {
+      "report_metadata": {
+        "generated_at": "2025-07-17T14:08:34.210234",
+        "strategy_name": "Enhanced_Momentum_Strategy",
+        "benchmark_name": "SPY",
+        "report_type": "comprehensive_institutional_analysis"
+      },
+      "executive_summary": {
+        "performance_score": 73.0,
+        "risk_score": 70.2,
+        "overall_rating": 71.6,
+        "key_metrics": {
+          "total_return": 0.050000000000000044,
+          "annualized_return": 20.62349257068413,
+          "sharpe_ratio": 7.886858670125873,
+          "max_drawdown": 0.0,
+          "win_rate": 0.25
+        },
+        "key_insights": [
+          "Excellent risk-adjusted returns"
+        ],
+        "recommendation": "BUY - Good performance with acceptable risk"
+      },
+      "performance_analysis": {
+        "performance_summary": {
+          "total_return": 0.050000000000000044,
+          "annualized_return": 20.62349257068413,
+          "annualized_volatility": 0.396862696659689,
+          "sharpe_ratio": 7.886858670125873,
+          "sortino_ratio": Infinity,
+          "calmar_ratio": Infinity
+        },
+        "drawdown_analysis": {
+          "max_drawdown": 0.0,
+          "max_drawdown_date": "2025-07-13T14:08:34.151002",
+          "avg_drawdown_duration_days": 0,
+          "max_drawdown_duration_days": 0,
+          "total_drawdown_periods": 0,
+          "drawdown_periods": []
+        },
+        "trade_statistics": {
+          "total_periods": 4,
+          "winning_periods": 1,
+          "losing_periods": 0,
+          "flat_periods": 3,
+          "win_rate": 0.25,
+          "average_win": 0.050000000000000044,
+          "average_loss": 0,
+          "win_loss_ratio": Infinity,
+          "profit_factor": Infinity,
+          "max_consecutive_wins": 1,
+          "max_consecutive_losses": 0,
+          "avg_consecutive_wins": 1.0,
+          "avg_consecutive_losses": 0
+        },
+        "time_analysis": {
+          "monthly_analysis": {
+            "total_months": 1,
+            "positive_months": 1,
+            "monthly_win_rate": 1.0,
+            "best_month": 0.050000000000000044,
+            "worst_month": 0.050000000000000044,
+            "best_month_date": "2025-07-31T00:00:00",
+            "worst_month_date": "2025-07-31T00:00:00",
+            "avg_monthly_return": 0.050000000000000044,
+            "monthly_volatility": NaN
+          },
+          "yearly_analysis": {
+            "yearly_returns": {
+              "2025": 0.050000000000000044
+            },
+            "best_year": 0.050000000000000044,
+            "worst_year": 0.050000000000000044,
+            "avg_yearly_return": 0.050000000000000044,
+            "yearly_volatility": NaN
+          }
+        },
+        "risk_metrics": {
+          "var_95": 0.0,
+          "var_99": 0.0,
+          "cvar_95": 0.0,
+          "cvar_99": 0.0,
+          "skewness": 1.9999999999999998,
+          "kurtosis": 4.0000000000000036,
+          "tail_ratio": Infinity,
+          "max_daily_loss": 0.0,
+          "max_daily_gain": 0.050000000000000044,
+          "downside_deviation": 0
+        },
+        "benchmark_comparison": {},
+        "analysis_timestamp": "2025-07-17T14:08:34.197502"
+      },
+      "risk_analysis": {
+        "current_metrics": {
+          "concentration_ratio": 1.0,
+          "exposure_ratio": 0.05,
+          "portfolio_volatility": 0.34369317712168834,
+          "var_95": 0.0,
+          "var_99": 0.0,
+          "total_positions": 1,
+          "risk_utilization": {
+            "position_size": 10.0,
+            "exposure": 0.05
+          }
+        },
+        "risk_report": {
+          "report_timestamp": "2025-07-17T14:08:34.197902",
+          "risk_limits": {
+            "max_position_size": 0.1,
+            "max_daily_loss": 0.02,
+            "max_total_exposure": 1.0,
+            "correlation_threshold": 0.7,
+            "var_confidence": 0.95
+          },
+          "risk_breaches": {
+            "total_breaches": 0,
+            "recent_breaches": [],
+            "breach_types": {}
+          },
+          "stress_test_summary": {},
+          "recommendations": [
+            "Risk management operating within acceptable parameters"
+          ]
+        },
+        "risk_breaches": 0,
+        "risk_utilization": {
+          "position_size": 10.0,
+          "exposure": 0.05
+        }
+      },
+      "trade_attribution": {
+        "error": "Missing columns: ['entry_time', 'exit_time', 'pnl']"
+      },
+      "charts_generated": [
+        "cumulative_returns",
+        "drawdown",
+        "return_distribution"
+      ],
+      "recommendations": [
+        "EXCELLENT SHARPE RATIO: Strategy demonstrates strong risk-adjusted performance",
+        "LOW WIN RATE: Analyze losing trades for pattern improvements",
+        "Error generating recommendations: 'int' object has no attribute 'get'"
+      ]
+    },
+    "report_files": {
+      "json_report": "/home/QuantNova/GrandModel/results/reports/Enhanced_Momentum_Strategy_comprehensive_report_20250717_140839.json",
+      "text_summary": "/home/QuantNova/GrandModel/results/reports/Enhanced_Momentum_Strategy_summary_20250717_140839.txt",
+      "data_quality_report": "/home/QuantNova/GrandModel/results/reports/Enhanced_Momentum_Strategy_data_quality_20250717_140839.txt"
+    },
+    "charts_generated": [
+      "cumulative_returns",
+      "drawdown",
+      "return_distribution"
+    ]
+  },
+  "recommendations": [
+    "EXCELLENT RISK-ADJUSTED PERFORMANCE: Consider increasing allocation",
+    "EXCELLENT RISK DISCIPLINE: No risk limit breaches detected",
+    "LOW TRADE FREQUENCY: Consider increasing signal sensitivity",
+    "STRATEGY SHOWS PROMISE - CONSIDER PAPER TRADING FIRST"
+  ]
+}

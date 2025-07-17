@@ -67,15 +67,19 @@ This comprehensive guide covers training Multi-Agent Reinforcement Learning (MAR
 
 ## Environment Setup
 
-### Training Environment Configuration
+### PettingZoo Environment Configuration
 
-Create `configs/training/marl_training.yaml`:
+GrandModel uses PettingZoo environments for standardized MARL training. Create `configs/training/marl_training.yaml`:
 
 ```yaml
 training:
   mode: marl_training
   environment: pettingzoo
   parallel_envs: 4
+  pettingzoo_config:
+    env_type: "strategic"  # or "tactical", "risk", "execution"
+    api_version: "1.24.0"
+    max_cycles: 2000
   
 data:
   sources:
@@ -347,10 +351,10 @@ RISK_AGENT_CONFIG = {
 
 ## Training Process
 
-### Training Script
+### PettingZoo Training Script
 
 ```python
-# scripts/train_marl_agents.py
+# scripts/train_pettingzoo_agents.py
 import torch
 import numpy as np
 import logging
@@ -359,8 +363,17 @@ from typing import Dict, List, Tuple
 import wandb
 from tensorboard import SummaryWriter
 
+# PettingZoo imports
+from pettingzoo.test import api_test
+from pettingzoo.utils import agent_selector
+
+# GrandModel PettingZoo environments
+from src.environment.strategic_env import StrategicMarketEnv
+from src.environment.tactical_env import TacticalMarketEnv
+from src.environment.risk_env import RiskManagementEnv
+from src.environment.execution_env import ExecutionEnv
+
 from src.training.marl_trainer import MARLTrainer
-from src.training.environments import TradingEnvironment
 from src.training.agents import StrategicAgent, TacticalAgent, RiskAgent
 
 class MARLTrainingOrchestrator:
@@ -380,13 +393,83 @@ class MARLTrainingOrchestrator:
         if self.config['logging']['wandb']:
             wandb.init(project="grandmodel-marl")
     
-    def _create_environment(self) -> TradingEnvironment:
-        """Create the MARL trading environment"""
-        return TradingEnvironment(
-            data_sources=self.config['data']['sources'],
-            episode_length=self.config['training_params']['episode_length'],
-            transaction_costs=self.config['reward_shaping']['transaction_cost']
-        )
+    def _create_environment(self):
+        """Create the PettingZoo MARL trading environment"""
+        env_type = self.config['training']['pettingzoo_config']['env_type']
+        
+        # Select appropriate PettingZoo environment
+        env_classes = {
+            'strategic': StrategicMarketEnv,
+            'tactical': TacticalMarketEnv,
+            'risk': RiskManagementEnv,
+            'execution': ExecutionEnv
+        }
+        
+        if env_type not in env_classes:
+            raise ValueError(f"Unknown environment type: {env_type}")
+        
+        env_class = env_classes[env_type]
+        env_config = self._build_env_config()
+        
+        # Create and validate environment
+        env = env_class(env_config)
+        
+        # Run PettingZoo API test
+        if self.config.get('validate_env', True):
+            api_test(env, num_cycles=10)
+            self.logger.info("✅ PettingZoo API validation passed")
+        
+        return env
+    
+    def _build_env_config(self) -> Dict:
+        """Build environment configuration from training config"""
+        env_type = self.config['training']['pettingzoo_config']['env_type']
+        
+        base_config = {
+            'max_episode_steps': self.config['training_params']['episode_length'],
+            'reward_scaling': self.config['reward_shaping'].get('scaling', 1.0),
+            'transaction_costs': self.config['reward_shaping']['transaction_cost']
+        }
+        
+        if env_type == 'strategic':
+            return {
+                'strategic_marl': {
+                    'environment': {
+                        'matrix_shape': [48, 13],
+                        **base_config
+                    }
+                }
+            }
+        elif env_type == 'tactical':
+            return {
+                'tactical_marl': {
+                    'environment': {
+                        'matrix_shape': [60, 7],
+                        'state_machine': True,
+                        **base_config
+                    }
+                }
+            }
+        elif env_type == 'risk':
+            return {
+                'risk_management': {
+                    'environment': {
+                        'observation_space': 10,
+                        'var_confidence': 0.95,
+                        **base_config
+                    }
+                }
+            }
+        else:  # execution
+            return {
+                'execution': {
+                    'environment': {
+                        'execution_venues': ['venue_a', 'venue_b'],
+                        'latency_target': 0.001,
+                        **base_config
+                    }
+                }
+            }
     
     def _create_agents(self) -> Dict[str, object]:
         """Create all MARL agents"""
@@ -464,54 +547,65 @@ class MARLTrainingOrchestrator:
         return training_metrics
     
     def _run_training_episode(self, episode: int) -> Dict:
-        """Run a single training episode"""
+        """Run a single PettingZoo training episode"""
         
         # Reset environment
-        observations = self.environment.reset()
-        episode_rewards = {agent: 0.0 for agent in self.agents.keys()}
+        self.environment.reset()
+        episode_rewards = {agent: 0.0 for agent in self.environment.possible_agents}
+        episode_losses = {agent: 0.0 for agent in self.environment.possible_agents}
         episode_steps = 0
         
-        done = False
-        while not done and episode_steps < self.config['training_params']['episode_length']:
+        # PettingZoo AEC training loop
+        for agent_name in self.environment.agent_iter():
+            observation, reward, termination, truncation, info = self.environment.last()
             
-            # Get actions from all agents
-            actions = {}
-            for agent_name, agent in self.agents.items():
-                action = agent.select_action(
-                    observations[agent_name], 
-                    training=True
-                )
-                actions[agent_name] = action
+            # Update episode rewards
+            if agent_name in episode_rewards:
+                episode_rewards[agent_name] += reward
             
-            # Environment step
-            next_observations, rewards, done, info = self.environment.step(actions)
+            # Check if episode is done
+            if termination or truncation:
+                action = None
+            else:
+                # Get action from agent
+                if agent_name in self.agents:
+                    action = self.agents[agent_name].select_action(
+                        observation, 
+                        training=True
+                    )
+                    
+                    # Store experience for training
+                    if reward != 0:  # Only store meaningful experiences
+                        self.agents[agent_name].store_experience(
+                            state=observation,
+                            action=action,
+                            reward=reward,
+                            next_state=None,  # Will be updated next step
+                            done=termination or truncation
+                        )
+                else:
+                    # Random action for unknown agents
+                    action = self.environment.action_space(agent_name).sample()
             
-            # Store experience for each agent
-            for agent_name, agent in self.agents.items():
-                agent.store_experience(
-                    state=observations[agent_name],
-                    action=actions[agent_name],
-                    reward=rewards[agent_name],
-                    next_state=next_observations[agent_name],
-                    done=done
-                )
-                episode_rewards[agent_name] += rewards[agent_name]
-            
-            observations = next_observations
+            # Step environment
+            self.environment.step(action)
             episode_steps += 1
+            
+            # Early termination check
+            if episode_steps >= self.config['training_params']['episode_length']:
+                break
         
         # Update agent models
-        agent_losses = {}
         for agent_name, agent in self.agents.items():
             if agent.can_update():
                 loss = agent.update()
-                agent_losses[agent_name] = loss
+                episode_losses[agent_name] = loss
         
         return {
             'episode_rewards': episode_rewards,
-            'agent_losses': agent_losses,
+            'agent_losses': episode_losses,
             'episode_steps': episode_steps,
-            'episode_info': info
+            'episode_info': info if 'info' in locals() else {}
         }
     
     def _run_evaluation(self, episode: int) -> Dict:
@@ -631,26 +725,201 @@ if __name__ == "__main__":
     main()
 ```
 
-### Running Training
+### Running PettingZoo Training
 
 ```bash
-# Basic training
-python scripts/train_marl_agents.py
+# Basic PettingZoo training
+python scripts/train_pettingzoo_agents.py
+
+# Training with specific environment
+python scripts/train_pettingzoo_agents.py --env strategic --config configs/training/strategic_marl.yaml
 
 # Training with custom config
-python scripts/train_marl_agents.py --config configs/training/advanced_marl.yaml
+python scripts/train_pettingzoo_agents.py --config configs/training/advanced_marl.yaml
 
 # Training with GPU acceleration
-CUDA_VISIBLE_DEVICES=0 python scripts/train_marl_agents.py
+CUDA_VISIBLE_DEVICES=0 python scripts/train_pettingzoo_agents.py
 
 # Distributed training across multiple GPUs
-python -m torch.distributed.launch --nproc_per_node=4 scripts/train_marl_agents.py
+python -m torch.distributed.launch --nproc_per_node=4 scripts/train_pettingzoo_agents.py
 
 # Resume from checkpoint
-python scripts/train_marl_agents.py --resume checkpoints/checkpoint_episode_5000.pth
+python scripts/train_pettingzoo_agents.py --resume checkpoints/checkpoint_episode_5000.pth
 
 # Training with wandb logging
-python scripts/train_marl_agents.py --wandb --project grandmodel-experiment-1
+python scripts/train_pettingzoo_agents.py --wandb --project grandmodel-pettingzoo-experiment
+
+# Validate PettingZoo environment before training
+python scripts/train_pettingzoo_agents.py --validate-env --dry-run
+```
+
+### Integration with Popular MARL Frameworks
+
+#### Ray RLlib Integration
+
+```python
+# scripts/train_rllib_pettingzoo.py
+import ray
+from ray.rllib.env import PettingZooEnv
+from ray.rllib.agents.ppo import PPOTrainer
+from ray.tune.logger import pretty_print
+
+from src.environment.strategic_env import StrategicMarketEnv
+
+# Initialize Ray
+ray.init()
+
+# Create PettingZoo environment wrapper
+def env_creator(config):
+    return PettingZooEnv(StrategicMarketEnv(config))
+
+# Register environment
+ray.tune.register_env("strategic_marl", env_creator)
+
+# Configure trainer
+config = {
+    "env": "strategic_marl",
+    "framework": "torch",
+    "multiagent": {
+        "policies": {
+            "mlmi_expert": (None, None, None, {}),
+            "nwrqk_expert": (None, None, None, {}),
+            "regime_expert": (None, None, None, {})
+        },
+        "policy_mapping_fn": lambda agent_id: agent_id,
+        "policies_to_train": ["mlmi_expert", "nwrqk_expert", "regime_expert"]
+    },
+    "num_workers": 4,
+    "num_envs_per_worker": 2,
+    "train_batch_size": 4000,
+    "sgd_minibatch_size": 128,
+    "lr": 3e-4,
+    "gamma": 0.99,
+    "lambda": 0.95,
+    "use_gae": True,
+    "clip_param": 0.2,
+    "num_sgd_iter": 10,
+    "vf_loss_coeff": 0.5,
+    "entropy_coeff": 0.01,
+}
+
+# Create trainer
+trainer = PPOTrainer(config=config)
+
+# Training loop
+for i in range(1000):
+    result = trainer.train()
+    print(pretty_print(result))
+    
+    if i % 100 == 0:
+        checkpoint = trainer.save()
+        print(f"Checkpoint saved at {checkpoint}")
+```
+
+#### Stable Baselines3 Integration
+
+```python
+# scripts/train_sb3_pettingzoo.py
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_util import make_vec_env
+from stable_baselines3.common.callbacks import EvalCallback
+from pettingzoo.utils.conversions import parallel_wrapper_fn
+
+from src.environment.tactical_env import TacticalMarketEnv
+
+# Create vectorized environment
+def make_env():
+    env = TacticalMarketEnv(tactical_config)
+    return env
+
+# Create parallel environment wrapper
+env_fn = parallel_wrapper_fn(make_env)
+env = make_vec_env(env_fn, n_envs=4)
+
+# Evaluation environment
+eval_env = make_vec_env(env_fn, n_envs=1)
+
+# Create evaluation callback
+eval_callback = EvalCallback(
+    eval_env,
+    best_model_save_path="./models/sb3_best/",
+    log_path="./logs/sb3_eval/",
+    eval_freq=10000,
+    deterministic=True,
+    render=False
+)
+
+# Create and train model
+model = PPO(
+    "MlpPolicy",
+    env,
+    learning_rate=3e-4,
+    n_steps=2048,
+    batch_size=64,
+    n_epochs=10,
+    gamma=0.99,
+    gae_lambda=0.95,
+    clip_range=0.2,
+    ent_coeff=0.01,
+    vf_coeff=0.5,
+    max_grad_norm=0.5,
+    verbose=1,
+    tensorboard_log="./logs/sb3_tensorboard/"
+)
+
+# Train model
+model.learn(
+    total_timesteps=1000000,
+    callback=eval_callback,
+    progress_bar=True
+)
+
+# Save trained model
+model.save("./models/sb3_tactical_marl")
+```
+
+#### CleanRL Integration
+
+```python
+# scripts/train_cleanrl_pettingzoo.py
+import torch
+import numpy as np
+from cleanrl.ppo_pettingzoo import PPOAgent, train_ppo
+
+from src.environment.risk_env import RiskManagementEnv
+
+# Configure training
+config = {
+    "env_id": "risk_management",
+    "total_timesteps": 1000000,
+    "learning_rate": 3e-4,
+    "num_envs": 4,
+    "num_steps": 2048,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "num_minibatches": 32,
+    "update_epochs": 10,
+    "clip_coef": 0.2,
+    "ent_coef": 0.01,
+    "vf_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "seed": 42,
+    "cuda": torch.cuda.is_available(),
+    "track": True,
+    "wandb_project_name": "grandmodel-cleanrl",
+    "wandb_entity": "grandmodel-team"
+}
+
+# Environment creation function
+def env_fn():
+    return RiskManagementEnv(risk_config)
+
+# Train with CleanRL
+train_ppo(
+    env_fn=env_fn,
+    config=config,
+    model_save_path="./models/cleanrl_risk_marl"
+)
 ```
 
 ## Model Evaluation

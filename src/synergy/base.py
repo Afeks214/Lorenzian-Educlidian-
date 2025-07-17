@@ -34,16 +34,22 @@ class Signal:
 @dataclass
 class SynergyPattern:
     """Represents a completed synergy pattern."""
-    synergy_type: str  # 'TYPE_1', 'TYPE_2', 'TYPE_3', 'TYPE_4'
+    synergy_type: str  # 'SEQUENTIAL_SYNERGY', 'TYPE_1_LEGACY', etc.
     direction: int     # 1 (long) or -1 (short)
     signals: List[Signal]
     completion_time: datetime
     bars_to_complete: int
     confidence: float = 1.0  # Always 1.0 for hard-coded rules
+    synergy_id: Optional[str] = None  # State manager ID
+    state_managed: bool = False  # Whether using state management
     
     def get_signal_sequence(self) -> Tuple[str, ...]:
         """Return the sequence of signal types."""
         return tuple(s.signal_type for s in self.signals)
+    
+    def is_sequential(self) -> bool:
+        """Check if this is a proper sequential synergy."""
+        return self.synergy_type == 'SEQUENTIAL_SYNERGY'
 
 
 class BasePatternDetector(ABC):
@@ -131,12 +137,14 @@ class BaseSynergyDetector(ABC):
     synergy patterns that form valid trading setups.
     """
     
-    # Define valid synergy patterns
+    # Define valid synergy patterns - SEQUENTIAL CHAIN ONLY
+    # Only NW-RQK → MLMI → FVG sequence is valid for proper synergy
     SYNERGY_PATTERNS = {
-        ('mlmi', 'nwrqk', 'fvg'): 'TYPE_1',
-        ('mlmi', 'fvg', 'nwrqk'): 'TYPE_2',
-        ('nwrqk', 'fvg', 'mlmi'): 'TYPE_3',
-        ('nwrqk', 'mlmi', 'fvg'): 'TYPE_4'
+        ('nwrqk', 'mlmi', 'fvg'): 'SEQUENTIAL_SYNERGY',
+        # Legacy patterns maintained for compatibility (but deprecated)
+        ('mlmi', 'nwrqk', 'fvg'): 'TYPE_1_LEGACY',
+        ('mlmi', 'fvg', 'nwrqk'): 'TYPE_2_LEGACY',
+        ('nwrqk', 'fvg', 'mlmi'): 'TYPE_3_LEGACY'
     }
     
     def __init__(self, config: Dict[str, Any]):

@@ -10,6 +10,7 @@ from numba.typed import List
 from typing import Tuple, Optional, Dict, Any
 import logging
 from functools import lru_cache
+from src.safety.kill_switch import get_kill_switch
 
 class IndicatorBase:
     """Base class for all indicators with common functionality"""
@@ -36,6 +37,21 @@ class IndicatorBase:
         
         if len(data) < self.config.get('min_periods', 0):
             raise ValueError(f"Insufficient data: need at least {self.config.get('min_periods', 0)} periods")
+    
+    def _is_system_active(self) -> bool:
+        """Check if trading system is active"""
+        kill_switch = get_kill_switch()
+        return not (kill_switch and kill_switch.is_active())
+    
+    def _create_empty_indicator_results(self, data: pd.DataFrame, columns: list) -> pd.DataFrame:
+        """Create empty indicator results when system is OFF"""
+        results = pd.DataFrame(index=data.index)
+        for col in columns:
+            if 'bull' in col or 'bear' in col:
+                results[col] = False
+            else:
+                results[col] = 0.0
+        return results
 
 class NWRQK(IndicatorBase):
     """Nadaraya-Watson Rational Quadratic Kernel indicator with ensemble"""
@@ -64,6 +80,14 @@ class NWRQK(IndicatorBase):
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate NW-RQK signals with caching"""
         self._validate_input_data(data, ['close'])
+        
+        # Check master switch safety
+        if not self._is_system_active():
+            self.logger.warning("Trading system is OFF - blocking NW-RQK calculation")
+            return self._create_empty_indicator_results(data, [
+                'nwrqk', 'nwrqk_bull', 'nwrqk_bear', 'nwrqk_strength', 
+                'nwrqk_slope', 'price_deviation'
+            ])
         
         # Check cache
         cache_key = f"nwrqk_{len(data)}_{data.index[-1]}"
@@ -209,6 +233,13 @@ class MLMI(IndicatorBase):
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate MLMI signals"""
         self._validate_input_data(data, ['close'])
+        
+        # Check master switch safety
+        if not self._is_system_active():
+            self.logger.warning("Trading system is OFF - blocking MLMI calculation")
+            return self._create_empty_indicator_results(data, [
+                'mlmi_bull', 'mlmi_bear', 'mlmi_confidence', 'mlmi_signal'
+            ])
         
         prices = data['close'].values
         
@@ -412,6 +443,13 @@ class FVG(IndicatorBase):
     def calculate(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate FVG signals"""
         self._validate_input_data(data, ['high', 'low', 'close', 'volume'])
+        
+        # Check master switch safety
+        if not self._is_system_active():
+            self.logger.warning("Trading system is OFF - blocking FVG calculation")
+            return self._create_empty_indicator_results(data, [
+                'fvg_bull', 'fvg_bear', 'fvg_size', 'fvg_count'
+            ])
         
         # Calculate FVG
         bull_signals, bear_signals, gap_size = self._detect_fvg_with_volume(

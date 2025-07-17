@@ -24,6 +24,7 @@ import structlog
 from src.core.events import Event, EventType, EventBus
 from src.risk.core.correlation_tracker import CorrelationTracker, CorrelationRegime
 from src.algorithms.copula_models import CopulaVaRCalculator, create_copula_var_calculator, MarketRegime
+from src.safety.trading_system_controller import get_controller
 
 logger = structlog.get_logger()
 
@@ -108,6 +109,16 @@ class VaRCalculator:
         # Subscribe to events
         self._setup_event_subscriptions()
         
+        # Register with trading system controller
+        system_controller = get_controller()
+        if system_controller:
+            system_controller.register_component("var_calculator", {
+                "confidence_levels": confidence_levels,
+                "time_horizons": time_horizons,
+                "default_method": default_method,
+                "performance_target_ms": self.performance_target_ms
+            })
+        
         logger.info("VaRCalculator initialized",
                    confidence_levels=confidence_levels,
                    time_horizons=time_horizons,
@@ -151,6 +162,12 @@ class VaRCalculator:
     
     async def _calculate_portfolio_var(self):
         """Calculate portfolio VaR asynchronously"""
+        # Check if system is ON before performing calculations
+        system_controller = get_controller()
+        if system_controller and not system_controller.is_system_on():
+            logger.debug("System is OFF - skipping automatic portfolio VaR calculation")
+            return
+        
         start_time = datetime.now()
         
         try:
@@ -182,7 +199,31 @@ class VaRCalculator:
                 self._check_var_breach(var_result)
         
         except Exception as e:
-            logger.error("Error calculating portfolio VaR", error=str(e))
+            logger.error("Error calculating portfolio VaR", error=str(e), exc_info=True)
+            
+            # Create system error for failed VaR calculation
+            from src.core.errors.base_exceptions import SystemError, ErrorContext
+            from src.core.errors.error_handler import get_error_handler
+            
+            error_handler = get_error_handler()
+            context = ErrorContext(
+                additional_data={
+                    "portfolio_value": self.portfolio_value,
+                    "position_count": len(self.positions),
+                    "confidence_level": self.confidence_levels[0],
+                    "calculation_method": self.default_method
+                }
+            )
+            
+            # Handle VaR calculation failure
+            var_error = SystemError(
+                message=f"VaR calculation failed: {str(e)}",
+                context=context,
+                cause=e,
+                recoverable=True
+            )
+            
+            error_handler.handle_exception(var_error, context, function_name="calculate_portfolio_var")
         
         finally:
             calc_time = (datetime.now() - start_time).total_seconds() * 1000
@@ -211,6 +252,26 @@ class VaRCalculator:
         Returns:
             VaRResult with enhanced risk metrics or None if calculation fails
         """
+        # Check if system is ON before performing new calculations
+        system_controller = get_controller()
+        if system_controller and not system_controller.is_system_on():
+            logger.info("System is OFF - returning cached VaR result instead of calculating new one")
+            
+            # Try to return cached VaR result
+            cache_key = f"var_result_{confidence_level}_{time_horizon}_{method}"
+            cached_result = system_controller.get_cached_value(cache_key)
+            if cached_result:
+                logger.debug("Returning cached VaR result while system is OFF")
+                return cached_result
+            
+            # If no cached result, return the last calculated result
+            if self.var_history:
+                logger.debug("Returning last VaR result from history while system is OFF")
+                return self.var_history[-1]
+            
+            logger.warning("No cached or historical VaR result available while system is OFF")
+            return None
+        
         start_time = datetime.now()
         
         if not self.positions or self.portfolio_value == 0:
@@ -262,12 +323,50 @@ class VaRCalculator:
                 # Calculate Enhanced Risk Metrics if enabled
                 if calculate_expected_shortfall and self.calculate_expected_shortfall:
                     await self._enhance_var_with_es_metrics(result, method, confidence_level, time_horizon)
+                
+                # Cache the result for when system is OFF
+                if system_controller:
+                    cache_key = f"var_result_{confidence_level}_{time_horizon}_{method}"
+                    system_controller.cache_value(cache_key, result, ttl_seconds=300)  # Cache for 5 minutes
+                    logger.debug("Cached VaR result for OFF-system access")
             
             return result
         
         except Exception as e:
-            logger.error("VaR calculation failed", error=str(e))
-            return None
+            logger.error("VaR calculation failed", error=str(e), exc_info=True)
+            
+            # Handle VaR calculation failure with proper error context
+            from src.core.errors.base_exceptions import SystemError, ErrorContext
+            from src.core.errors.error_handler import get_error_handler
+            
+            error_handler = get_error_handler()
+            context = ErrorContext(
+                additional_data={
+                    "confidence_level": confidence_level,
+                    "time_horizon": time_horizon,
+                    "method": method,
+                    "portfolio_value": self.portfolio_value,
+                    "position_count": len(self.positions)
+                }
+            )
+            
+            # Create specific error for VaR calculation failure
+            var_error = SystemError(
+                message=f"VaR calculation failed using {method} method: {str(e)}",
+                context=context,
+                cause=e,
+                recoverable=True
+            )
+            
+            # Register calculate_var as mandatory response function
+            error_handler.register_mandatory_response_function(
+                "calculate_var",
+                validator=lambda result: result is not None and hasattr(result, 'portfolio_var') and result.portfolio_var > 0
+            )
+            
+            # Handle the error and return None if no recovery possible
+            result = error_handler.handle_exception(var_error, context, function_name="calculate_var")
+            return result
     
     async def _calculate_copula_var(
         self,

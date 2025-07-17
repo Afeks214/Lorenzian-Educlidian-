@@ -134,14 +134,23 @@ which python
 # Upgrade pip
 pip install --upgrade pip
 
+# Install PettingZoo and core MARL dependencies
+pip install pettingzoo[classic] gymnasium numpy torch pandas
+
 # Install production dependencies
 pip install -r requirements.txt
 
 # Install development dependencies (optional)
 pip install -r requirements-dev.txt
 
-# Verify installation
-python -c "import torch, pettingzoo, pandas, numpy; print('✅ All core dependencies installed')"
+# Verify installation including PettingZoo
+python -c "
+import torch, pettingzoo, gymnasium, pandas, numpy
+print('✅ All core dependencies installed')
+print(f'PettingZoo version: {pettingzoo.__version__}')
+print(f'Gymnasium version: {gymnasium.__version__}')
+print(f'PyTorch version: {torch.__version__}')
+"
 ```
 
 ### Step 4: Set Environment Variables
@@ -203,10 +212,66 @@ print(f'PyTorch version: {torch.__version__}')
 import pettingzoo
 print(f'PettingZoo version: {pettingzoo.__version__}')
 
+import gymnasium
+print(f'Gymnasium version: {gymnasium.__version__}')
+
 import pandas as pd
 print(f'Pandas version: {pd.__version__}')
 
 print('✅ Installation verification complete')
+"
+
+# Verify PettingZoo environments
+python -c "
+from src.environment.strategic_env import StrategicMarketEnv
+from src.environment.tactical_env import TacticalMarketEnv
+
+# Test strategic environment
+strategic_config = {
+    'strategic_marl': {
+        'environment': {
+            'matrix_shape': [48, 13],
+            'max_episode_steps': 10
+        }
+    }
+}
+strategic_env = StrategicMarketEnv(strategic_config)
+strategic_env.reset()
+print('✅ Strategic environment initialized')
+
+# Test tactical environment
+tactical_config = {
+    'tactical_marl': {
+        'environment': {
+            'matrix_shape': [60, 7],
+            'max_episode_steps': 10
+        }
+    }
+}
+tactical_env = TacticalMarketEnv(tactical_config)
+tactical_env.reset()
+print('✅ Tactical environment initialized')
+
+print('✅ PettingZoo environments verified')
+"
+
+# Run PettingZoo API tests
+python -c "
+from pettingzoo.test import api_test
+from src.environment.strategic_env import StrategicMarketEnv
+
+config = {
+    'strategic_marl': {
+        'environment': {
+            'matrix_shape': [48, 13],
+            'max_episode_steps': 5
+        }
+    }
+}
+
+env = StrategicMarketEnv(config)
+api_test(env, num_cycles=3)
+print('✅ PettingZoo API test passed')
 "
 
 # Run system tests
@@ -219,10 +284,13 @@ pytest tests/test_production_ready.py::TestProductionReady::test_pytorch_install
 
 ```bash
 # Create configuration directories
-mkdir -p configs/{system,models,data}
+mkdir -p configs/{system,models,data,environments}
 
 # Copy example configuration
 cp production_config.yaml configs/system/development.yaml
+
+# Create PettingZoo environment configurations
+mkdir -p configs/environments/pettingzoo
 ```
 
 ### Step 2: Edit Development Configuration
@@ -262,6 +330,25 @@ matrix_assemblers:
       - price_momentum_5
       - volume_ratio
 
+# PettingZoo Configuration
+pettingzoo:
+  environments:
+    strategic:
+      enabled: true
+      config_path: configs/environments/pettingzoo/strategic_marl.yaml
+      
+    tactical:
+      enabled: true
+      config_path: configs/environments/pettingzoo/tactical_marl.yaml
+      
+    risk:
+      enabled: false
+      config_path: configs/environments/pettingzoo/risk_management.yaml
+      
+    execution:
+      enabled: false
+      config_path: configs/environments/pettingzoo/execution.yaml
+
 strategic_marl:
   enabled: true
   model_path: models/strategic_agent.pth
@@ -280,7 +367,80 @@ logging:
   backup_count: 5
 ```
 
-### Step 3: Create Logging Directory
+### Step 3: Create PettingZoo Environment Configurations
+
+Create `configs/environments/pettingzoo/strategic_marl.yaml`:
+
+```yaml
+# Strategic MARL Environment Configuration
+strategic_marl:
+  environment:
+    matrix_shape: [48, 13]
+    max_episode_steps: 2000
+    reward_scaling: 1.0
+    observation_noise: 0.01
+    synergy_weight: 0.2
+    regime_detection: true
+    
+  agents:
+    mlmi_expert:
+      observation_columns: [0, 1, 2, 3]  # MLMI features
+      action_space_size: 3
+      expertise_weight: 0.35
+      
+    nwrqk_expert:
+      observation_columns: [4, 5, 6, 7]  # NWRQK features
+      action_space_size: 3
+      expertise_weight: 0.35
+      
+    regime_expert:
+      observation_columns: [8, 9, 10, 11, 12]  # Regime features
+      action_space_size: 3
+      expertise_weight: 0.30
+      
+  reward_shaping:
+    profit_weight: 1.0
+    synergy_bonus: 0.2
+    risk_penalty: 0.1
+    sharpe_bonus: 0.1
+```
+
+Create `configs/environments/pettingzoo/tactical_marl.yaml`:
+
+```yaml
+# Tactical MARL Environment Configuration
+tactical_marl:
+  environment:
+    matrix_shape: [60, 7]
+    max_episode_steps: 1000
+    reward_scaling: 1.0
+    state_machine: true
+    byzantine_tolerance: true
+    
+  agents:
+    fvg_agent:
+      observation_columns: [0, 1, 2]
+      detection_threshold: 0.7
+      confidence_threshold: 0.8
+      
+    momentum_agent:
+      observation_columns: [3, 4]
+      momentum_window: 14
+      trend_threshold: 0.6
+      
+    entry_opt_agent:
+      observation_columns: [5, 6]
+      optimization_steps: 10
+      timing_precision: 0.001  # 1ms
+      
+  reward_shaping:
+    execution_quality_weight: 1.0
+    timing_bonus: 0.15
+    coordination_bonus: 0.1
+    slippage_penalty: 0.2
+```
+
+### Step 4: Create Logging Directory
 
 ```bash
 # Create logs directory
@@ -290,17 +450,46 @@ mkdir -p logs
 chmod 755 logs
 ```
 
-### Step 4: Validate Configuration
+### Step 5: Validate Configuration
 
 ```bash
-# Validate configuration syntax
+# Validate main configuration syntax
 python -c "
 import yaml
 with open('configs/system/development.yaml', 'r') as f:
     config = yaml.safe_load(f)
-print('✅ Configuration file is valid YAML')
+print('✅ Main configuration file is valid YAML')
 print(f'Environment: {config[\"system\"][\"environment\"]}')
 print(f'Data handler: {config[\"data_handler\"][\"type\"]}')
+print(f'PettingZoo environments: {list(config[\"pettingzoo\"][\"environments\"].keys())}')
+"
+
+# Validate PettingZoo environment configurations
+python -c "
+import yaml
+from pathlib import Path
+
+# Validate strategic environment config
+strategic_path = Path('configs/environments/pettingzoo/strategic_marl.yaml')
+if strategic_path.exists():
+    with open(strategic_path, 'r') as f:
+        strategic_config = yaml.safe_load(f)
+    print('✅ Strategic MARL configuration is valid')
+    print(f'  Matrix shape: {strategic_config[\"strategic_marl\"][\"environment\"][\"matrix_shape\"]}')
+    print(f'  Agents: {list(strategic_config[\"strategic_marl\"][\"agents\"].keys())}')
+else:
+    print('⚠️  Strategic MARL configuration not found')
+
+# Validate tactical environment config
+tactical_path = Path('configs/environments/pettingzoo/tactical_marl.yaml')
+if tactical_path.exists():
+    with open(tactical_path, 'r') as f:
+        tactical_config = yaml.safe_load(f)
+    print('✅ Tactical MARL configuration is valid')
+    print(f'  Matrix shape: {tactical_config[\"tactical_marl\"][\"environment\"][\"matrix_shape\"]}')
+    print(f'  Agents: {list(tactical_config[\"tactical_marl\"][\"agents\"].keys())}')
+else:
+    print('⚠️  Tactical MARL configuration not found')
 "
 ```
 

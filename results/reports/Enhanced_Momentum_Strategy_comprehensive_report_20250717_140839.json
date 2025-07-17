@@ -1,0 +1,144 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-07-17T14:08:34.210234",
+    "strategy_name": "Enhanced_Momentum_Strategy",
+    "benchmark_name": "SPY",
+    "report_type": "comprehensive_institutional_analysis"
+  },
+  "executive_summary": {
+    "performance_score": 73.0,
+    "risk_score": 70.2,
+    "overall_rating": 71.6,
+    "key_metrics": {
+      "total_return": 0.050000000000000044,
+      "annualized_return": 20.62349257068413,
+      "sharpe_ratio": 7.886858670125873,
+      "max_drawdown": 0.0,
+      "win_rate": 0.25
+    },
+    "key_insights": [
+      "Excellent risk-adjusted returns"
+    ],
+    "recommendation": "BUY - Good performance with acceptable risk"
+  },
+  "performance_analysis": {
+    "performance_summary": {
+      "total_return": 0.050000000000000044,
+      "annualized_return": 20.62349257068413,
+      "annualized_volatility": 0.396862696659689,
+      "sharpe_ratio": 7.886858670125873,
+      "sortino_ratio": Infinity,
+      "calmar_ratio": Infinity
+    },
+    "drawdown_analysis": {
+      "max_drawdown": 0.0,
+      "max_drawdown_date": "2025-07-13T14:08:34.151002",
+      "avg_drawdown_duration_days": 0,
+      "max_drawdown_duration_days": 0,
+      "total_drawdown_periods": 0,
+      "drawdown_periods": []
+    },
+    "trade_statistics": {
+      "total_periods": 4,
+      "winning_periods": 1,
+      "losing_periods": 0,
+      "flat_periods": 3,
+      "win_rate": 0.25,
+      "average_win": 0.050000000000000044,
+      "average_loss": 0,
+      "win_loss_ratio": Infinity,
+      "profit_factor": Infinity,
+      "max_consecutive_wins": 1,
+      "max_consecutive_losses": 0,
+      "avg_consecutive_wins": 1.0,
+      "avg_consecutive_losses": 0
+    },
+    "time_analysis": {
+      "monthly_analysis": {
+        "total_months": 1,
+        "positive_months": 1,
+        "monthly_win_rate": 1.0,
+        "best_month": 0.050000000000000044,
+        "worst_month": 0.050000000000000044,
+        "best_month_date": "2025-07-31T00:00:00",
+        "worst_month_date": "2025-07-31T00:00:00",
+        "avg_monthly_return": 0.050000000000000044,
+        "monthly_volatility": NaN
+      },
+      "yearly_analysis": {
+        "yearly_returns": {
+          "2025": 0.050000000000000044
+        },
+        "best_year": 0.050000000000000044,
+        "worst_year": 0.050000000000000044,
+        "avg_yearly_return": 0.050000000000000044,
+        "yearly_volatility": NaN
+      }
+    },
+    "risk_metrics": {
+      "var_95": 0.0,
+      "var_99": 0.0,
+      "cvar_95": 0.0,
+      "cvar_99": 0.0,
+      "skewness": 1.9999999999999998,
+      "kurtosis": 4.0000000000000036,
+      "tail_ratio": Infinity,
+      "max_daily_loss": 0.0,
+      "max_daily_gain": 0.050000000000000044,
+      "downside_deviation": 0
+    },
+    "benchmark_comparison": {},
+    "analysis_timestamp": "2025-07-17T14:08:34.197502"
+  },
+  "risk_analysis": {
+    "current_metrics": {
+      "concentration_ratio": 1.0,
+      "exposure_ratio": 0.05,
+      "portfolio_volatility": 0.34369317712168834,
+      "var_95": 0.0,
+      "var_99": 0.0,
+      "total_positions": 1,
+      "risk_utilization": {
+        "position_size": 10.0,
+        "exposure": 0.05
+      }
+    },
+    "risk_report": {
+      "report_timestamp": "2025-07-17T14:08:34.197902",
+      "risk_limits": {
+        "max_position_size": 0.1,
+        "max_daily_loss": 0.02,
+        "max_total_exposure": 1.0,
+        "correlation_threshold": 0.7,
+        "var_confidence": 0.95
+      },
+      "risk_breaches": {
+        "total_breaches": 0,
+        "recent_breaches": [],
+        "breach_types": {}
+      },
+      "stress_test_summary": {},
+      "recommendations": [
+        "Risk management operating within acceptable parameters"
+      ]
+    },
+    "risk_breaches": 0,
+    "risk_utilization": {
+      "position_size": 10.0,
+      "exposure": 0.05
+    }
+  },
+  "trade_attribution": {
+    "error": "Missing columns: ['entry_time', 'exit_time', 'pnl']"
+  },
+  "charts_generated": [
+    "cumulative_returns",
+    "drawdown",
+    "return_distribution"
+  ],
+  "recommendations": [
+    "EXCELLENT SHARPE RATIO: Strategy demonstrates strong risk-adjusted performance",
+    "LOW WIN RATE: Analyze losing trades for pattern improvements",
+    "Error generating recommendations: 'int' object has no attribute 'get'"
+  ]
+}

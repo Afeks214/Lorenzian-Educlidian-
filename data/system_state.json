@@ -1,0 +1,62 @@
+{
+  "state": "OFF",
+  "last_state_change": "2025-07-17T14:08:38.495186",
+  "start_time": null,
+  "state_history": [
+    {
+      "timestamp": "2025-07-17T14:08:04.267460",
+      "from_state": "OFF",
+      "to_state": "STARTING",
+      "reason": "User command: turn on"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:08.795923",
+      "from_state": "STARTING",
+      "to_state": "ON",
+      "reason": "Startup sequence completed"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:23.941814",
+      "from_state": "ON",
+      "to_state": "EMERGENCY_STOP",
+      "reason": "Emergency stop command"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:24.670367",
+      "from_state": "EMERGENCY_STOP",
+      "to_state": "OFF",
+      "reason": "Emergency stop completed"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:30.133647",
+      "from_state": "OFF",
+      "to_state": "STARTING",
+      "reason": "User command: turn on"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:34.664032",
+      "from_state": "STARTING",
+      "to_state": "ON",
+      "reason": "Startup sequence completed"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:36.172063",
+      "from_state": "ON",
+      "to_state": "STOPPING",
+      "reason": "User command: turn off"
+    },
+    {
+      "timestamp": "2025-07-17T14:08:38.495186",
+      "from_state": "STOPPING",
+      "to_state": "OFF",
+      "reason": "Shutdown sequence completed"
+    }
+  ],
+  "performance_metrics": {
+    "commands_processed": 0,
+    "errors_encountered": 0,
+    "state_changes": 2,
+    "average_response_time": 0.0
+  },
+  "timestamp": "2025-07-17T14:08:38.509192"
+}

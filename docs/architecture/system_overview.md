@@ -331,6 +331,82 @@ POSITION_UPDATE → RISK_ASSESSMENT → RISK_BREACH → EMERGENCY_STOP
 
 ## MARL Intelligence Layer
 
+The MARL Intelligence Layer represents the core decision-making component of GrandModel, utilizing multi-agent reinforcement learning to make sophisticated trading decisions. Built on **PettingZoo**, the system provides standardized, high-performance environments for training and deploying MARL agents.
+
+### PettingZoo Integration Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        PettingZoo MARL Architecture                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │
+│  │   Strategic     │  │    Tactical     │  │      Risk       │            │
+│  │  Environment    │  │  Environment    │  │   Environment   │            │
+│  │  (AECEnv)       │  │  (AECEnv)       │  │   (AECEnv)      │            │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘            │
+│           │                     │                     │                    │
+│           v                     v                     v                    │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │
+│  │ MLMI│NWRQK│RGM  │  │ FVG│MOM│ENTRY   │  │ POS│STOP│RISK  │            │
+│  │ Experts (3)     │  │ Agents (3)      │  │ Agents (4)      │            │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘            │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                           PettingZoo API Layer                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │
+│  │   AEC Pattern   │  │ Parallel Envs   │  │   Vectorized    │            │
+│  │  agent_iter()   │  │  step(actions)  │  │   Wrappers      │            │
+│  │  last()         │  │  reset()        │  │                 │            │
+│  │  step(action)   │  │                 │  │                 │            │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘            │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                        Training Framework Layer                            │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐            │
+│  │   Ray RLlib     │  │ Stable Baselines│  │    CleanRL      │            │
+│  │   Integration   │  │     3 (SB3)     │  │   Integration   │            │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Environment Specifications
+
+#### Strategic Market Environment (`src/environment/strategic_env.py`)
+- **Inherits from**: `pettingzoo.AECEnv`
+- **Agents**: 3 parallel expert agents
+  - `mlmi_expert`: Market microstructure and liquidity intelligence
+  - `nwrqk_expert`: News, weather, and quantitative signals
+  - `regime_expert`: Market regime detection and adaptation
+- **Observation Space**: `Box(shape=(48, 13))` - 48 time steps, 13 features
+- **Action Space**: `Discrete(3)` - [SHORT, NEUTRAL, LONG]
+- **Episode Length**: 2000 steps (configurable)
+- **Features**: Synergy detection, regime-aware decisions, centralized critic
+
+#### Tactical Market Environment (`src/environment/tactical_env.py`)
+- **Inherits from**: `pettingzoo.AECEnv`
+- **Agents**: 3 sequential agents with state machine coordination
+  - `fvg_agent`: Fair Value Gap detection and analysis
+  - `momentum_agent`: Price momentum and trend evaluation
+  - `entry_opt_agent`: Entry timing optimization
+- **Observation Space**: `Box(shape=(60, 7))` - 60 time steps, 7 features
+- **Action Space**: `Discrete(3)` - [SHORT, NEUTRAL, LONG]
+- **Episode Length**: 1000 steps (configurable)
+- **Features**: State machine coordination, FVG patterns, microsecond precision
+
+#### Risk Management Environment (`src/environment/risk_env.py`)
+- **Inherits from**: `pettingzoo.AECEnv`
+- **Agents**: 4 specialized risk agents
+  - `position_sizing`: Dynamic position sizing with Kelly Criterion
+  - `stop_target`: Stop-loss and take-profit optimization
+  - `risk_monitor`: Real-time risk assessment and alerts
+  - `portfolio_optimizer`: Portfolio allocation optimization
+- **Observation Space**: `Box(shape=(10,))` - Portfolio risk metrics
+- **Action Space**: `Discrete(5)` - Risk adjustment levels
+- **Episode Length**: 500 steps (configurable)
+- **Features**: VaR integration, correlation tracking, emergency protocols
+
 ### Multi-Agent Architecture
 
 ```

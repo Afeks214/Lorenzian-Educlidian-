@@ -164,3 +164,63 @@ def get_config_value(config: Dict[str, Any], path: str, default: Any = None) -> 
         return value
     except (KeyError, TypeError):
         return default
+
+
+class Config:
+    """Configuration manager for system components"""
+    
+    def __init__(self, config_path: Optional[str] = None):
+        self.config_path = config_path or 'config/settings.yaml'
+        self._config = None
+        self._load_config()
+    
+    def _load_config(self):
+        """Load configuration from file"""
+        try:
+            self._config = load_config(self.config_path)
+        except (FileNotFoundError, ConfigurationError) as e:
+            logger.warning(f"Could not load config file: {e}")
+            self._config = self._get_default_config()
+    
+    def _get_default_config(self) -> Dict[str, Any]:
+        """Get default configuration"""
+        return {
+            'system': {
+                'name': 'GrandModel Trading System',
+                'version': '1.0.0',
+                'monitoring_interval': 10.0,
+                'health_check_timeout': 30.0
+            },
+            'data_handler': {
+                'type': 'backtest',
+                'backtest_file': 'data/sample_data.csv'
+            },
+            'risk_management': {
+                'max_position_size': 100000,
+                'max_daily_loss': 5000
+            },
+            'agents': {
+                'strategic': {'enabled': True},
+                'tactical': {'enabled': True}
+            },
+            'models': {
+                'rde_path': 'models/rde_model.pt',
+                'mrms_path': 'models/mrms_model.pt'
+            },
+            'execution': {
+                'max_slippage': 0.1,
+                'timeout': 30.0
+            }
+        }
+    
+    def get(self, path: str, default: Any = None) -> Any:
+        """Get configuration value by path"""
+        return get_config_value(self._config, path, default)
+    
+    def get_config(self) -> Dict[str, Any]:
+        """Get full configuration"""
+        return self._config.copy()
+    
+    def reload(self):
+        """Reload configuration from file"""
+        self._load_config()

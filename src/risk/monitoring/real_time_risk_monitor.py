@@ -29,6 +29,8 @@ import aiohttp
 from numba import jit, njit
 import warnings
 
+from src.safety.trading_system_controller import get_controller
+
 warnings.filterwarnings('ignore')
 logger = logging.getLogger(__name__)
 
@@ -545,6 +547,15 @@ class RealTimeRiskMonitor:
         self.data_callbacks: List[Callable] = []
         self.alert_callbacks: List[Callable] = []
         
+        # Register with trading system controller
+        system_controller = get_controller()
+        if system_controller:
+            system_controller.register_component("real_time_risk_monitor", {
+                "risk_update_frequency": config.risk_update_frequency,
+                "position_update_frequency": config.position_update_frequency,
+                "alert_config": config.alert_config.to_dict()
+            })
+        
         logger.info("RealTimeRiskMonitor initialized",
                    extra={'config': config.to_dict()})
     
@@ -946,9 +957,17 @@ class RealTimeRiskMonitor:
         # Get active alerts
         active_alerts = self.alert_manager.get_active_alerts()
         
+        # Get system controller status
+        system_controller = get_controller()
+        system_status = system_controller.get_system_status() if system_controller else {
+            "state": "unknown",
+            "error": "controller_not_available"
+        }
+        
         return {
             'timestamp': datetime.now().isoformat(),
             'status': self.status.value,
+            'system_status': system_status,  # Add system status to dashboard
             'current_metrics': recent_metrics[-1].to_dict() if recent_metrics else {},
             'metrics_history': [m.to_dict() for m in recent_metrics],
             'active_alerts': [alert.to_dict() for alert in active_alerts],

@@ -22,9 +22,35 @@ import gzip
 import traceback
 from logging.handlers import RotatingFileHandler, QueueHandler, QueueListener
 import socket
-import redis
-import elasticsearch
-from prometheus_client import Counter, Histogram, Gauge
+try:
+    import redis
+except ImportError:
+    redis = None
+
+try:
+    import elasticsearch
+except ImportError:
+    elasticsearch = None
+
+try:
+    from prometheus_client import Counter, Histogram, Gauge
+except ImportError:
+    # Mock prometheus metrics if not available
+    class MockMetric:
+        def __init__(self, *args, **kwargs):
+            pass
+        def inc(self, *args, **kwargs):
+            pass
+        def observe(self, *args, **kwargs):
+            pass
+        def set(self, *args, **kwargs):
+            pass
+        def labels(self, *args, **kwargs):
+            return self
+    
+    Counter = MockMetric
+    Histogram = MockMetric
+    Gauge = MockMetric
 
 # Logging metrics
 LOG_MESSAGES_TOTAL = Counter(
@@ -225,7 +251,7 @@ class StructuredFormatter(logging.Formatter):
 class ElasticsearchHandler(logging.Handler):
     """Handler for sending logs to Elasticsearch."""
     
-    def __init__(self, elasticsearch_client: elasticsearch.Elasticsearch, index_pattern: str = "grandmodel-logs"):
+    def __init__(self, elasticsearch_client: Any, index_pattern: str = "grandmodel-logs"):
         super().__init__()
         self.es_client = elasticsearch_client
         self.index_pattern = index_pattern
@@ -321,7 +347,7 @@ class ElasticsearchHandler(logging.Handler):
 class RedisHandler(logging.Handler):
     """Handler for sending logs to Redis streams."""
     
-    def __init__(self, redis_client: redis.Redis, stream_name: str = "grandmodel:logs"):
+    def __init__(self, redis_client: Any, stream_name: str = "grandmodel:logs"):
         super().__init__()
         self.redis_client = redis_client
         self.stream_name = stream_name
@@ -543,7 +569,7 @@ class StructuredLoggingSystem:
             file_handler.setFormatter(StructuredFormatter())
             self.handlers.append(file_handler)
             
-        if self.config.elasticsearch_enabled:
+        if self.config.elasticsearch_enabled and elasticsearch:
             try:
                 es_client = elasticsearch.Elasticsearch(
                     hosts=self.config.elasticsearch_hosts
@@ -557,7 +583,7 @@ class StructuredLoggingSystem:
             except Exception as e:
                 print(f"Failed to setup Elasticsearch handler: {e}")
                 
-        if self.config.redis_enabled:
+        if self.config.redis_enabled and redis:
             try:
                 redis_client = redis.Redis(
                     host=self.config.redis_host,

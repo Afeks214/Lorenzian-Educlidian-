@@ -10,6 +10,7 @@ from numba import njit
 from typing import Dict, Any
 from src.indicators.base import BaseIndicator
 from src.core.minimal_dependencies import EventBus, BarData
+from src.core.signal_alignment import SignalAlignmentEngine, SignalType, create_signal_alignment_engine
 
 
 def detect_real_fvg(df, min_gap_ticks=2, min_gap_percent=0.01, max_age_bars=50):
@@ -335,6 +336,13 @@ class FVGDetector(BaseIndicator):
         self.threshold = config.get('threshold', 0.001)
         self.lookback_period = config.get('lookback_period', 10)
         self.body_multiplier = config.get('body_multiplier', 1.5)
+        
+        # Initialize signal alignment engine
+        self.signal_engine = create_signal_alignment_engine(config.get('signal_alignment', {}))
+        
+        # Signal state tracking
+        self.last_bull_fvg_level = 0.0
+        self.last_bear_fvg_level = 0.0
     
     def calculate_5m(self, bar: BarData) -> Dict[str, Any]:
         """REAL FVG detection on 5-minute bars using authentic market structure analysis"""
@@ -408,6 +416,43 @@ class FVGDetector(BaseIndicator):
                 if bear_fvg_detected[i]:
                     fvg_age = current_idx - i
                     break
+        
+        # Process signals through alignment engine
+        if is_bull_fvg_active[current_idx] and not np.isnan(bull_fvg_bottom[current_idx]):
+            if abs(bull_fvg_bottom[current_idx] - self.last_bull_fvg_level) > self.threshold:
+                processed_signal = self.signal_engine.process_raw_signal(
+                    signal_type=SignalType.FVG,
+                    raw_value=1.0,  # Bullish FVG signal
+                    timeframe="5m",
+                    timestamp=bar.timestamp,
+                    metadata={
+                        'fvg_type': 'bullish',
+                        'fvg_top': float(bull_fvg_top[current_idx]),
+                        'fvg_bottom': float(bull_fvg_bottom[current_idx]),
+                        'fvg_age': int(fvg_age),
+                        'nearest_level': float(nearest_level),
+                        'mitigation_signal': bool(fvg_mitigation)
+                    }
+                )
+                self.last_bull_fvg_level = bull_fvg_bottom[current_idx]
+        
+        if is_bear_fvg_active[current_idx] and not np.isnan(bear_fvg_top[current_idx]):
+            if abs(bear_fvg_top[current_idx] - self.last_bear_fvg_level) > self.threshold:
+                processed_signal = self.signal_engine.process_raw_signal(
+                    signal_type=SignalType.FVG,
+                    raw_value=-1.0,  # Bearish FVG signal
+                    timeframe="5m",
+                    timestamp=bar.timestamp,
+                    metadata={
+                        'fvg_type': 'bearish',
+                        'fvg_top': float(bear_fvg_top[current_idx]),
+                        'fvg_bottom': float(bear_fvg_bottom[current_idx]),
+                        'fvg_age': int(fvg_age),
+                        'nearest_level': float(nearest_level),
+                        'mitigation_signal': bool(fvg_mitigation)
+                    }
+                )
+                self.last_bear_fvg_level = bear_fvg_top[current_idx]
         
         return {
             'fvg_bullish_active': bool(is_bull_fvg_active[current_idx]),

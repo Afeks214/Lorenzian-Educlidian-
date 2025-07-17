@@ -11,20 +11,58 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional, Union
 from decimal import Decimal
+from functools import wraps
 
 from ..core.component_base import ComponentBase
+from ..operations.operational_controls import OperationalControls
+from ..safety.kill_switch import get_kill_switch
 
 logger = logging.getLogger(__name__)
+
+
+def require_system_active(func):
+    """
+    Decorator to ensure system is active before executing trading functions.
+    
+    Checks both kill switch and operational controls to ensure system safety.
+    Blocks execution if system is in emergency stop or maintenance mode.
+    """
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        # Check kill switch first
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            logger.error(f"BLOCKED: {func.__name__} - Kill switch is active")
+            # Don't execute the function, just return
+            return
+        
+        # Check operational controls
+        if hasattr(self, 'operational_controls') and self.operational_controls:
+            if self.operational_controls.emergency_stop:
+                logger.error(f"BLOCKED: {func.__name__} - Emergency stop is active")
+                return
+            
+            if self.operational_controls.maintenance_mode:
+                logger.warning(f"BLOCKED: {func.__name__} - System is in maintenance mode")
+                return
+        
+        # System is active, proceed with execution
+        return func(self, *args, **kwargs)
+    
+    return wrapper
 
 
 class BaseExecutionHandler(ComponentBase):
     """Base class for execution handlers providing common functionality."""
     
-    def __init__(self, config: Dict[str, Any], event_bus):
+    def __init__(self, config: Dict[str, Any], event_bus, operational_controls: Optional[OperationalControls] = None):
         super().__init__()
         self.config = config
         self.event_bus = event_bus
         self.execution_config = config.get('execution', {})
+        
+        # Initialize safety controls
+        self.operational_controls = operational_controls
         
         # Position tracking
         self.active_positions = {}
@@ -38,8 +76,9 @@ class BaseExecutionHandler(ComponentBase):
         # Subscribe to execution events
         self.event_bus.subscribe('EXECUTE_TRADE', self.execute_trade)
         
-        logger.info(f"Initialized {self.__class__.__name__} with config: {self.execution_config}")
+        logger.info(f"Initialized {self.__class__.__name__} with config: {self.execution_config} and safety controls")
     
+    @require_system_active
     def execute_trade(self, event_data: Dict[str, Any]):
         """
         Process EXECUTE_TRADE events from Main MARL Core.
@@ -139,8 +178,8 @@ class BaseExecutionHandler(ComponentBase):
 class LiveExecutionHandler(BaseExecutionHandler):
     """Execution handler for live trading with broker integration."""
     
-    def __init__(self, config: Dict[str, Any], event_bus):
-        super().__init__(config, event_bus)
+    def __init__(self, config: Dict[str, Any], event_bus, operational_controls: Optional[OperationalControls] = None):
+        super().__init__(config, event_bus, operational_controls)
         
         # Live trading specific initialization
         self.broker_connection = None
@@ -153,6 +192,7 @@ class LiveExecutionHandler(BaseExecutionHandler):
         logger.info("Live broker connection initialized (placeholder)")
         self.broker_connection = "live_connection_placeholder"
     
+    @require_system_active
     def _execute_order(self, execution_id: str, trade_spec: Dict, risk_params: Dict, confidence: Dict):
         """Execute order through live broker connection."""
         try:
@@ -211,8 +251,8 @@ class LiveExecutionHandler(BaseExecutionHandler):
 class BacktestExecutionHandler(BaseExecutionHandler):
     """Execution handler for backtesting with simulated execution."""
     
-    def __init__(self, config: Dict[str, Any], event_bus):
-        super().__init__(config, event_bus)
+    def __init__(self, config: Dict[str, Any], event_bus, operational_controls: Optional[OperationalControls] = None):
+        super().__init__(config, event_bus, operational_controls)
         
         # Backtesting specific parameters
         self.current_price = None
@@ -232,6 +272,7 @@ class BacktestExecutionHandler(BaseExecutionHandler):
         tick_data = event_data
         self.current_price = tick_data.get('price')
     
+    @require_system_active
     def _execute_order(self, execution_id: str, trade_spec: Dict, risk_params: Dict, confidence: Dict):
         """Execute order in backtesting simulation."""
         try:

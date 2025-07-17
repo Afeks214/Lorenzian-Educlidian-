@@ -8,13 +8,17 @@ serving as Gate 1 in the two-gate MARL system.
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import time
+import asyncio
 
 import structlog
 
-from src.core.minimal_dependencies import ComponentBase, AlgoSpaceKernel, EventType, Event
+from src.core.minimal_dependencies import ComponentBase, EventType, Event
 from .base import BaseSynergyDetector, Signal, SynergyPattern
 from .patterns import MLMIPatternDetector, NWRQKPatternDetector, FVGPatternDetector
 from .sequence import SignalSequence, CooldownTracker
+from .state_manager import SynergyStateManager
+from .integration_bridge import SynergyIntegrationBridge, execution_system_handler
+from src.safety.kill_switch import get_kill_switch
 
 logger = structlog.get_logger()
 
@@ -35,7 +39,7 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
     - Zero false negatives on valid patterns
     """
     
-    def __init__(self, name: str, kernel: AlgoSpaceKernel):
+    def __init__(self, name: str, kernel):
         """
         Initialize SynergyDetector.
         
@@ -69,6 +73,23 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
         self.cooldown = CooldownTracker(
             cooldown_bars=self.cooldown_bars,
             bar_duration_minutes=5
+        )
+        
+        # Initialize state manager
+        self.state_manager = SynergyStateManager(
+            expiration_minutes=config.get('synergy_expiration_minutes', 30)
+        )
+        
+        # Initialize integration bridge
+        self.integration_bridge = SynergyIntegrationBridge(
+            self.state_manager, 
+            kernel.event_bus
+        )
+        
+        # Register execution system handler
+        self.integration_bridge.register_integration_handler(
+            'execution_system', 
+            execution_system_handler
         )
         
         # Performance tracking
@@ -116,10 +137,14 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
             self._handle_indicators_ready
         )
         
+        # Shutdown state manager
+        await self.state_manager.shutdown()
+        
         # Log final metrics
         logger.info(
             "SynergyDetector shutting down",
-            metrics=self.performance_metrics
+            metrics=self.performance_metrics,
+            state_manager_metrics=self.state_manager.get_metrics()
         )
     
     def _handle_indicators_ready(self, event: Event):
@@ -132,6 +157,12 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
         start_time = time.perf_counter()
         
         try:
+            # Check master switch safety at event level
+            kill_switch = get_kill_switch()
+            if kill_switch and kill_switch.is_active():
+                logger.debug("Trading system is OFF - blocking indicator event processing")
+                return
+            
             # Extract features and timestamp
             features = event.payload
             timestamp = event.timestamp
@@ -142,9 +173,15 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
             # Process features for synergy detection
             synergy = self.process_features(features, timestamp)
             
-            # If synergy detected, emit event
+            # If synergy detected, emit event and initiate handoff
             if synergy:
                 self._emit_synergy_event(synergy, features)
+                
+                # Initiate handoff to execution system for sequential synergies
+                if synergy.is_sequential() and synergy.state_managed:
+                    asyncio.create_task(
+                        self.integration_bridge.initiate_handoff(synergy, 'execution_system')
+                    )
             
             # Update metrics
             self._update_performance_metrics(time.perf_counter() - start_time)
@@ -163,6 +200,12 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
         This is the main detection logic that coordinates pattern detection,
         sequence tracking, and cooldown management.
         """
+        # Check master switch safety
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            logger.warning("Trading system is OFF - blocking synergy processing")
+            return None
+        
         self.performance_metrics['events_processed'] += 1
         
         # Update cooldown state
@@ -186,6 +229,9 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
                 synergy = self._check_and_create_synergy()
                 
                 if synergy and self.cooldown.can_emit():
+                    # Create state record for synergy
+                    synergy_id = self.state_manager.create_synergy_record(synergy)
+                    
                     # Start cooldown period
                     self.cooldown.start_cooldown(timestamp)
                     
@@ -195,6 +241,10 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
                     # Update metrics
                     self.performance_metrics['synergies_detected'] += 1
                     self.performance_metrics['patterns_by_type'][synergy.synergy_type] += 1
+                    
+                    # Enhanced synergy with state management
+                    synergy.synergy_id = synergy_id
+                    synergy.state_managed = True
                     
                     return synergy
                 elif synergy and not self.cooldown.can_emit():
@@ -209,25 +259,80 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
         return None
     
     def _detect_signals(self, features: Dict[str, Any]) -> List[Signal]:
-        """Detect all active signals from current features."""
+        """Detect signals using sequential NW-RQK → MLMI → FVG chain."""
+        # Check master switch safety at signal detection level
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            logger.debug("Trading system is OFF - blocking signal detection")
+            return []
+        
         signals = []
         
-        # Check MLMI pattern
-        mlmi_signal = self.mlmi_detector.detect_pattern(features)
-        if mlmi_signal:
-            signals.append(mlmi_signal)
+        # SEQUENTIAL PROCESSING: NW-RQK → MLMI → FVG
+        # Each stage gates the next stage
         
-        # Check NW-RQK pattern
+        # Stage 1: NW-RQK Detection (Primary Signal)
         nwrqk_signal = self.nwrqk_detector.detect_pattern(features)
         if nwrqk_signal:
             signals.append(nwrqk_signal)
-        
-        # Check FVG pattern
-        fvg_signal = self.fvg_detector.detect_pattern(features)
-        if fvg_signal:
-            signals.append(fvg_signal)
+            
+            # Stage 2: MLMI Detection (Only if NW-RQK detected)
+            mlmi_signal = self.mlmi_detector.detect_pattern(features)
+            if mlmi_signal and self._validate_signal_chain(nwrqk_signal, mlmi_signal):
+                signals.append(mlmi_signal)
+                
+                # Stage 3: FVG Detection (Only if MLMI detected)
+                fvg_signal = self.fvg_detector.detect_pattern(features)
+                if fvg_signal and self._validate_signal_chain(mlmi_signal, fvg_signal):
+                    signals.append(fvg_signal)
+                    
+                    logger.info(
+                        "Sequential synergy chain completed",
+                        chain="NW-RQK → MLMI → FVG",
+                        direction=nwrqk_signal.direction,
+                        total_strength=sum(s.strength for s in signals) / len(signals)
+                    )
         
         return signals
+    
+    def _validate_signal_chain(self, signal1: Signal, signal2: Signal) -> bool:
+        """Validate that two signals can be chained together."""
+        # Direction consistency check
+        if signal1.direction != signal2.direction:
+            logger.debug(
+                "Signal chain broken: direction mismatch",
+                signal1_type=signal1.signal_type,
+                signal1_direction=signal1.direction,
+                signal2_type=signal2.signal_type,
+                signal2_direction=signal2.direction
+            )
+            return False
+        
+        # Timestamp proximity check (within 2 bars)
+        time_diff = abs((signal2.timestamp - signal1.timestamp).total_seconds())
+        max_time_diff = 2 * 5 * 60  # 2 bars * 5 minutes * 60 seconds
+        
+        if time_diff > max_time_diff:
+            logger.debug(
+                "Signal chain broken: timestamp too far apart",
+                signal1_type=signal1.signal_type,
+                signal2_type=signal2.signal_type,
+                time_diff_seconds=time_diff
+            )
+            return False
+        
+        # Strength coherence check (combined strength should be reasonable)
+        combined_strength = (signal1.strength + signal2.strength) / 2
+        if combined_strength < 0.3:  # Minimum threshold for chain
+            logger.debug(
+                "Signal chain broken: combined strength too low",
+                signal1_type=signal1.signal_type,
+                signal2_type=signal2.signal_type,
+                combined_strength=combined_strength
+            )
+            return False
+        
+        return True
     
     def _check_and_create_synergy(self) -> Optional[SynergyPattern]:
         """Check if current sequence forms a valid synergy."""
@@ -279,13 +384,16 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
             }
         }
         
-        # Build metadata
+        # Build metadata with state management info
         metadata = {
             'bars_to_complete': synergy.bars_to_complete,
             'signal_strengths': {
                 signal.signal_type: signal.strength 
                 for signal in synergy.signals
-            }
+            },
+            'synergy_id': getattr(synergy, 'synergy_id', None),
+            'state_managed': getattr(synergy, 'state_managed', False),
+            'is_sequential': synergy.is_sequential() if hasattr(synergy, 'is_sequential') else False
         }
         
         # Create event payload
@@ -341,14 +449,31 @@ class SynergyDetector(ComponentBase, BaseSynergyDetector):
     
     def get_status(self) -> Dict[str, Any]:
         """Get component status for monitoring."""
+        kill_switch = get_kill_switch()
+        system_active = not (kill_switch and kill_switch.is_active())
+        
         return {
             'initialized': self._initialized,
+            'system_active': system_active,
+            'kill_switch_status': kill_switch.get_status() if kill_switch else None,
             'performance_metrics': self.performance_metrics,
             'sequence_state': self.sequence.get_state(),
             'cooldown_state': self.cooldown.get_state(),
+            'state_manager': self.state_manager.get_status(),
+            'integration_bridge': self.integration_bridge.get_status(),
             'pattern_detectors': {
                 'mlmi': self.mlmi_detector.get_performance_metrics(),
                 'nwrqk': self.nwrqk_detector.get_performance_metrics(),
                 'fvg': self.fvg_detector.get_performance_metrics()
+            },
+            'sequential_processing': {
+                'enabled': True,
+                'chain_order': 'NW-RQK → MLMI → FVG',
+                'validation_enabled': True,
+                'integration_handoffs': self.integration_bridge.get_metrics(),
+                'safety_checks': {
+                    'master_switch_enabled': True,
+                    'signal_blocking_active': not system_active
+                }
             }
         }

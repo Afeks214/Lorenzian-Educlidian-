@@ -8,6 +8,7 @@ import logging
 import time
 from typing import Dict, Any, Optional
 from datetime import datetime
+from functools import wraps
 
 try:
     import redis.asyncio as redis
@@ -17,8 +18,42 @@ except ImportError:
     Redis = None
 
 from src.core.events import EventBus, Event, EventType
+from src.operations.operational_controls import OperationalControls
+from src.safety.kill_switch import get_kill_switch
 
 logger = logging.getLogger(__name__)
+
+
+def require_system_active(func):
+    """
+    Decorator to ensure system is active before executing trading functions.
+    
+    Checks both kill switch and operational controls to ensure system safety.
+    Blocks execution if system is in emergency stop or maintenance mode.
+    """
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        # Check kill switch first
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            logger.error(f"BLOCKED: {func.__name__} - Kill switch is active")
+            # Don't execute the function, just return
+            return
+        
+        # Check operational controls
+        if hasattr(self, 'operational_controls') and self.operational_controls:
+            if self.operational_controls.emergency_stop:
+                logger.error(f"BLOCKED: {func.__name__} - Emergency stop is active")
+                return
+            
+            if self.operational_controls.maintenance_mode:
+                logger.warning(f"BLOCKED: {func.__name__} - System is in maintenance mode")
+                return
+        
+        # System is active, proceed with execution
+        return await func(self, *args, **kwargs)
+    
+    return wrapper
 
 
 class ExecutionEngine:
@@ -28,10 +63,12 @@ class ExecutionEngine:
     Bridges the gap between tactical decisions and actual order execution.
     """
     
-    def __init__(self, redis_url: str = "redis://localhost:6379/2"):
+    def __init__(self, redis_url: str = "redis://localhost:6379/2", operational_controls: Optional[OperationalControls] = None):
         self.redis_url = redis_url
         self.redis_client: Optional[Redis] = None
         
+        # Initialize safety controls
+        self.operational_controls = operational_controls
         
         # We'll create a mock event bus for now
         self.event_bus = EventBus()
@@ -45,7 +82,7 @@ class ExecutionEngine:
         self.executions_failed = 0
         self.running = False
         
-        logger.info("ExecutionEngine initialized")
+        logger.info("ExecutionEngine initialized with safety controls")
     
     async def initialize(self):
         """Initialize Redis connection and start listening."""
@@ -58,6 +95,7 @@ class ExecutionEngine:
             logger.error(f"Failed to initialize ExecutionEngine: {e}")
             raise
     
+    @require_system_active
     async def start_execution_listener(self):
         """Start listening for execution events."""
         if self.running:
@@ -120,6 +158,7 @@ class ExecutionEngine:
                 logger.error(f"Error in stream listener: {e}")
                 await asyncio.sleep(1)
     
+    @require_system_active
     async def _process_execution_event(self, data: Dict[str, Any]):
         """Process execution event and execute trade."""
         start_time = time.perf_counter()
@@ -219,11 +258,22 @@ class ExecutionEngine:
         total = max(1, self.executions_processed)
         success_rate = self.executions_success / total
         
+        # Check system state
+        system_state = "active"
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            system_state = "kill_switch_active"
+        elif self.operational_controls and self.operational_controls.emergency_stop:
+            system_state = "emergency_stop"
+        elif self.operational_controls and self.operational_controls.maintenance_mode:
+            system_state = "maintenance_mode"
+        
         return {
             'executions_processed': self.executions_processed,
             'executions_success': self.executions_success,
             'executions_failed': self.executions_failed,
             'success_rate': success_rate,
             'running': self.running,
+            'system_state': system_state,
             'conversion_rate': success_rate  # This is our key metric
         }

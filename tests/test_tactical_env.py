@@ -1,7 +1,8 @@
 """
-Quantitative Unit Tests for Tactical Environment Logic
+Comprehensive Tests for Tactical Environment Logic
 
 Comprehensive test suite for TacticalMarketEnv with:
+- PettingZoo API compliance testing
 - FVG detection mathematical validation
 - Agent cycling and state machine testing
 - Matrix construction and feature validation
@@ -9,12 +10,13 @@ Comprehensive test suite for TacticalMarketEnv with:
 - Error handling and edge cases
 
 Author: Quantitative Engineer
-Version: 1.0
+Version: 2.0 - PettingZoo Enhanced
 """
 
 import pytest
 import numpy as np
 import torch
+import time
 from unittest.mock import Mock, patch, MagicMock
 from typing import Dict, Any, List
 import yaml
@@ -26,8 +28,16 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
-from environment.tactical_env import TacticalMarketEnv, TacticalState, MarketState
-from src.indicators.custom.tactical_fvg import TacticalFVGDetector, calculate_momentum_5_bar, calculate_volume_ratio_ema
+from src.environment.tactical_env import (
+    TacticalMarketEnv, 
+    TacticalState, 
+    MarketState,
+    AgentOutput,
+    PerformanceMetrics,
+    make_tactical_env,
+    validate_environment
+)
+from pettingzoo.test import api_test
 
 
 class TestTacticalEnvironmentLogic:
@@ -56,86 +66,85 @@ class TestTacticalEnvironmentLogic:
         }
     
     @pytest.fixture
-    def env(self, config):
+    def test_env(self, config):
         """Create test environment"""
         return TacticalMarketEnv(config)
     
-    def test_environment_initialization(self, env):
+    def test_environment_initialization(self, test_env):
         """Test environment initialization"""
         # Check agents
-        assert len(env.possible_agents) == 3
-        assert 'fvg_agent' in env.possible_agents
-        assert 'momentum_agent' in env.possible_agents
-        assert 'entry_opt_agent' in env.possible_agents
+        assert len(test_env.possible_agents) == 3
+        assert 'fvg_agent' in test_env.possible_agents
+        assert 'momentum_agent' in test_env.possible_agents
+        assert 'entry_opt_agent' in test_env.possible_agents
         
         # Check state machine
-        assert env.tactical_state == TacticalState.AWAITING_FVG
+        assert test_env.tactical_state == TacticalState.AWAITING_FVG
         
         # Check observation spaces
-        for agent in env.possible_agents:
-            assert agent in env.observation_spaces
-            assert env.observation_spaces[agent].shape == (60, 7)
+        for agent in test_env.possible_agents:
+            assert agent in test_env.observation_spaces
+            assert test_env.observation_spaces[agent].shape == (60, 7)
     
-    def test_agent_cycling_full_cycle(self, env):
+    def test_agent_cycling_full_cycle(self, test_env):
         """Test that agent cycling works correctly through full cycle"""
         # Reset environment
-        observations = env.reset()
+        observations = test_env.reset()
         
         # Check initial state
-        assert env.tactical_state == TacticalState.AWAITING_FVG
-        assert env.agent_selection == 'fvg_agent'
+        assert test_env.tactical_state == TacticalState.AWAITING_FVG
+        assert test_env.agent_selection == 'fvg_agent'
         
         # Execute FVG agent action
-        obs, rewards, dones, infos = env.step(1)  # Neutral action
-        assert env.tactical_state == TacticalState.AWAITING_MOMENTUM
-        assert env.agent_selection == 'momentum_agent'
+        obs, reward, done, truncated, info = test_env.step(1)  # Neutral action
+        assert test_env.tactical_state == TacticalState.AWAITING_MOMENTUM
+        assert test_env.agent_selection == 'momentum_agent'
         
         # Execute Momentum agent action
-        obs, rewards, dones, infos = env.step(2)  # Bullish action
-        assert env.tactical_state == TacticalState.AWAITING_ENTRY_OPT
-        assert env.agent_selection == 'entry_opt_agent'
+        obs, reward, done, truncated, info = test_env.step(2)  # Bullish action
+        assert test_env.tactical_state == TacticalState.AWAITING_ENTRY_OPT
+        assert test_env.agent_selection == 'entry_opt_agent'
         
         # Execute Entry Optimization agent action
-        obs, rewards, dones, infos = env.step(0)  # Bearish action
-        assert env.tactical_state == TacticalState.AWAITING_FVG  # Reset after aggregation
-        assert env.agent_selection == 'fvg_agent'  # Back to first agent
+        obs, reward, done, truncated, info = test_env.step(0)  # Bearish action
+        assert test_env.tactical_state == TacticalState.AWAITING_FVG  # Reset after aggregation
+        assert test_env.agent_selection == 'fvg_agent'  # Back to first agent
     
-    def test_matrix_construction_shape(self, env):
+    def test_matrix_construction_shape(self, test_env):
         """Test matrix construction has correct shape"""
-        observations = env.reset()
+        observations = test_env.reset()
         
-        for agent in env.possible_agents:
-            assert agent in observations
-            obs = observations[agent]
+        for agent in test_env.possible_agents:
+            obs = test_env.observe(agent)
             assert obs.shape == (60, 7)
             assert obs.dtype == np.float32
     
-    def test_matrix_construction_features(self, env):
+    def test_matrix_construction_features(self, test_env):
         """Test matrix construction with specific features"""
-        observations = env.reset()
+        observations = test_env.reset()
         
         # Test that observations contain valid data
-        for agent in env.possible_agents:
-            obs = observations[agent]
+        for agent in test_env.possible_agents:
+            obs = test_env.observe(agent)
             
             # Check for reasonable value ranges
             assert np.all(np.isfinite(obs))
             assert not np.all(obs == 0)  # Should have some non-zero values
     
-    def test_attention_weights_application(self, env):
+    def test_attention_weights_application(self, test_env):
         """Test that agent-specific attention weights are applied"""
-        observations = env.reset()
+        observations = test_env.reset()
         
         # Get observations for different agents
-        fvg_obs = observations['fvg_agent']
-        momentum_obs = observations['momentum_agent']
+        fvg_obs = test_env.observe('fvg_agent')
+        momentum_obs = test_env.observe('momentum_agent')
         
         # They should be different due to attention weights
         assert not np.allclose(fvg_obs, momentum_obs)
     
-    def test_episode_termination(self, env):
+    def test_episode_termination(self, test_env):
         """Test episode termination conditions"""
-        observations = env.reset()
+        observations = test_env.reset()
         
         # Run until episode terminates
         steps = 0
@@ -143,9 +152,9 @@ class TestTacticalEnvironmentLogic:
         done = False
         
         while not done and steps < max_steps:
-            current_agent = env.agent_selection
-            obs, rewards, dones, infos = env.step(1)  # Neutral action
-            done = all(dones.values()) if dones else False
+            current_agent = test_env.agent_selection
+            obs, reward, done, truncated, info = test_env.step(1)  # Neutral action
+            done = done or truncated
             steps += 1
         
         assert steps == max_steps  # Should terminate due to max steps
@@ -519,6 +528,203 @@ class TestEnvironmentPerformance:
         # Should complete at least 5 episodes per second
         throughput = episodes_completed / total_time
         assert throughput >= 5.0
+
+
+class TestPettingZooCompliance:
+    """Test suite for PettingZoo API compliance"""
+    
+    def test_pettingzoo_api_test(self):
+        """Test PettingZoo API compliance"""
+        test_env = make_tactical_env()
+        
+        # Run PettingZoo API test
+        api_test(test_env, num_cycles=5, verbose_progress=False)
+    
+    def test_pettingzoo_wrapper_functions(self):
+        """Test PettingZoo wrapper functions"""
+        test_env = make_tactical_env()
+        
+        assert test_env is not None
+        assert hasattr(test_env, 'reset')
+        assert hasattr(test_env, 'step')
+        assert hasattr(test_env, 'observe')
+        assert hasattr(test_env, 'close')
+    
+    def test_environment_validation(self):
+        """Test environment validation"""
+        test_env = make_tactical_env()
+        
+        # Run validation
+        validation_results = validate_environment(test_env)
+        
+        # Check validation results
+        assert 'pettingzoo_compliance' in validation_results
+        assert 'api_compliance' in validation_results
+        assert 'performance_acceptable' in validation_results
+        assert 'errors' in validation_results
+    
+    def test_action_space_compliance(self):
+        """Test action space compliance"""
+        test_env = make_tactical_env()
+        test_env.reset()
+        
+        for agent in test_env.possible_agents:
+            action_space = test_env.action_spaces[agent]
+            assert action_space.n == 3  # Discrete actions: 0, 1, 2
+            
+            # Test sampling
+            for _ in range(5):
+                action = action_space.sample()
+                assert action_space.contains(action)
+                assert 0 <= action <= 2
+    
+    def test_observation_space_compliance(self):
+        """Test observation space compliance"""
+        test_env = make_tactical_env()
+        test_env.reset()
+        
+        for agent in test_env.possible_agents:
+            obs_space = test_env.observation_spaces[agent]
+            assert obs_space.shape == (60, 7)
+            assert obs_space.dtype == np.float32
+            
+            # Test observation
+            obs = test_env.observe(agent)
+            assert obs_space.contains(obs)
+    
+    def test_environment_properties(self):
+        """Test required environment properties"""
+        test_env = make_tactical_env()
+        
+        # Check required properties
+        assert hasattr(test_env, 'possible_agents')
+        assert hasattr(test_env, 'agents')
+        assert hasattr(test_env, 'action_spaces')
+        assert hasattr(test_env, 'observation_spaces')
+        assert hasattr(test_env, 'agent_selection')
+        
+        # Check metadata
+        assert hasattr(test_env, 'metadata')
+        assert 'name' in test_env.metadata
+        assert 'is_parallelizable' in test_env.metadata
+        assert 'render_modes' in test_env.metadata
+
+
+class TestTacticalPerformanceAndStability:
+    """Test suite for tactical environment performance and stability"""
+    
+    def test_performance_benchmarks(self):
+        """Test performance benchmarks"""
+        test_env = make_tactical_env()
+        
+        # Measure reset time
+        start_time = time.time()
+        test_env.reset()
+        reset_time = time.time() - start_time
+        assert reset_time < 1.0  # Should reset in less than 1 second
+        
+        # Measure step time
+        step_times = []
+        for _ in range(15):  # 5 complete cycles
+            start_time = time.time()
+            action = test_env.action_spaces[test_env.agent_selection].sample()
+            test_env.step(action)
+            step_time = time.time() - start_time
+            step_times.append(step_time)
+        
+        avg_step_time = np.mean(step_times)
+        assert avg_step_time < 0.2  # Should step in less than 200ms
+    
+    def test_memory_stability(self):
+        """Test memory stability over multiple episodes"""
+        test_env = make_tactical_env()
+        
+        for episode in range(3):
+            test_env.reset()
+            steps = 0
+            
+            while test_env.agents and steps < 20:
+                action = test_env.action_spaces[test_env.agent_selection].sample()
+                test_env.step(action)
+                steps += 1
+            
+            # Check memory usage doesn't grow unbounded
+            assert len(test_env.agent_outputs) <= 3
+            assert len(test_env.decision_history) <= 1000
+    
+    def test_error_recovery(self):
+        """Test error recovery mechanisms"""
+        test_env = make_tactical_env()
+        test_env.reset()
+        
+        # Test invalid action handling
+        try:
+            test_env.step(10)  # Invalid action
+        except Exception:
+            pass  # Should handle gracefully
+        
+        # Environment should still be functional
+        valid_action = test_env.action_spaces[test_env.agent_selection].sample()
+        test_env.step(valid_action)
+        assert test_env.agent_selection in test_env.agents
+    
+    def test_deterministic_behavior(self):
+        """Test deterministic behavior with same seed"""
+        # Test with same seed
+        results1 = []
+        test_env1 = make_tactical_env()
+        test_env1.reset(seed=42)
+        
+        for _ in range(9):  # 3 complete cycles
+            action = 1  # Fixed action
+            test_env1.step(action)
+            results1.append(test_env1.performance_metrics.step_count)
+        
+        results2 = []
+        test_env2 = make_tactical_env()
+        test_env2.reset(seed=42)
+        
+        for _ in range(9):  # 3 complete cycles
+            action = 1  # Fixed action
+            test_env2.step(action)
+            results2.append(test_env2.performance_metrics.step_count)
+        
+        # Results should be identical
+        assert results1 == results2
+    
+    def test_concurrent_access(self):
+        """Test concurrent access safety"""
+        test_env = make_tactical_env()
+        test_env.reset()
+        
+        # Test multiple concurrent observations
+        obs1 = test_env.observe('fvg_agent')
+        obs2 = test_env.observe('fvg_agent')
+        
+        # Should be identical
+        assert np.array_equal(obs1, obs2)
+    
+    def test_configuration_robustness(self):
+        """Test configuration robustness"""
+        # Test with minimal config
+        minimal_config = {
+            'tactical_marl': {
+                'environment': {
+                    'matrix_shape': [60, 7],
+                    'max_episode_steps': 50
+                }
+            }
+        }
+        
+        test_env = make_tactical_env(minimal_config)
+        test_env.reset()
+        
+        # Should work with minimal config
+        for _ in range(6):  # 2 complete cycles
+            action = test_env.action_spaces[test_env.agent_selection].sample()
+            test_env.step(action)
+        
+        assert test_env.performance_metrics.step_count > 0
 
 
 def test_configuration_loading():

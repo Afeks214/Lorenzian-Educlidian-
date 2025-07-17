@@ -8,6 +8,7 @@ import pandas as pd
 from numba import njit, prange, float64, int64, boolean
 from typing import Tuple, Dict, Any, Optional
 import logging
+from src.safety.kill_switch import get_kill_switch
 
 class SynergyDetector:
     """Detects synergies between multiple indicators with state management"""
@@ -49,6 +50,12 @@ class SynergyDetector:
         Returns:
             DataFrame with synergy signals and strength
         """
+        # Check master switch safety
+        kill_switch = get_kill_switch()
+        if kill_switch and kill_switch.is_active():
+            self.logger.warning("Trading system is OFF - blocking synergy detection")
+            return self._create_empty_synergy_results(nwrqk_signals, mlmi_signals, fvg_signals)
+        
         self.logger.info("Starting synergy detection...")
         
         # Validate inputs
@@ -104,6 +111,26 @@ class SynergyDetector:
             'bear_synergies': synergy_bear.sum(),
             'avg_strength': synergy_strength[synergy_strength > 0].mean() if (synergy_strength > 0).any() else 0
         })
+        
+        return results
+    
+    def _create_empty_synergy_results(self, nwrqk_signals: pd.DataFrame, 
+                                    mlmi_signals: pd.DataFrame, 
+                                    fvg_signals: pd.DataFrame) -> pd.DataFrame:
+        """Create empty synergy results when system is OFF"""
+        # Find common index range
+        start_idx = max(nwrqk_signals.index[0], mlmi_signals.index[0], fvg_signals.index[0])
+        end_idx = min(nwrqk_signals.index[-1], mlmi_signals.index[-1], fvg_signals.index[-1])
+        
+        # Create empty results with same structure
+        results = pd.DataFrame(index=pd.date_range(start_idx, end_idx, freq=nwrqk_signals.index.freq))
+        results['synergy_bull'] = False
+        results['synergy_bear'] = False
+        results['synergy_strength'] = 0.0
+        results['nwrqk_active_bull'] = False
+        results['nwrqk_active_bear'] = False
+        results['mlmi_confirmed_bull'] = False
+        results['mlmi_confirmed_bear'] = False
         
         return results
     

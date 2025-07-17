@@ -25,6 +25,7 @@ from enum import Enum
 import threading
 
 from src.core.events import Event, EventType, EventBus
+from src.safety.trading_system_controller import get_controller
 
 logger = structlog.get_logger()
 
@@ -115,6 +116,16 @@ class CorrelationTracker:
         # Subscribe to events
         self._setup_event_subscriptions()
         
+        # Register with trading system controller
+        system_controller = get_controller()
+        if system_controller:
+            system_controller.register_component("correlation_tracker", {
+                "ewma_lambda": ewma_lambda,
+                "shock_threshold": shock_threshold,
+                "shock_window_minutes": shock_window_minutes,
+                "performance_target_ms": performance_target_ms
+            })
+        
         logger.info("CorrelationTracker initialized", 
                    ewma_lambda=ewma_lambda,
                    shock_threshold=shock_threshold,
@@ -149,6 +160,12 @@ class CorrelationTracker:
     
     def _handle_price_update(self, event: Event):
         """Handle new price data for correlation updates"""
+        # Check if system is ON before processing new data
+        system_controller = get_controller()
+        if system_controller and not system_controller.is_system_on():
+            logger.debug("System is OFF - skipping correlation tracking update")
+            return
+            
         bar_data = event.payload
         if not hasattr(bar_data, 'symbol') or bar_data.symbol not in self.asset_index:
             return
@@ -167,6 +184,12 @@ class CorrelationTracker:
                 self._update_correlation_matrix()
                 calc_time = (datetime.now() - start_time).total_seconds() * 1000
                 self.calculation_times.append(calc_time)
+                
+                # Cache the updated correlation matrix
+                if system_controller and self.correlation_matrix is not None:
+                    system_controller.cache_value("correlation_matrix", self.correlation_matrix.copy(), ttl_seconds=300)
+                    system_controller.cache_value("correlation_regime", self.current_regime, ttl_seconds=300)
+                    logger.debug("Cached correlation matrix and regime for OFF-system access")
                 
                 # Check for correlation shocks
                 self._check_correlation_shock()
@@ -366,6 +389,24 @@ class CorrelationTracker:
     def get_correlation_matrix(self) -> Optional[np.ndarray]:
         """Get current correlation matrix"""
         with self._correlation_lock:
+            # Check if system is ON before returning live correlation matrix
+            system_controller = get_controller()
+            if system_controller and not system_controller.is_system_on():
+                logger.debug("System is OFF - returning cached correlation matrix")
+                
+                # Try to return cached correlation matrix
+                cached_matrix = system_controller.get_cached_value("correlation_matrix")
+                if cached_matrix is not None:
+                    return cached_matrix.copy()
+                
+                # Fall back to current matrix if available
+                if self.correlation_matrix is not None:
+                    logger.debug("Using current correlation matrix as fallback while system is OFF")
+                    return self.correlation_matrix.copy()
+                
+                logger.warning("No correlation matrix available while system is OFF")
+                return None
+            
             return self.correlation_matrix.copy() if self.correlation_matrix is not None else None
     
     def get_performance_stats(self) -> Dict:

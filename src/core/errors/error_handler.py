@@ -1,24 +1,27 @@
 """
-Error Handler with Recovery, Retry, and Circuit Breaker Mechanisms
-
-Provides comprehensive error handling with automatic retry, circuit breaker patterns,
-and fallback mechanisms to replace bare except clauses.
+AGENT 7: Enhanced Error Handler with Silent Failure Prevention
+Comprehensive error handling with automatic retry, circuit breaker patterns,
+silent failure elimination, and trading-specific error recovery.
 """
 
 import asyncio
 import functools
 import logging
 import time
-from typing import Dict, Any, Optional, Callable, Type, List, Union, Awaitable
+import traceback
+import uuid
+from typing import Dict, Any, Optional, Callable, Type, List, Union, Awaitable, Set
 from dataclasses import dataclass, field
 from enum import Enum
 import threading
 from contextlib import contextmanager, asynccontextmanager
+from datetime import datetime, timezone, timedelta
 
 from .base_exceptions import (
     BaseGrandModelError, ErrorSeverity, ErrorCategory, ErrorContext,
     CircuitBreakerError, TimeoutError, NetworkError, DependencyError,
-    RecoverableError, NonRecoverableError
+    RecoverableError, NonRecoverableError, SystemError, ValidationError,
+    DataError, ResourceError, AuthorizationError
 )
 
 logger = logging.getLogger(__name__)
@@ -179,60 +182,369 @@ class FallbackManager:
         return None
 
 
+@dataclass
+class SilentFailureConfig:
+    """Configuration for silent failure prevention."""
+    track_mandatory_responses: bool = True
+    response_timeout_seconds: float = 30.0
+    null_response_is_failure: bool = True
+    empty_response_is_failure: bool = True
+    track_function_calls: bool = True
+    alert_on_silent_failure: bool = True
+
+
+@dataclass
+class ErrorStatistics:
+    """Error statistics tracking."""
+    total_errors: int = 0
+    error_types: Dict[str, int] = field(default_factory=dict)
+    silent_failures: int = 0
+    recovery_attempts: int = 0
+    recovery_successes: int = 0
+    circuit_breaker_trips: int = 0
+    
+    def record_error(self, error_type: str):
+        """Record an error occurrence."""
+        self.total_errors += 1
+        self.error_types[error_type] = self.error_types.get(error_type, 0) + 1
+    
+    def record_silent_failure(self):
+        """Record a silent failure."""
+        self.silent_failures += 1
+    
+    def record_recovery_attempt(self, success: bool):
+        """Record a recovery attempt."""
+        self.recovery_attempts += 1
+        if success:
+            self.recovery_successes += 1
+    
+    def record_circuit_breaker_trip(self):
+        """Record a circuit breaker trip."""
+        self.circuit_breaker_trips += 1
+
+
 class ErrorHandler:
-    """Comprehensive error handler with retry, circuit breaker, and fallback support."""
+    """
+    Comprehensive error handler with retry, circuit breaker, fallback support,
+    and silent failure prevention.
+    """
     
     def __init__(
         self,
         retry_config: Optional[RetryConfig] = None,
         circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
-        fallback_manager: Optional[FallbackManager] = None
+        fallback_manager: Optional[FallbackManager] = None,
+        silent_failure_config: Optional[SilentFailureConfig] = None
     ):
         self.retry_config = retry_config or RetryConfig()
         self.circuit_breaker_config = circuit_breaker_config
         self.fallback_manager = fallback_manager or FallbackManager()
+        self.silent_failure_config = silent_failure_config or SilentFailureConfig()
         
         self.retry_manager = RetryManager(self.retry_config)
         self.circuit_breaker = None
         if circuit_breaker_config:
             self.circuit_breaker = CircuitBreakerManager(circuit_breaker_config)
+        
+        # Silent failure prevention
+        self.mandatory_response_functions: Set[str] = set()
+        self.function_call_tracking: Dict[str, List[datetime]] = {}
+        self.response_validators: Dict[str, Callable] = {}
+        self.silent_failure_alerts: List[Dict[str, Any]] = []
+        
+        # Statistics tracking
+        self.statistics = ErrorStatistics()
+        
+        # Error correlation tracking
+        self.error_correlation_window = timedelta(minutes=5)
+        self.correlated_errors: List[Dict[str, Any]] = []
+        
+        # Lock for thread safety
+        self._lock = threading.RLock()
+        
+        logger.info("Enhanced ErrorHandler initialized with silent failure prevention")
+    
+    def register_mandatory_response_function(self, function_name: str, validator: Optional[Callable] = None):
+        """Register a function that must return a valid response."""
+        with self._lock:
+            self.mandatory_response_functions.add(function_name)
+            if validator:
+                self.response_validators[function_name] = validator
+            logger.info(f"Registered mandatory response function: {function_name}")
+    
+    def track_function_call(self, function_name: str):
+        """Track function call for silent failure detection."""
+        if not self.silent_failure_config.track_function_calls:
+            return
+        
+        with self._lock:
+            if function_name not in self.function_call_tracking:
+                self.function_call_tracking[function_name] = []
+            
+            self.function_call_tracking[function_name].append(datetime.now(timezone.utc))
+            
+            # Keep only recent calls
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
+            self.function_call_tracking[function_name] = [
+                call_time for call_time in self.function_call_tracking[function_name]
+                if call_time >= cutoff_time
+            ]
+    
+    def validate_response(self, function_name: str, response: Any) -> bool:
+        """Validate function response to detect silent failures."""
+        if function_name not in self.mandatory_response_functions:
+            return True
+        
+        # Check for null response
+        if self.silent_failure_config.null_response_is_failure and response is None:
+            self._record_silent_failure(function_name, "null_response", response)
+            return False
+        
+        # Check for empty response
+        if self.silent_failure_config.empty_response_is_failure:
+            if hasattr(response, '__len__') and len(response) == 0:
+                self._record_silent_failure(function_name, "empty_response", response)
+                return False
+        
+        # Use custom validator if available
+        if function_name in self.response_validators:
+            try:
+                validator = self.response_validators[function_name]
+                if not validator(response):
+                    self._record_silent_failure(function_name, "custom_validation_failed", response)
+                    return False
+            except Exception as e:
+                logger.warning(f"Response validator failed for {function_name}: {e}")
+                return False
+        
+        return True
+    
+    def _record_silent_failure(self, function_name: str, failure_type: str, response: Any):
+        """Record a silent failure occurrence."""
+        with self._lock:
+            self.statistics.record_silent_failure()
+            
+            failure_record = {
+                "function_name": function_name,
+                "failure_type": failure_type,
+                "response": str(response),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "correlation_id": str(uuid.uuid4())
+            }
+            
+            self.silent_failure_alerts.append(failure_record)
+            
+            # Keep only recent alerts
+            if len(self.silent_failure_alerts) > 1000:
+                self.silent_failure_alerts = self.silent_failure_alerts[-1000:]
+            
+            logger.error(
+                f"Silent failure detected in {function_name}: {failure_type}",
+                extra=failure_record
+            )
+            
+            # Trigger alert if enabled
+            if self.silent_failure_config.alert_on_silent_failure:
+                self._trigger_silent_failure_alert(failure_record)
+    
+    def _trigger_silent_failure_alert(self, failure_record: Dict[str, Any]):
+        """Trigger alert for silent failure."""
+        alert_message = (
+            f"SILENT FAILURE ALERT: {failure_record['function_name']} "
+            f"failed with {failure_record['failure_type']}"
+        )
+        
+        logger.critical(alert_message, extra=failure_record)
+        
+        # Additional alerting mechanisms can be added here
+        # (e.g., send to monitoring systems, notify operators, etc.)
     
     def handle_exception(
         self,
         exception: Exception,
         context: Optional[ErrorContext] = None,
         fallback_name: Optional[str] = None,
+        function_name: Optional[str] = None,
         **fallback_kwargs
     ) -> Any:
-        """Handle exception with recovery mechanisms."""
+        """Handle exception with comprehensive recovery mechanisms."""
         
-        # Convert generic exceptions to GrandModel exceptions
-        if not isinstance(exception, BaseGrandModelError):
-            exception = self._convert_exception(exception, context)
+        with self._lock:
+            # Record error statistics
+            self.statistics.record_error(type(exception).__name__)
+            
+            # Convert generic exceptions to GrandModel exceptions
+            if not isinstance(exception, BaseGrandModelError):
+                exception = self._convert_exception(exception, context)
+            
+            # Enhance context with correlation information
+            if context is None:
+                context = ErrorContext()
+            
+            # Add error to correlation tracking
+            self._add_correlated_error(exception, context, function_name)
+            
+            # Log the error with enhanced context
+            logger.error(
+                f"Error handled: {exception}",
+                extra={
+                    "error_type": type(exception).__name__,
+                    "error_message": str(exception),
+                    "correlation_id": context.correlation_id,
+                    "function_name": function_name,
+                    "severity": exception.severity.value if hasattr(exception, 'severity') else 'unknown',
+                    "recoverable": getattr(exception, 'recoverable', True),
+                    "stack_trace": traceback.format_exc()
+                }
+            )
+            
+            # Try fallback if available
+            if fallback_name:
+                try:
+                    self.statistics.record_recovery_attempt(True)
+                    result = self.fallback_manager.execute_fallback(fallback_name, **fallback_kwargs)
+                    
+                    # Validate fallback response
+                    if function_name and not self.validate_response(function_name, result):
+                        logger.warning(f"Fallback response validation failed for {function_name}")
+                        self.statistics.record_recovery_attempt(False)
+                        return None
+                    
+                    return result
+                except Exception as fallback_error:
+                    self.statistics.record_recovery_attempt(False)
+                    logger.error(f"Fallback failed: {fallback_error}")
+            
+            # Re-raise if not recoverable
+            if not getattr(exception, 'recoverable', True):
+                raise exception
+            
+            # Return None for graceful degradation
+            return None
+    
+    def _add_correlated_error(self, exception: Exception, context: ErrorContext, function_name: Optional[str]):
+        """Add error to correlation tracking."""
+        error_record = {
+            "error_type": type(exception).__name__,
+            "error_message": str(exception),
+            "function_name": function_name,
+            "correlation_id": context.correlation_id,
+            "timestamp": datetime.now(timezone.utc),
+            "severity": getattr(exception, 'severity', ErrorSeverity.MEDIUM).value
+        }
         
-        # Log the error
-        logger.error(
-            f"Error handled: {exception}",
-            extra={
-                "error_type": type(exception).__name__,
-                "error_message": str(exception),
-                "correlation_id": context.correlation_id if context else None
+        self.correlated_errors.append(error_record)
+        
+        # Keep only recent errors
+        cutoff_time = datetime.now(timezone.utc) - self.error_correlation_window
+        self.correlated_errors = [
+            error for error in self.correlated_errors
+            if error["timestamp"] >= cutoff_time
+        ]
+        
+        # Check for error patterns
+        self._detect_error_patterns()
+    
+    def _detect_error_patterns(self):
+        """Detect error patterns and correlations."""
+        if len(self.correlated_errors) < 3:
+            return
+        
+        # Group errors by type and function
+        error_groups = {}
+        for error in self.correlated_errors:
+            key = f"{error['error_type']}:{error['function_name']}"
+            if key not in error_groups:
+                error_groups[key] = []
+            error_groups[key].append(error)
+        
+        # Check for patterns (3+ errors of same type in window)
+        for key, errors in error_groups.items():
+            if len(errors) >= 3:
+                logger.warning(
+                    f"Error pattern detected: {key} occurred {len(errors)} times in {self.error_correlation_window}",
+                    extra={
+                        "pattern_key": key,
+                        "error_count": len(errors),
+                        "correlation_ids": [error["correlation_id"] for error in errors]
+                    }
+                )
+    
+    def get_error_statistics(self) -> Dict[str, Any]:
+        """Get comprehensive error statistics."""
+        with self._lock:
+            return {
+                "total_errors": self.statistics.total_errors,
+                "error_types": dict(self.statistics.error_types),
+                "silent_failures": self.statistics.silent_failures,
+                "recovery_attempts": self.statistics.recovery_attempts,
+                "recovery_successes": self.statistics.recovery_successes,
+                "recovery_success_rate": (
+                    self.statistics.recovery_successes / self.statistics.recovery_attempts
+                    if self.statistics.recovery_attempts > 0 else 0.0
+                ),
+                "circuit_breaker_trips": self.statistics.circuit_breaker_trips,
+                "recent_silent_failures": len(self.silent_failure_alerts),
+                "correlated_errors": len(self.correlated_errors),
+                "mandatory_response_functions": len(self.mandatory_response_functions),
+                "function_call_tracking": {
+                    func: len(calls) for func, calls in self.function_call_tracking.items()
+                }
             }
-        )
+    
+    def get_health_report(self) -> Dict[str, Any]:
+        """Get health report of error handling system."""
+        stats = self.get_error_statistics()
         
-        # Try fallback if available
-        if fallback_name:
-            try:
-                return self.fallback_manager.execute_fallback(fallback_name, **fallback_kwargs)
-            except Exception as fallback_error:
-                logger.error(f"Fallback failed: {fallback_error}")
+        # Calculate health score
+        health_score = 100
         
-        # Re-raise if not recoverable
-        if not getattr(exception, 'recoverable', True):
-            raise exception
+        # Deduct for silent failures
+        if stats["silent_failures"] > 0:
+            health_score -= min(stats["silent_failures"] * 5, 30)
         
-        # Return None for graceful degradation
-        return None
+        # Deduct for low recovery rate
+        if stats["recovery_success_rate"] < 0.8:
+            health_score -= (0.8 - stats["recovery_success_rate"]) * 50
+        
+        # Deduct for high error rate
+        if stats["total_errors"] > 100:
+            health_score -= min((stats["total_errors"] - 100) * 0.1, 20)
+        
+        health_score = max(0, min(100, health_score))
+        
+        return {
+            "health_score": health_score,
+            "status": "healthy" if health_score >= 80 else "degraded" if health_score >= 50 else "critical",
+            "statistics": stats,
+            "recommendations": self._generate_health_recommendations(stats)
+        }
+    
+    def _generate_health_recommendations(self, stats: Dict[str, Any]) -> List[str]:
+        """Generate health recommendations based on statistics."""
+        recommendations = []
+        
+        if stats["silent_failures"] > 0:
+            recommendations.append(
+                f"Address {stats['silent_failures']} silent failures by implementing proper response validation"
+            )
+        
+        if stats["recovery_success_rate"] < 0.8:
+            recommendations.append(
+                f"Improve error recovery mechanisms - current success rate: {stats['recovery_success_rate']:.1%}"
+            )
+        
+        if stats["total_errors"] > 100:
+            recommendations.append(
+                f"Investigate high error rate - {stats['total_errors']} total errors recorded"
+            )
+        
+        if len(stats["error_types"]) > 10:
+            recommendations.append(
+                "Consider consolidating error types - too many different error types may indicate inconsistent error handling"
+            )
+        
+        return recommendations
     
     def _convert_exception(self, exception: Exception, context: Optional[ErrorContext] = None) -> BaseGrandModelError:
         """Convert generic exception to GrandModel exception."""

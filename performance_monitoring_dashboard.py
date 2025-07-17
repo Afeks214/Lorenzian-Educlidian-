@@ -181,7 +181,7 @@ class PerformanceCollector:
 class PerformanceBenchmark:
     """Comprehensive performance benchmarking"""
     
-    def __init__(self, model_dir: Path = Path("models/optimized")):
+    def __init__(self, model_dir: Path = Path("models/ultra_fast")):
         self.model_dir = Path(model_dir)
         self.models = {}
         self.benchmark_results = {}
