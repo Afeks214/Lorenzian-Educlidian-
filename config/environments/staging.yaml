@@ -1,0 +1,117 @@
+# Staging Environment Configuration Overrides
+
+system:
+  environment: staging
+  ssl_enabled: true
+  backup_enabled: true
+  debug: false
+  log_level: INFO
+
+database:
+  host: ${DB_HOST:staging.db.company.com}
+  port: ${DB_PORT:5432}
+  name: ${DB_NAME:grandmodel_staging}
+  username: ${DB_USERNAME:grandmodel_user}
+  password: ${SECRET:db_password}
+  ssl_mode: require
+  connection_pool:
+    min_connections: 5
+    max_connections: 50
+
+redis:
+  host: ${REDIS_HOST:redis-staging.company.com}
+  port: ${REDIS_PORT:6379}
+  password: ${SECRET:redis_password}
+  ssl: true
+  cluster_enabled: false
+
+security:
+  jwt_secret_key: ${SECRET:jwt_secret}
+  api_rate_limit: 500
+  cors_origins: ["https://staging.grandmodel.com"]
+  encryption_key: ${SECRET:encryption_key}
+
+monitoring:
+  prometheus_port: 9090
+  enable_profiling: true
+  metrics_interval: 30
+  health_check_interval: 15
+
+risk_management:
+  max_position_size: 100000
+  max_daily_loss: 5000
+  max_drawdown_percent: 3
+  stop_loss_percent: 1.0
+  position_sizing_method: "kelly"
+  var_confidence: 0.95
+
+data_handler:
+  type: "simulated"
+  live_settings:
+    user: ${SECRET:staging_user}
+    password: ${SECRET:staging_password}
+    system: ${SECRET:staging_system}
+    gateway: ${RITHMIC_GATEWAY:staging.apis.rithmic.com:443}
+  
+execution:
+  order_type: "limit"
+  slippage_ticks: 0.5
+  commission_per_contract: 2.5
+  max_order_size: 5
+  timeout_seconds: 30
+
+logging:
+  level: DEBUG
+  format: json
+  handlers:
+    - console
+    - file
+    - elasticsearch
+  file:
+    path: /var/log/grandmodel/staging.log
+    max_size: 50MB
+    backup_count: 5
+  elasticsearch:
+    host: ${ELASTICSEARCH_HOST:logs-staging.company.com}
+    index: grandmodel-staging
+
+# Performance settings for staging
+performance:
+  strategic_model_cache_size: 100
+  tactical_model_cache_size: 50
+  risk_calculation_interval: 30
+  max_concurrent_requests: 50
+  request_timeout: 30
+
+# Testing configurations
+testing:
+  enable_test_endpoints: true
+  mock_external_apis: false
+  synthetic_data_enabled: true
+  load_testing_enabled: true
+  performance_benchmarks: true
+
+# Feature flags for staging
+feature_flags:
+  enable_new_risk_engine: true
+  enable_advanced_analytics: true
+  enable_experimental_features: true
+  enable_debug_endpoints: true
+  enable_model_monitoring: true
+
+# Compliance settings
+compliance:
+  audit_logging: true
+  data_retention_days: 90
+  anonymize_pii: true
+  regulatory_reporting: false
+  sox_compliance: false
+  pci_dss_compliance: false
+
+# Deployment settings
+deployment:
+  auto_rollback_enabled: true
+  health_check_grace_period: 60
+  deployment_strategy: "rolling"
+  max_unavailable_replicas: 1
+  max_surge_replicas: 1

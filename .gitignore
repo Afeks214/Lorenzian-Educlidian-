@@ -25,12 +25,43 @@ logs/
 data/historical/*
 data/live/*
 data/processed/*
+data/cache/*
+data/cleaned/*
+data/optimized/*
+data/optimized_final/*
+data/prepared/*
 !data/*/.gitkeep
 
 # Models
 models/checkpoints/*
 models/artifacts/*
+models/models/*
+models/tactical/*
 !models/*/.gitkeep
+
+# Scripts
+scripts/db/*
+scripts/recovery/*
+
+# Notebooks
+notebooks/notebook\ data/*
+notebooks/results/*
+notebooks/archive_backup/*
+notebooks/improved/*
+notebooks/tests/*
+notebooks/utils/*
+
+# Documentation
+docs/mission-reports/*
+docs/api/*
+docs/architecture/*
+docs/development/*
+docs/guides/*
+docs/operations/*
+docs/prd/*
+docs/production_runbooks/*
+docs/runbooks/*
+docs/security/*
 
 # Docker volumes
 docker/volumes/

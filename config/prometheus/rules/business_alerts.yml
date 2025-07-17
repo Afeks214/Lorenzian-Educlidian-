@@ -1,0 +1,459 @@
+groups:
+  - name: business_performance_alerts
+    rules:
+      # P&L Alerts
+      - alert: DailyPnLBelowTarget
+        expr: business_daily_pnl_usd < 5000
+        for: 1h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: pnl
+        annotations:
+          summary: "Daily P&L below target"
+          description: "Daily P&L is {{ $value | humanize }}USD, below 5000 USD target"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/pnl-alerts"
+
+      - alert: DailyPnLCriticallyLow
+        expr: business_daily_pnl_usd < 0
+        for: 30m
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: pnl
+        annotations:
+          summary: "Daily P&L is negative"
+          description: "Daily P&L is {{ $value | humanize }}USD, showing losses"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/pnl-alerts"
+
+      - alert: HourlyPnLLoss
+        expr: business_hourly_pnl_usd < -1000
+        for: 15m
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: pnl
+        annotations:
+          summary: "Hourly P&L showing significant losses"
+          description: "Hourly P&L is {{ $value | humanize }}USD, below -1000 USD threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/pnl-alerts"
+
+      - alert: CriticalHourlyPnLLoss
+        expr: business_hourly_pnl_usd < -5000
+        for: 5m
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: pnl
+        annotations:
+          summary: "Critical hourly P&L losses"
+          description: "Hourly P&L is {{ $value | humanize }}USD, below -5000 USD critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/pnl-alerts"
+
+      # Sharpe Ratio Alerts
+      - alert: LowSharpeRatio
+        expr: business_sharpe_ratio < 1.5
+        for: 6h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: performance
+        annotations:
+          summary: "Sharpe ratio below target"
+          description: "Sharpe ratio is {{ $value }}, below 1.5 target"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/sharpe-ratio"
+
+      - alert: CriticalSharpeRatio
+        expr: business_sharpe_ratio < 1.0
+        for: 3h
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: performance
+        annotations:
+          summary: "Sharpe ratio critically low"
+          description: "Sharpe ratio is {{ $value }}, below 1.0 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/sharpe-ratio"
+
+      # Max Drawdown Alerts
+      - alert: HighMaxDrawdown
+        expr: business_max_drawdown_percent > 10
+        for: 1h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: risk
+        annotations:
+          summary: "Maximum drawdown exceeding threshold"
+          description: "Maximum drawdown is {{ $value }}%, above 10% threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/drawdown"
+
+      - alert: CriticalMaxDrawdown
+        expr: business_max_drawdown_percent > 15
+        for: 30m
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: risk
+        annotations:
+          summary: "Maximum drawdown at critical level"
+          description: "Maximum drawdown is {{ $value }}%, above 15% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/drawdown"
+
+      # Win Rate Alerts
+      - alert: LowWinRate
+        expr: business_win_rate_percent < 50
+        for: 4h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: performance
+        annotations:
+          summary: "Win rate below target"
+          description: "Win rate is {{ $value }}%, below 50% target"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/win-rate"
+
+      - alert: CriticalWinRate
+        expr: business_win_rate_percent < 40
+        for: 2h
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: performance
+        annotations:
+          summary: "Win rate critically low"
+          description: "Win rate is {{ $value }}%, below 40% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/win-rate"
+
+      # Volume Alerts
+      - alert: LowTradingVolume
+        expr: business_trade_volume_usd{timeframe="daily"} < 100000
+        for: 2h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: volume
+        annotations:
+          summary: "Daily trading volume below target"
+          description: "Daily trading volume is {{ $value | humanize }}USD, below 100K USD target"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/volume"
+
+      - alert: CriticalTradingVolume
+        expr: business_trade_volume_usd{timeframe="daily"} < 50000
+        for: 1h
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: volume
+        annotations:
+          summary: "Daily trading volume critically low"
+          description: "Daily trading volume is {{ $value | humanize }}USD, below 50K USD critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/volume"
+
+  - name: business_risk_alerts
+    rules:
+      # VaR Alerts
+      - alert: HighVaR95
+        expr: business_var_95_percent > 3
+        for: 15m
+        labels:
+          severity: warning
+          service: risk_system
+          alert_type: var
+        annotations:
+          summary: "95% VaR exceeding threshold"
+          description: "95% VaR is {{ $value }}%, above 3% threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/var"
+
+      - alert: CriticalVaR95
+        expr: business_var_95_percent > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: risk_system
+          alert_type: var
+        annotations:
+          summary: "95% VaR at critical level"
+          description: "95% VaR is {{ $value }}%, above 5% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/var"
+
+      # Kelly Fraction Alerts
+      - alert: HighKellyFraction
+        expr: business_kelly_fraction > 0.20
+        for: 30m
+        labels:
+          severity: warning
+          service: risk_system
+          alert_type: kelly
+        annotations:
+          summary: "Kelly fraction exceeding safe threshold"
+          description: "Kelly fraction is {{ $value }}, above 0.20 threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/kelly"
+
+      - alert: CriticalKellyFraction
+        expr: business_kelly_fraction > 0.25
+        for: 15m
+        labels:
+          severity: critical
+          service: risk_system
+          alert_type: kelly
+        annotations:
+          summary: "Kelly fraction at critical level"
+          description: "Kelly fraction is {{ $value }}, above 0.25 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/kelly"
+
+      # Correlation Alerts
+      - alert: HighCorrelationRisk
+        expr: business_correlation_risk_score > 0.8
+        for: 1h
+        labels:
+          severity: warning
+          service: risk_system
+          alert_type: correlation
+        annotations:
+          summary: "High correlation risk detected"
+          description: "Correlation risk score is {{ $value }}, above 0.8 threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/correlation"
+
+      - alert: CriticalCorrelationRisk
+        expr: business_correlation_risk_score > 0.9
+        for: 30m
+        labels:
+          severity: critical
+          service: risk_system
+          alert_type: correlation
+        annotations:
+          summary: "Critical correlation risk"
+          description: "Correlation risk score is {{ $value }}, above 0.9 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/correlation"
+
+      # Position Concentration Alerts
+      - alert: HighPositionConcentration
+        expr: business_position_concentration_max > 0.15
+        for: 1h
+        labels:
+          severity: warning
+          service: risk_system
+          alert_type: concentration
+        annotations:
+          summary: "High position concentration detected"
+          description: "Maximum position concentration is {{ $value | humanizePercentage }}, above 15% threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/concentration"
+
+      - alert: CriticalPositionConcentration
+        expr: business_position_concentration_max > 0.20
+        for: 30m
+        labels:
+          severity: critical
+          service: risk_system
+          alert_type: concentration
+        annotations:
+          summary: "Critical position concentration"
+          description: "Maximum position concentration is {{ $value | humanizePercentage }}, above 20% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/concentration"
+
+  - name: business_execution_alerts
+    rules:
+      # Execution Quality Alerts
+      - alert: HighSlippage
+        expr: business_avg_slippage_bps > 2.0
+        for: 30m
+        labels:
+          severity: warning
+          service: execution_engine
+          alert_type: slippage
+        annotations:
+          summary: "Average slippage exceeding threshold"
+          description: "Average slippage is {{ $value }} bps, above 2.0 bps threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/slippage"
+
+      - alert: CriticalSlippage
+        expr: business_avg_slippage_bps > 5.0
+        for: 15m
+        labels:
+          severity: critical
+          service: execution_engine
+          alert_type: slippage
+        annotations:
+          summary: "Average slippage critically high"
+          description: "Average slippage is {{ $value }} bps, above 5.0 bps critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/slippage"
+
+      # Order Fill Rate Alerts
+      - alert: LowOrderFillRate
+        expr: business_order_fill_rate_percent < 95
+        for: 30m
+        labels:
+          severity: warning
+          service: execution_engine
+          alert_type: fill_rate
+        annotations:
+          summary: "Order fill rate below target"
+          description: "Order fill rate is {{ $value }}%, below 95% target"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/fill-rate"
+
+      - alert: CriticalOrderFillRate
+        expr: business_order_fill_rate_percent < 90
+        for: 15m
+        labels:
+          severity: critical
+          service: execution_engine
+          alert_type: fill_rate
+        annotations:
+          summary: "Order fill rate critically low"
+          description: "Order fill rate is {{ $value }}%, below 90% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/fill-rate"
+
+      # Execution Latency Alerts
+      - alert: HighExecutionLatency
+        expr: histogram_quantile(0.95, rate(business_execution_latency_ms_bucket[5m])) > 10
+        for: 15m
+        labels:
+          severity: warning
+          service: execution_engine
+          alert_type: latency
+        annotations:
+          summary: "Execution latency exceeding threshold"
+          description: "P95 execution latency is {{ $value }}ms, above 10ms threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/execution-latency"
+
+      - alert: CriticalExecutionLatency
+        expr: histogram_quantile(0.95, rate(business_execution_latency_ms_bucket[5m])) > 25
+        for: 5m
+        labels:
+          severity: critical
+          service: execution_engine
+          alert_type: latency
+        annotations:
+          summary: "Execution latency critically high"
+          description: "P95 execution latency is {{ $value }}ms, above 25ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/execution-latency"
+
+  - name: business_strategy_alerts
+    rules:
+      # Strategy Performance Alerts
+      - alert: StrategyUnderperformance
+        expr: business_strategy_pnl_usd{strategy!=""} < -1000
+        for: 2h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: strategy
+        annotations:
+          summary: "Strategy showing losses"
+          description: "{{ $labels.strategy }} strategy P&L is {{ $value | humanize }}USD, below -1000 USD threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/strategy-performance"
+
+      - alert: CriticalStrategyUnderperformance
+        expr: business_strategy_pnl_usd{strategy!=""} < -5000
+        for: 1h
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: strategy
+        annotations:
+          summary: "Strategy showing critical losses"
+          description: "{{ $labels.strategy }} strategy P&L is {{ $value | humanize }}USD, below -5000 USD critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/strategy-performance"
+
+      # Strategy Diversification Alerts
+      - alert: LowStrategyDiversification
+        expr: business_strategy_diversification_score < 0.6
+        for: 4h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: diversification
+        annotations:
+          summary: "Low strategy diversification"
+          description: "Strategy diversification score is {{ $value }}, below 0.6 threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/diversification"
+
+      - alert: CriticalStrategyDiversification
+        expr: business_strategy_diversification_score < 0.4
+        for: 2h
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: diversification
+        annotations:
+          summary: "Critical strategy diversification"
+          description: "Strategy diversification score is {{ $value }}, below 0.4 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/diversification"
+
+      # Signal Quality Alerts
+      - alert: LowSignalQuality
+        expr: business_signal_quality_score < 0.7
+        for: 1h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: signal_quality
+        annotations:
+          summary: "Low signal quality detected"
+          description: "Signal quality score is {{ $value }}, below 0.7 threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/signal-quality"
+
+      - alert: CriticalSignalQuality
+        expr: business_signal_quality_score < 0.5
+        for: 30m
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: signal_quality
+        annotations:
+          summary: "Critical signal quality"
+          description: "Signal quality score is {{ $value }}, below 0.5 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/signal-quality"
+
+  - name: business_compliance_alerts
+    rules:
+      # Regulatory Compliance Alerts
+      - alert: RegulatoryLimitBreach
+        expr: business_regulatory_limit_usage_percent > 80
+        for: 15m
+        labels:
+          severity: warning
+          service: compliance_system
+          alert_type: regulatory
+        annotations:
+          summary: "Regulatory limit usage high"
+          description: "{{ $labels.limit_type }} usage is {{ $value }}%, above 80% threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/regulatory-limits"
+
+      - alert: CriticalRegulatoryLimitBreach
+        expr: business_regulatory_limit_usage_percent > 95
+        for: 5m
+        labels:
+          severity: critical
+          service: compliance_system
+          alert_type: regulatory
+        annotations:
+          summary: "Critical regulatory limit usage"
+          description: "{{ $labels.limit_type }} usage is {{ $value }}%, above 95% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/regulatory-limits"
+
+      # Audit Trail Alerts
+      - alert: AuditTrailGap
+        expr: business_audit_trail_gap_minutes > 5
+        for: 1m
+        labels:
+          severity: warning
+          service: compliance_system
+          alert_type: audit
+        annotations:
+          summary: "Audit trail gap detected"
+          description: "Audit trail gap of {{ $value }} minutes detected"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/audit-trail"
+
+      - alert: CriticalAuditTrailGap
+        expr: business_audit_trail_gap_minutes > 15
+        for: 30s
+        labels:
+          severity: critical
+          service: compliance_system
+          alert_type: audit
+        annotations:
+          summary: "Critical audit trail gap"
+          description: "Critical audit trail gap of {{ $value }} minutes detected"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/audit-trail"

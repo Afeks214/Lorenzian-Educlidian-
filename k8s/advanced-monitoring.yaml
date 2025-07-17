@@ -1,0 +1,650 @@
+# GrandModel Advanced Monitoring Configuration - Agent 7 Implementation
+# Real-time monitoring, alerting, and observability for production trading system
+
+---
+# Custom Metrics Server Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-metrics-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+data:
+  custom-metrics.yaml: |
+    metrics:
+      strategic:
+        - name: decision_accuracy_ratio
+          type: gauge
+          description: "Ratio of accurate strategic decisions"
+          labels: ["model_version", "market_condition"]
+        - name: signal_confidence_score
+          type: histogram
+          description: "Distribution of signal confidence scores"
+          buckets: [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        - name: portfolio_optimization_time
+          type: histogram
+          description: "Time taken for portfolio optimization"
+          buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
+      
+      tactical:
+        - name: execution_slippage_bps
+          type: histogram
+          description: "Execution slippage in basis points"
+          buckets: [0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
+        - name: order_fill_rate
+          type: gauge
+          description: "Rate of successful order fills"
+          labels: ["order_type", "venue"]
+        - name: market_impact_estimate
+          type: gauge
+          description: "Estimated market impact of trades"
+          labels: ["symbol", "trade_size"]
+      
+      risk:
+        - name: var_accuracy_backtest
+          type: gauge
+          description: "VaR accuracy from backtesting"
+          labels: ["confidence_level", "holding_period"]
+        - name: correlation_matrix_condition_number
+          type: gauge
+          description: "Condition number of correlation matrix"
+        - name: risk_limit_utilization
+          type: gauge
+          description: "Current risk limit utilization"
+          labels: ["limit_type", "entity"]
+      
+      system:
+        - name: gpu_utilization_percent
+          type: gauge
+          description: "GPU utilization percentage"
+          labels: ["gpu_id", "node"]
+        - name: model_inference_cache_hit_rate
+          type: gauge
+          description: "Cache hit rate for model inference"
+          labels: ["model_type", "cache_type"]
+        - name: data_pipeline_throughput
+          type: gauge
+          description: "Data pipeline throughput in messages/sec"
+          labels: ["pipeline_stage", "data_type"]
+
+---
+# Prometheus Operator ServiceMonitor for Custom Metrics
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grandmodel-custom-metrics
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      metrics: custom
+  endpoints:
+  - port: metrics
+    interval: 5s
+    path: /metrics
+    scrapeTimeout: 4s
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: 'grandmodel_.*'
+      targetLabel: __name__
+      replacement: '${1}'
+    - sourceLabels: [component]
+      targetLabel: service_component
+    - sourceLabels: [version]
+      targetLabel: service_version
+
+---
+# Advanced Alerting Rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: grandmodel-advanced-alerts
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  groups:
+  - name: trading-performance
+    interval: 30s
+    rules:
+    - alert: StrategicDecisionAccuracyLow
+      expr: grandmodel_decision_accuracy_ratio{component="strategic"} < 0.85
+      for: 5m
+      labels:
+        severity: warning
+        component: strategic
+        category: performance
+      annotations:
+        summary: "Strategic decision accuracy is low"
+        description: "Strategic decision accuracy is {{ $value | humanizePercentage }}, below threshold of 85%"
+        runbook_url: "https://runbooks.grandmodel.local/strategic-accuracy-low"
+    
+    - alert: TacticalSlippageHigh
+      expr: histogram_quantile(0.95, grandmodel_execution_slippage_bps_bucket{component="tactical"}) > 5.0
+      for: 2m
+      labels:
+        severity: critical
+        component: tactical
+        category: execution
+      annotations:
+        summary: "Tactical execution slippage is high"
+        description: "95th percentile execution slippage is {{ $value }} bps, exceeding 5 bps threshold"
+        runbook_url: "https://runbooks.grandmodel.local/tactical-slippage-high"
+    
+    - alert: RiskVaRAccuracyDegraded
+      expr: grandmodel_var_accuracy_backtest{component="risk"} < 0.95
+      for: 10m
+      labels:
+        severity: warning
+        component: risk
+        category: accuracy
+      annotations:
+        summary: "VaR accuracy has degraded"
+        description: "VaR accuracy is {{ $value | humanizePercentage }}, below 95% threshold"
+        runbook_url: "https://runbooks.grandmodel.local/var-accuracy-degraded"
+    
+    - alert: CorrelationMatrixUnstable
+      expr: grandmodel_correlation_matrix_condition_number{component="risk"} > 1000
+      for: 1m
+      labels:
+        severity: critical
+        component: risk
+        category: stability
+      annotations:
+        summary: "Correlation matrix is numerically unstable"
+        description: "Correlation matrix condition number is {{ $value }}, indicating numerical instability"
+        runbook_url: "https://runbooks.grandmodel.local/correlation-matrix-unstable"
+    
+    - alert: RiskLimitNearBreach
+      expr: grandmodel_risk_limit_utilization{component="risk"} > 0.9
+      for: 30s
+      labels:
+        severity: critical
+        component: risk
+        category: limits
+      annotations:
+        summary: "Risk limit near breach"
+        description: "Risk limit utilization is {{ $value | humanizePercentage }} for {{ $labels.limit_type }}"
+        runbook_url: "https://runbooks.grandmodel.local/risk-limit-breach"
+
+  - name: system-performance
+    interval: 15s
+    rules:
+    - alert: GPUUtilizationLow
+      expr: grandmodel_gpu_utilization_percent < 60
+      for: 5m
+      labels:
+        severity: warning
+        category: resource
+      annotations:
+        summary: "GPU utilization is low"
+        description: "GPU {{ $labels.gpu_id }} utilization is {{ $value }}%, indicating potential underutilization"
+    
+    - alert: ModelInferenceCacheMissHigh
+      expr: grandmodel_model_inference_cache_hit_rate < 0.8
+      for: 2m
+      labels:
+        severity: warning
+        category: performance
+      annotations:
+        summary: "Model inference cache miss rate is high"
+        description: "Cache hit rate for {{ $labels.model_type }} is {{ $value | humanizePercentage }}"
+    
+    - alert: DataPipelineThroughputLow
+      expr: grandmodel_data_pipeline_throughput < 1000
+      for: 3m
+      labels:
+        severity: warning
+        category: data
+      annotations:
+        summary: "Data pipeline throughput is low"
+        description: "Pipeline {{ $labels.pipeline_stage }} throughput is {{ $value }} msg/sec"
+
+  - name: business-metrics
+    interval: 60s
+    rules:
+    - alert: TradingVolumeAnomalous
+      expr: abs(grandmodel_trading_volume - grandmodel_trading_volume_baseline) / grandmodel_trading_volume_baseline > 0.5
+      for: 5m
+      labels:
+        severity: warning
+        category: business
+      annotations:
+        summary: "Trading volume is anomalous"
+        description: "Trading volume deviates {{ $value | humanizePercentage }} from baseline"
+    
+    - alert: PnLVolatilityHigh
+      expr: grandmodel_pnl_volatility_rolling_1h > grandmodel_pnl_volatility_threshold
+      for: 10m
+      labels:
+        severity: critical
+        category: business
+      annotations:
+        summary: "P&L volatility is high"
+        description: "1-hour rolling P&L volatility is {{ $value }}, exceeding threshold"
+    
+    - alert: DrawdownExcessive
+      expr: grandmodel_current_drawdown > grandmodel_max_drawdown_threshold
+      for: 1m
+      labels:
+        severity: critical
+        category: business
+      annotations:
+        summary: "Drawdown is excessive"
+        description: "Current drawdown is {{ $value | humanizePercentage }}, exceeding maximum threshold"
+
+---
+# Grafana Dashboard for Advanced Monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grandmodel-advanced-dashboard
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+    grafana_dashboard: "1"
+data:
+  advanced-monitoring.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "GrandModel Advanced Monitoring",
+        "tags": ["grandmodel", "trading", "performance", "agent7"],
+        "timezone": "browser",
+        "refresh": "5s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Strategic Decision Accuracy",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "grandmodel_decision_accuracy_ratio{component=\"strategic\"}",
+                "legendFormat": "Accuracy - {{ model_version }}"
+              }
+            ],
+            "yAxes": [
+              {
+                "min": 0,
+                "max": 1,
+                "unit": "percentunit"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 0.85,
+                "colorMode": "critical",
+                "op": "lt"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Tactical Execution Slippage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, grandmodel_execution_slippage_bps_bucket{component=\"tactical\"})",
+                "legendFormat": "P95 Slippage"
+              },
+              {
+                "expr": "histogram_quantile(0.50, grandmodel_execution_slippage_bps_bucket{component=\"tactical\"})",
+                "legendFormat": "P50 Slippage"
+              }
+            ],
+            "yAxes": [
+              {
+                "min": 0,
+                "unit": "short",
+                "label": "Basis Points"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 5,
+                "colorMode": "critical",
+                "op": "gt"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Risk Management Dashboard",
+            "type": "row",
+            "gridPos": {"h": 1, "w": 24, "x": 0, "y": 8},
+            "panels": [
+              {
+                "id": 4,
+                "title": "VaR Accuracy",
+                "type": "singlestat",
+                "targets": [
+                  {
+                    "expr": "grandmodel_var_accuracy_backtest{component=\"risk\"}",
+                    "legendFormat": "VaR Accuracy"
+                  }
+                ],
+                "thresholds": [
+                  {"color": "red", "value": 0.90},
+                  {"color": "yellow", "value": 0.95},
+                  {"color": "green", "value": 0.98}
+                ],
+                "valueMaps": [
+                  {"op": "=", "text": "N/A", "value": "null"}
+                ],
+                "gridPos": {"h": 6, "w": 6, "x": 0, "y": 9}
+              },
+              {
+                "id": 5,
+                "title": "Risk Limit Utilization",
+                "type": "graph",
+                "targets": [
+                  {
+                    "expr": "grandmodel_risk_limit_utilization{component=\"risk\"}",
+                    "legendFormat": "{{ limit_type }} - {{ entity }}"
+                  }
+                ],
+                "yAxes": [
+                  {
+                    "min": 0,
+                    "max": 1,
+                    "unit": "percentunit"
+                  }
+                ],
+                "thresholds": [
+                  {
+                    "value": 0.9,
+                    "colorMode": "critical",
+                    "op": "gt"
+                  }
+                ],
+                "gridPos": {"h": 6, "w": 12, "x": 6, "y": 9}
+              },
+              {
+                "id": 6,
+                "title": "Correlation Matrix Stability",
+                "type": "singlestat",
+                "targets": [
+                  {
+                    "expr": "grandmodel_correlation_matrix_condition_number{component=\"risk\"}",
+                    "legendFormat": "Condition Number"
+                  }
+                ],
+                "thresholds": [
+                  {"color": "green", "value": 0},
+                  {"color": "yellow", "value": 100},
+                  {"color": "red", "value": 1000}
+                ],
+                "gridPos": {"h": 6, "w": 6, "x": 18, "y": 9}
+              }
+            ]
+          },
+          {
+            "id": 7,
+            "title": "System Performance",
+            "type": "row",
+            "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15},
+            "panels": [
+              {
+                "id": 8,
+                "title": "GPU Utilization",
+                "type": "graph",
+                "targets": [
+                  {
+                    "expr": "grandmodel_gpu_utilization_percent",
+                    "legendFormat": "GPU {{ gpu_id }} - {{ node }}"
+                  }
+                ],
+                "yAxes": [
+                  {
+                    "min": 0,
+                    "max": 100,
+                    "unit": "percent"
+                  }
+                ],
+                "gridPos": {"h": 6, "w": 8, "x": 0, "y": 16}
+              },
+              {
+                "id": 9,
+                "title": "Model Inference Cache Hit Rate",
+                "type": "graph",
+                "targets": [
+                  {
+                    "expr": "grandmodel_model_inference_cache_hit_rate",
+                    "legendFormat": "{{ model_type }} - {{ cache_type }}"
+                  }
+                ],
+                "yAxes": [
+                  {
+                    "min": 0,
+                    "max": 1,
+                    "unit": "percentunit"
+                  }
+                ],
+                "gridPos": {"h": 6, "w": 8, "x": 8, "y": 16}
+              },
+              {
+                "id": 10,
+                "title": "Data Pipeline Throughput",
+                "type": "graph",
+                "targets": [
+                  {
+                    "expr": "grandmodel_data_pipeline_throughput",
+                    "legendFormat": "{{ pipeline_stage }} - {{ data_type }}"
+                  }
+                ],
+                "yAxes": [
+                  {
+                    "min": 0,
+                    "unit": "reqps"
+                  }
+                ],
+                "gridPos": {"h": 6, "w": 8, "x": 16, "y": 16}
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+# Jaeger Tracing Configuration for Trading System
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: grandmodel-trading-tracing
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  strategy: production
+  storage:
+    type: elasticsearch
+    elasticsearch:
+      nodeCount: 3
+      redundancyPolicy: SingleRedundancy
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          cpu: 1000m
+          memory: 4Gi
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 100Gi
+  collector:
+    maxReplicas: 10
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+    config: |
+      receivers:
+        jaeger:
+          protocols:
+            grpc:
+            thrift_http:
+            thrift_compact:
+            thrift_binary:
+        zipkin:
+        otlp:
+          protocols:
+            grpc:
+            http:
+      processors:
+        batch:
+          timeout: 1s
+          send_batch_size: 1024
+        memory_limiter:
+          limit_mib: 512
+        resource:
+          attributes:
+            - key: service.name
+              value: grandmodel
+              action: upsert
+            - key: service.version
+              value: v1.0.0
+              action: upsert
+      exporters:
+        jaeger:
+          endpoint: jaeger-collector:14250
+          tls:
+            insecure: true
+      service:
+        pipelines:
+          traces:
+            receivers: [jaeger, zipkin, otlp]
+            processors: [memory_limiter, batch, resource]
+            exporters: [jaeger]
+  query:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  agent:
+    strategy: DaemonSet
+    config: |
+      reporter:
+        grpc:
+          host-port: "jaeger-collector:14250"
+
+---
+# Custom Metrics Exporter
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-metrics-exporter
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: metrics-exporter
+    managed-by: agent7
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: metrics-exporter
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: metrics-exporter
+        metrics: custom
+        version: v1.0.0
+    spec:
+      containers:
+      - name: metrics-exporter
+        image: grandmodel/custom-metrics-exporter:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: METRICS_CONFIG_PATH
+          value: "/app/config/custom-metrics.yaml"
+        - name: SCRAPE_INTERVAL
+          value: "5s"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: STRATEGIC_ENDPOINT
+          value: "http://strategic-service:8000"
+        - name: TACTICAL_ENDPOINT
+          value: "http://tactical-service:8000"
+        - name: RISK_ENDPOINT
+          value: "http://risk-service:8000"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9090
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: custom-metrics-config
+
+---
+# Service for Custom Metrics Exporter
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-metrics-exporter
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: metrics-exporter
+    metrics: custom
+    managed-by: agent7
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: metrics-exporter

@@ -1,0 +1,608 @@
+# GrandModel Istio Service Mesh Configuration - Agent 7 Implementation
+# Production-ready service mesh with traffic management, security, and observability
+
+---
+# Istio Gateway
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: grandmodel-gateway
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: grandmodel-tls
+    hosts:
+    - grandmodel.production.local
+    - grandmodel-staging.production.local
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - grandmodel.production.local
+    - grandmodel-staging.production.local
+    tls:
+      httpsRedirect: true
+
+---
+# Virtual Service for Production Traffic Management
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grandmodel-production-vs
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  hosts:
+  - grandmodel.production.local
+  gateways:
+  - grandmodel-gateway
+  http:
+  # Strategic Agent Routes
+  - match:
+    - uri:
+        prefix: /api/strategic
+      headers:
+        user-agent:
+          regex: ".*mobile.*"
+    route:
+    - destination:
+        host: strategic-service
+        port:
+          number: 8000
+        subset: mobile-optimized
+      weight: 100
+    timeout: 5s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+  - match:
+    - uri:
+        prefix: /api/strategic
+    route:
+    - destination:
+        host: strategic-service
+        port:
+          number: 8000
+        subset: stable
+      weight: 90
+    - destination:
+        host: strategic-service
+        port:
+          number: 8000
+        subset: canary
+      weight: 10
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 10ms
+    timeout: 10s
+    retries:
+      attempts: 3
+      perTryTimeout: 3s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+  
+  # Tactical Agent Routes (High Performance)
+  - match:
+    - uri:
+        prefix: /api/tactical
+      headers:
+        priority:
+          exact: "high"
+    route:
+    - destination:
+        host: tactical-service
+        port:
+          number: 8000
+        subset: high-performance
+      weight: 100
+    timeout: 2s
+    retries:
+      attempts: 5
+      perTryTimeout: 500ms
+      retryOn: 5xx,reset,connect-failure,refused-stream
+  - match:
+    - uri:
+        prefix: /api/tactical
+    route:
+    - destination:
+        host: tactical-service
+        port:
+          number: 8000
+        subset: stable
+      weight: 100
+    timeout: 5s
+    retries:
+      attempts: 3
+      perTryTimeout: 1s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+  
+  # Risk Management Routes (Critical)
+  - match:
+    - uri:
+        prefix: /api/risk
+    route:
+    - destination:
+        host: risk-service
+        port:
+          number: 8000
+        subset: stable
+      weight: 100
+    timeout: 15s
+    retries:
+      attempts: 2
+      perTryTimeout: 7s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+  
+  # Data Pipeline Routes
+  - match:
+    - uri:
+        prefix: /api/data
+    route:
+    - destination:
+        host: data-pipeline-service
+        port:
+          number: 8000
+        subset: stable
+      weight: 100
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+
+---
+# Destination Rules for Advanced Traffic Management
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: strategic-service-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent7
+spec:
+  host: strategic-service
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+    outlierDetection:
+      consecutiveGatewayErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+  subsets:
+  - name: stable
+    labels:
+      version: v1.0.0
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 50
+  - name: canary
+    labels:
+      version: v1.1.0
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 20
+  - name: mobile-optimized
+    labels:
+      version: v1.0.0
+      optimization: mobile
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 30
+        http:
+          maxRequestsPerConnection: 5
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: tactical-service-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent7
+spec:
+  host: tactical-service
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 200
+        connectTimeout: 10s
+        tcpKeepalive:
+          time: 3600s
+          interval: 30s
+      http:
+        http1MaxPendingRequests: 200
+        http2MaxRequests: 2000
+        maxRequestsPerConnection: 20
+        maxRetries: 5
+        consecutiveGatewayErrors: 3
+        interval: 10s
+        baseEjectionTime: 10s
+        maxEjectionPercent: 30
+    outlierDetection:
+      consecutiveGatewayErrors: 3
+      interval: 10s
+      baseEjectionTime: 10s
+      maxEjectionPercent: 30
+      minHealthPercent: 50
+  subsets:
+  - name: stable
+    labels:
+      version: v1.0.0
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 150
+  - name: high-performance
+    labels:
+      version: v1.0.0
+      performance: high
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 100
+        http:
+          maxRequestsPerConnection: 50
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: risk-service-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent7
+spec:
+  host: risk-service
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    connectionPool:
+      tcp:
+        maxConnections: 50
+        connectTimeout: 60s
+        tcpKeepalive:
+          time: 7200s
+          interval: 75s
+      http:
+        http1MaxPendingRequests: 50
+        http2MaxRequests: 500
+        maxRequestsPerConnection: 5
+        maxRetries: 2
+        consecutiveGatewayErrors: 2
+        interval: 60s
+        baseEjectionTime: 60s
+        maxEjectionPercent: 25
+    outlierDetection:
+      consecutiveGatewayErrors: 2
+      interval: 60s
+      baseEjectionTime: 60s
+      maxEjectionPercent: 25
+      minHealthPercent: 66
+  subsets:
+  - name: stable
+    labels:
+      version: v1.0.0
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 25
+
+---
+# Security Policy - Peer Authentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: grandmodel-peer-auth
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# Authorization Policy - Strategic Agent
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: strategic-authz
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent7
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/grandmodel/sa/grandmodel-sa"]
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/api/strategic/*", "/health/*", "/metrics"]
+    when:
+    - key: request.headers[user-agent]
+      notValues: ["*bot*", "*crawler*", "*scraper*"]
+
+---
+# Authorization Policy - Tactical Agent
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: tactical-authz
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: tactical
+    managed-by: agent7
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: tactical
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/grandmodel/sa/grandmodel-sa"]
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT"]
+        paths: ["/api/tactical/*", "/health/*", "/metrics"]
+    when:
+    - key: request.headers[priority]
+      values: ["high", "medium", "low"]
+
+---
+# Authorization Policy - Risk Management
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: risk-authz
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: risk
+    managed-by: agent7
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: risk
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/grandmodel/sa/grandmodel-sa"]
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/api/risk/*", "/health/*", "/metrics"]
+    when:
+    - key: request.headers[authorization]
+      values: ["*"]
+
+---
+# Telemetry Configuration
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: grandmodel-telemetry
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  metrics:
+  - providers:
+    - name: prometheus
+  - overrides:
+    - match:
+        metric: ALL_METRICS
+      tagOverrides:
+        component:
+          value: "{{ .component | default \"unknown\" }}"
+        version:
+          value: "{{ .version | default \"unknown\" }}"
+        deployment_type:
+          value: "{{ .deployment_type | default \"standard\" }}"
+  tracing:
+  - providers:
+    - name: jaeger
+  accessLogging:
+  - providers:
+    - name: otel
+
+---
+# Service Entry for External Dependencies
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-database
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  hosts:
+  - postgres.database.svc.cluster.local
+  ports:
+  - number: 5432
+    name: postgres
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-cache
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  hosts:
+  - redis.cache.svc.cluster.local
+  ports:
+  - number: 6379
+    name: redis
+    protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+
+---
+# Envoy Filter for Custom Headers
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: grandmodel-headers
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.lua
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+          inline_code: |
+            function envoy_on_request(request_handle)
+              request_handle:headers():add("x-grandmodel-timestamp", os.time())
+              request_handle:headers():add("x-grandmodel-agent", "agent7")
+              request_handle:headers():add("x-grandmodel-deployment", "production")
+            end
+            
+            function envoy_on_response(response_handle)
+              response_handle:headers():add("x-grandmodel-processed", "true")
+              response_handle:headers():add("x-grandmodel-version", "v1.0.0")
+            end
+
+---
+# Wasm Plugin for Custom Metrics
+apiVersion: extensions.istio.io/v1alpha1
+kind: WasmPlugin
+metadata:
+  name: grandmodel-metrics
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+  url: oci://registry.local/grandmodel-metrics-wasm:latest
+  phase: STATS
+  pluginConfig:
+    metric_prefix: "grandmodel"
+    custom_metrics:
+      - name: "strategic_decisions_total"
+        type: "counter"
+        labels: ["decision_type", "confidence"]
+      - name: "tactical_execution_latency"
+        type: "histogram"
+        labels: ["execution_type", "success"]
+      - name: "risk_var_calculations"
+        type: "gauge"
+        labels: ["calculation_type", "accuracy"]
+
+---
+# Circuit Breaker Configuration
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: grandmodel-circuit-breaker
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  host: "*.grandmodel.svc.cluster.local"
+  trafficPolicy:
+    outlierDetection:
+      consecutiveGatewayErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+      minHealthPercent: 30
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+      http:
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 50
+    loadBalancer:
+      simple: LEAST_CONN

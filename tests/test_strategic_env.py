@@ -2,21 +2,31 @@
 Comprehensive tests for Strategic Market Environment
 
 Tests the PettingZoo environment implementation including:
+- PettingZoo API compliance
 - Observation space correctness
 - State machine logic
 - Agent turn sequencing
 - Synergy integration
+- Performance and error handling
 """
 
 import pytest
 import numpy as np
 import sys
+import time
 from pathlib import Path
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from environment.strategic_env import StrategicMarketEnv, EnvironmentState
+from src.environment.strategic_env import (
+    StrategicMARLEnvironment, 
+    EnvironmentPhase, 
+    EnvironmentState,
+    env, 
+    raw_env
+)
+from pettingzoo.test import api_test, parallel_test
 
 
 class TestStrategicEnvironment:

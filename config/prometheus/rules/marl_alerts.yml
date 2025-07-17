@@ -1,0 +1,354 @@
+groups:
+  - name: marl_agent_alerts
+    rules:
+      # Strategic Agent Alerts
+      - alert: StrategicAgentHighLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket{agent_type="strategic"}[2m])) > 0.008
+        for: 30s
+        labels:
+          severity: warning
+          service: strategic_agent
+          alert_type: latency
+        annotations:
+          summary: "Strategic MARL agent inference latency is high"
+          description: "Strategic agent P95 inference latency is {{ $value }}s, exceeding 8ms threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-latency"
+
+      - alert: StrategicAgentCriticalLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket{agent_type="strategic"}[2m])) > 0.020
+        for: 15s
+        labels:
+          severity: critical
+          service: strategic_agent
+          alert_type: latency
+        annotations:
+          summary: "Strategic MARL agent inference latency is critically high"
+          description: "Strategic agent P95 inference latency is {{ $value }}s, exceeding 20ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-latency"
+
+      - alert: StrategicAgentLowAccuracy
+        expr: marl_agent_accuracy_percent{agent_type="strategic"} < 75
+        for: 2m
+        labels:
+          severity: warning
+          service: strategic_agent
+          alert_type: accuracy
+        annotations:
+          summary: "Strategic MARL agent accuracy has dropped"
+          description: "Strategic agent accuracy is {{ $value }}%, below 75% threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-accuracy"
+
+      - alert: StrategicAgentCriticalAccuracy
+        expr: marl_agent_accuracy_percent{agent_type="strategic"} < 65
+        for: 1m
+        labels:
+          severity: critical
+          service: strategic_agent
+          alert_type: accuracy
+        annotations:
+          summary: "Strategic MARL agent accuracy is critically low"
+          description: "Strategic agent accuracy is {{ $value }}%, below 65% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-accuracy"
+
+      # Tactical Agent Alerts
+      - alert: TacticalAgentHighLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket{agent_type="tactical"}[2m])) > 0.008
+        for: 30s
+        labels:
+          severity: warning
+          service: tactical_agent
+          alert_type: latency
+        annotations:
+          summary: "Tactical MARL agent inference latency is high"
+          description: "Tactical agent P95 inference latency is {{ $value }}s, exceeding 8ms threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-latency"
+
+      - alert: TacticalAgentCriticalLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket{agent_type="tactical"}[2m])) > 0.020
+        for: 15s
+        labels:
+          severity: critical
+          service: tactical_agent
+          alert_type: latency
+        annotations:
+          summary: "Tactical MARL agent inference latency is critically high"
+          description: "Tactical agent P95 inference latency is {{ $value }}s, exceeding 20ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-latency"
+
+      - alert: TacticalAgentLowAccuracy
+        expr: marl_agent_accuracy_percent{agent_type="tactical"} < 75
+        for: 2m
+        labels:
+          severity: warning
+          service: tactical_agent
+          alert_type: accuracy
+        annotations:
+          summary: "Tactical MARL agent accuracy has dropped"
+          description: "Tactical agent accuracy is {{ $value }}%, below 75% threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-accuracy"
+
+      - alert: TacticalAgentCriticalAccuracy
+        expr: marl_agent_accuracy_percent{agent_type="tactical"} < 65
+        for: 1m
+        labels:
+          severity: critical
+          service: tactical_agent
+          alert_type: accuracy
+        annotations:
+          summary: "Tactical MARL agent accuracy is critically low"
+          description: "Tactical agent accuracy is {{ $value }}%, below 65% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-accuracy"
+
+      # Risk Agent Alerts
+      - alert: RiskAgentHighLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket{agent_type="risk"}[1m])) > 0.005
+        for: 15s
+        labels:
+          severity: warning
+          service: risk_agent
+          alert_type: latency
+        annotations:
+          summary: "Risk MARL agent inference latency is high"
+          description: "Risk agent P95 inference latency is {{ $value }}s, exceeding 5ms threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-latency"
+
+      - alert: RiskAgentCriticalLatency
+        expr: histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket{agent_type="risk"}[1m])) > 0.015
+        for: 10s
+        labels:
+          severity: critical
+          service: risk_agent
+          alert_type: latency
+        annotations:
+          summary: "Risk MARL agent inference latency is critically high"
+          description: "Risk agent P95 inference latency is {{ $value }}s, exceeding 15ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-latency"
+
+      # Agent Consensus Alerts
+      - alert: LowAgentConsensus
+        expr: marl_agent_consensus_score < 0.7
+        for: 1m
+        labels:
+          severity: warning
+          service: marl_system
+          alert_type: consensus
+        annotations:
+          summary: "MARL agent consensus score is low"
+          description: "Agent consensus score is {{ $value }}, below 0.7 threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-consensus"
+
+      - alert: CriticalAgentConsensus
+        expr: marl_agent_consensus_score < 0.5
+        for: 30s
+        labels:
+          severity: critical
+          service: marl_system
+          alert_type: consensus
+        annotations:
+          summary: "MARL agent consensus score is critically low"
+          description: "Agent consensus score is {{ $value }}, below 0.5 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/marl-consensus"
+
+      # Agent Health Alerts
+      - alert: AgentDown
+        expr: up{job=~".*-agent"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+          alert_type: availability
+        annotations:
+          summary: "MARL agent is down"
+          description: "{{ $labels.job }} has been down for more than 30 seconds"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-down"
+
+      - alert: AgentHighErrorRate
+        expr: rate(marl_agent_errors_total[2m]) / rate(marl_agent_requests_total[2m]) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: errors
+        annotations:
+          summary: "MARL agent has high error rate"
+          description: "{{ $labels.agent_type }} agent error rate is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-errors"
+
+      - alert: AgentCriticalErrorRate
+        expr: rate(marl_agent_errors_total[2m]) / rate(marl_agent_requests_total[2m]) > 0.1
+        for: 30s
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: errors
+        annotations:
+          summary: "MARL agent has critically high error rate"
+          description: "{{ $labels.agent_type }} agent error rate is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-errors"
+
+  - name: marl_performance_alerts
+    rules:
+      # Throughput Alerts
+      - alert: LowAgentThroughput
+        expr: rate(marl_agent_requests_total[2m]) < 50
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: throughput
+        annotations:
+          summary: "MARL agent throughput is low"
+          description: "{{ $labels.agent_type }} agent throughput is {{ $value }} requests/sec, below 50 threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-throughput"
+
+      - alert: CriticalAgentThroughput
+        expr: rate(marl_agent_requests_total[2m]) < 20
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: throughput
+        annotations:
+          summary: "MARL agent throughput is critically low"
+          description: "{{ $labels.agent_type }} agent throughput is {{ $value }} requests/sec, below 20 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-throughput"
+
+      # Memory Usage Alerts
+      - alert: HighAgentMemoryUsage
+        expr: marl_agent_memory_usage_percent > 85
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: memory
+        annotations:
+          summary: "MARL agent memory usage is high"
+          description: "{{ $labels.agent_type }} agent memory usage is {{ $value }}%"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-memory"
+
+      - alert: CriticalAgentMemoryUsage
+        expr: marl_agent_memory_usage_percent > 95
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: memory
+        annotations:
+          summary: "MARL agent memory usage is critically high"
+          description: "{{ $labels.agent_type }} agent memory usage is {{ $value }}%"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-memory"
+
+      # GPU Usage Alerts (for agents using GPU)
+      - alert: HighAgentGPUUsage
+        expr: marl_agent_gpu_utilization_percent > 90
+        for: 3m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: gpu
+        annotations:
+          summary: "MARL agent GPU usage is high"
+          description: "{{ $labels.agent_type }} agent GPU usage is {{ $value }}%"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-gpu"
+
+      - alert: CriticalAgentGPUUsage
+        expr: marl_agent_gpu_utilization_percent > 98
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: gpu
+        annotations:
+          summary: "MARL agent GPU usage is critically high"
+          description: "{{ $labels.agent_type }} agent GPU usage is {{ $value }}%"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-gpu"
+
+  - name: marl_coordination_alerts
+    rules:
+      # Coordination Alerts
+      - alert: AgentCoordinationFailure
+        expr: increase(marl_coordination_failures_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          service: marl_system
+          alert_type: coordination
+        annotations:
+          summary: "MARL agent coordination failures detected"
+          description: "{{ $value }} coordination failures in the last 5 minutes"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/coordination-failures"
+
+      - alert: CriticalAgentCoordinationFailure
+        expr: increase(marl_coordination_failures_total[5m]) > 20
+        for: 30s
+        labels:
+          severity: critical
+          service: marl_system
+          alert_type: coordination
+        annotations:
+          summary: "Critical MARL agent coordination failures"
+          description: "{{ $value }} coordination failures in the last 5 minutes"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/coordination-failures"
+
+      # Byzantine Fault Detection
+      - alert: ByzantineFaultDetected
+        expr: marl_byzantine_fault_detected > 0
+        for: 0s
+        labels:
+          severity: critical
+          service: marl_system
+          alert_type: security
+        annotations:
+          summary: "Byzantine fault detected in MARL system"
+          description: "Byzantine fault detected in agent {{ $labels.agent_type }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/byzantine-faults"
+
+      # Message Passing Alerts
+      - alert: HighMessagePassingLatency
+        expr: histogram_quantile(0.95, rate(marl_message_passing_duration_seconds_bucket[2m])) > 0.010
+        for: 1m
+        labels:
+          severity: warning
+          service: marl_system
+          alert_type: communication
+        annotations:
+          summary: "High message passing latency between MARL agents"
+          description: "P95 message passing latency is {{ $value }}s"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/message-passing"
+
+      - alert: CriticalMessagePassingLatency
+        expr: histogram_quantile(0.95, rate(marl_message_passing_duration_seconds_bucket[2m])) > 0.050
+        for: 30s
+        labels:
+          severity: critical
+          service: marl_system
+          alert_type: communication
+        annotations:
+          summary: "Critical message passing latency between MARL agents"
+          description: "P95 message passing latency is {{ $value }}s"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/message-passing"
+
+      # Model Drift Detection
+      - alert: ModelDriftDetected
+        expr: marl_model_drift_score > 0.15
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: model_drift
+        annotations:
+          summary: "Model drift detected in MARL agent"
+          description: "{{ $labels.agent_type }} agent model drift score is {{ $value }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/model-drift"
+
+      - alert: CriticalModelDriftDetected
+        expr: marl_model_drift_score > 0.25
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: model_drift
+        annotations:
+          summary: "Critical model drift detected in MARL agent"
+          description: "{{ $labels.agent_type }} agent model drift score is {{ $value }}"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/model-drift"

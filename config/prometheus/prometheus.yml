@@ -1,66 +1,251 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  external_labels:
+    cluster: 'grandmodel-production'
+    environment: 'production'
 
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          # - 'alertmanager:9093'
+          - 'alertmanager:9093'
+    alert_relabel_configs:
+      - source_labels: [alertname]
+        target_label: severity
+        regex: '.*Critical.*'
+        replacement: 'critical'
+      - source_labels: [alertname]
+        target_label: severity
+        regex: '.*Warning.*'
+        replacement: 'warning'
 
 rule_files:
   - "/etc/prometheus/rules/trading_alerts.yml"
   - "/etc/prometheus/rules/system_alerts.yml"
   - "/etc/prometheus/rules/sla_alerts.yml"
+  - "/etc/prometheus/rules/marl_alerts.yml"
+  - "/etc/prometheus/rules/business_alerts.yml"
 
 scrape_configs:
+  # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+    scrape_interval: 15s
 
+  # Main GrandModel application
   - job_name: 'grandmodel-app'
     static_configs:
       - targets: ['grandmodel:8000']
     metrics_path: '/metrics'
-    scrape_interval: 15s
-    scrape_timeout: 10s
+    scrape_interval: 2s
+    scrape_timeout: 1s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'grandmodel-main'
 
+  # Real-time monitoring endpoint
   - job_name: 'grandmodel-monitoring'
     static_configs:
       - targets: ['grandmodel:8000']
-    metrics_path: '/metrics'
-    scrape_interval: 5s
-    scrape_timeout: 5s
+    metrics_path: '/monitoring/metrics'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'grandmodel-monitor'
 
+  # MARL Agents - Strategic
   - job_name: 'strategic-agent'
     static_configs:
       - targets: ['strategic_agent:8000']
     metrics_path: '/metrics'
-    scrape_interval: 10s
+    scrape_interval: 2s
+    scrape_timeout: 1s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: agent_type
+        replacement: 'strategic'
 
+  # MARL Agents - Tactical
   - job_name: 'tactical-agent'
     static_configs:
       - targets: ['tactical_agent:8000']
     metrics_path: '/metrics'
-    scrape_interval: 10s
+    scrape_interval: 2s
+    scrape_timeout: 1s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: agent_type
+        replacement: 'tactical'
 
+  # Risk Management Agent
   - job_name: 'risk-agent'
     static_configs:
       - targets: ['risk_agent:8000']
     metrics_path: '/metrics'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: agent_type
+        replacement: 'risk'
+
+  # Execution Engine
+  - job_name: 'execution-engine'
+    static_configs:
+      - targets: ['execution_engine:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 1s
+    scrape_timeout: 500ms
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'execution'
+
+  # Data Pipeline
+  - job_name: 'data-pipeline'
+    static_configs:
+      - targets: ['data_pipeline:8000']
+    metrics_path: '/metrics'
     scrape_interval: 5s
+    scrape_timeout: 2s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: component
+        replacement: 'data_pipeline'
 
-  - job_name: 'postgres'
+  # Database monitoring
+  - job_name: 'postgres-exporter'
     static_configs:
-      - targets: ['postgres:5432']
-    scrape_interval: 30s
+      - targets: ['postgres_exporter:9187']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: database
+        replacement: 'postgres'
 
-  - job_name: 'redis'
+  # Redis monitoring
+  - job_name: 'redis-exporter'
     static_configs:
-      - targets: ['redis:6379']
-    scrape_interval: 30s
+      - targets: ['redis_exporter:9121']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: cache
+        replacement: 'redis'
 
+  # System metrics
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
+    scrape_interval: 5s
+    scrape_timeout: 2s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: node_type
+        replacement: 'production'
+
+  # Kubernetes monitoring (if deployed on K8s)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+  # Custom business metrics
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['business_metrics:8000']
+    metrics_path: '/business/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: metrics_type
+        replacement: 'business'
+
+  # JVM metrics for Java components
+  - job_name: 'jvm-metrics'
+    static_configs:
+      - targets: ['jvm_metrics:8080']
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: runtime
+        replacement: 'jvm'
+
+  # Custom application metrics
+  - job_name: 'custom-metrics'
+    static_configs:
+      - targets: ['custom_metrics:8000']
+    metrics_path: '/custom/metrics'
     scrape_interval: 15s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: metrics_type
+        replacement: 'custom'
+
+  # Blackbox exporter for endpoint monitoring
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - http://grandmodel:8000/health
+        - http://strategic_agent:8000/health
+        - http://tactical_agent:8000/health
+        - http://risk_agent:8000/health
+        - http://execution_engine:8000/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # SSL certificate monitoring
+  - job_name: 'ssl-monitoring'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://api.grandmodel.ai
+        - https://app.grandmodel.ai
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115

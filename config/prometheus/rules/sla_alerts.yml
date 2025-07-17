@@ -1,0 +1,481 @@
+groups:
+  - name: sla_availability_alerts
+    rules:
+      # Overall System Availability
+      - alert: SystemAvailabilityWarning
+        expr: (up{job="grandmodel-app"} * 100) < 99.5
+        for: 1m
+        labels:
+          severity: warning
+          service: grandmodel
+          alert_type: availability
+          sla_type: availability
+        annotations:
+          summary: "System availability below warning threshold"
+          description: "System availability is {{ $value }}%, below 99.5% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/availability"
+
+      - alert: SystemAvailabilityCritical
+        expr: (up{job="grandmodel-app"} * 100) < 99.0
+        for: 30s
+        labels:
+          severity: critical
+          service: grandmodel
+          alert_type: availability
+          sla_type: availability
+        annotations:
+          summary: "System availability below critical threshold"
+          description: "System availability is {{ $value }}%, below 99.0% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/availability"
+
+      # Trading Engine Availability
+      - alert: TradingEngineAvailabilityWarning
+        expr: (up{job="execution-engine"} * 100) < 99.9
+        for: 30s
+        labels:
+          severity: warning
+          service: execution_engine
+          alert_type: availability
+          sla_type: trading_availability
+        annotations:
+          summary: "Trading engine availability below warning threshold"
+          description: "Trading engine availability is {{ $value }}%, below 99.9% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-availability"
+
+      - alert: TradingEngineAvailabilityCritical
+        expr: (up{job="execution-engine"} * 100) < 99.5
+        for: 15s
+        labels:
+          severity: critical
+          service: execution_engine
+          alert_type: availability
+          sla_type: trading_availability
+        annotations:
+          summary: "Trading engine availability below critical threshold"
+          description: "Trading engine availability is {{ $value }}%, below 99.5% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-availability"
+
+      # MARL Agents Availability
+      - alert: MARLAgentAvailabilityWarning
+        expr: (up{job=~".*-agent"} * 100) < 99.5
+        for: 30s
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+          alert_type: availability
+          sla_type: agent_availability
+        annotations:
+          summary: "MARL agent availability below warning threshold"
+          description: "{{ $labels.job }} availability is {{ $value }}%, below 99.5% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-availability"
+
+      - alert: MARLAgentAvailabilityCritical
+        expr: (up{job=~".*-agent"} * 100) < 99.0
+        for: 15s
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+          alert_type: availability
+          sla_type: agent_availability
+        annotations:
+          summary: "MARL agent availability below critical threshold"
+          description: "{{ $labels.job }} availability is {{ $value }}%, below 99.0% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-availability"
+
+  - name: sla_performance_alerts
+    rules:
+      # Trading Engine Response Time SLA
+      - alert: TradingEngineResponseTimeWarning
+        expr: histogram_quantile(0.95, rate(trading_engine_response_time_seconds_bucket[5m])) * 1000 > 15
+        for: 2m
+        labels:
+          severity: warning
+          service: execution_engine
+          alert_type: response_time
+          sla_type: trading_performance
+        annotations:
+          summary: "Trading engine response time above warning threshold"
+          description: "Trading engine P95 response time is {{ $value }}ms, above 15ms warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-performance"
+
+      - alert: TradingEngineResponseTimeCritical
+        expr: histogram_quantile(0.95, rate(trading_engine_response_time_seconds_bucket[5m])) * 1000 > 25
+        for: 1m
+        labels:
+          severity: critical
+          service: execution_engine
+          alert_type: response_time
+          sla_type: trading_performance
+        annotations:
+          summary: "Trading engine response time above critical threshold"
+          description: "Trading engine P95 response time is {{ $value }}ms, above 25ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-performance"
+
+      # MARL Agent Response Time SLA
+      - alert: MARLAgentResponseTimeWarning
+        expr: histogram_quantile(0.95, rate(marl_agent_response_time_seconds_bucket[5m])) * 1000 > 12
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: response_time
+          sla_type: agent_performance
+        annotations:
+          summary: "MARL agent response time above warning threshold"
+          description: "{{ $labels.agent_type }} agent P95 response time is {{ $value }}ms, above 12ms warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-performance"
+
+      - alert: MARLAgentResponseTimeCritical
+        expr: histogram_quantile(0.95, rate(marl_agent_response_time_seconds_bucket[5m])) * 1000 > 20
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: response_time
+          sla_type: agent_performance
+        annotations:
+          summary: "MARL agent response time above critical threshold"
+          description: "{{ $labels.agent_type }} agent P95 response time is {{ $value }}ms, above 20ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-performance"
+
+      # Risk Management Response Time SLA
+      - alert: RiskManagementResponseTimeWarning
+        expr: histogram_quantile(0.95, rate(risk_management_response_time_seconds_bucket[5m])) * 1000 > 8
+        for: 1m
+        labels:
+          severity: warning
+          service: risk_agent
+          alert_type: response_time
+          sla_type: risk_performance
+        annotations:
+          summary: "Risk management response time above warning threshold"
+          description: "Risk management P95 response time is {{ $value }}ms, above 8ms warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/risk-performance"
+
+      - alert: RiskManagementResponseTimeCritical
+        expr: histogram_quantile(0.95, rate(risk_management_response_time_seconds_bucket[5m])) * 1000 > 15
+        for: 30s
+        labels:
+          severity: critical
+          service: risk_agent
+          alert_type: response_time
+          sla_type: risk_performance
+        annotations:
+          summary: "Risk management response time above critical threshold"
+          description: "Risk management P95 response time is {{ $value }}ms, above 15ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/risk-performance"
+
+      # Data Pipeline Throughput SLA
+      - alert: DataPipelineThroughputWarning
+        expr: rate(data_pipeline_processed_messages_total[5m]) < 800
+        for: 2m
+        labels:
+          severity: warning
+          service: data_pipeline
+          alert_type: throughput
+          sla_type: data_performance
+        annotations:
+          summary: "Data pipeline throughput below warning threshold"
+          description: "Data pipeline throughput is {{ $value }} messages/sec, below 800 messages/sec warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/data-performance"
+
+      - alert: DataPipelineThroughputCritical
+        expr: rate(data_pipeline_processed_messages_total[5m]) < 500
+        for: 1m
+        labels:
+          severity: critical
+          service: data_pipeline
+          alert_type: throughput
+          sla_type: data_performance
+        annotations:
+          summary: "Data pipeline throughput below critical threshold"
+          description: "Data pipeline throughput is {{ $value }} messages/sec, below 500 messages/sec critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/data-performance"
+
+      # Data Pipeline Latency SLA
+      - alert: DataPipelineLatencyWarning
+        expr: histogram_quantile(0.95, rate(data_pipeline_latency_seconds_bucket[5m])) * 1000 > 200
+        for: 2m
+        labels:
+          severity: warning
+          service: data_pipeline
+          alert_type: latency
+          sla_type: data_performance
+        annotations:
+          summary: "Data pipeline latency above warning threshold"
+          description: "Data pipeline P95 latency is {{ $value }}ms, above 200ms warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/data-performance"
+
+      - alert: DataPipelineLatencyCritical
+        expr: histogram_quantile(0.95, rate(data_pipeline_latency_seconds_bucket[5m])) * 1000 > 500
+        for: 1m
+        labels:
+          severity: critical
+          service: data_pipeline
+          alert_type: latency
+          sla_type: data_performance
+        annotations:
+          summary: "Data pipeline latency above critical threshold"
+          description: "Data pipeline P95 latency is {{ $value }}ms, above 500ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/data-performance"
+
+  - name: sla_error_rate_alerts
+    rules:
+      # Trading Engine Error Rate SLA
+      - alert: TradingEngineErrorRateWarning
+        expr: rate(trading_engine_errors_total[5m]) / rate(trading_engine_requests_total[5m]) * 100 > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: execution_engine
+          alert_type: error_rate
+          sla_type: trading_reliability
+        annotations:
+          summary: "Trading engine error rate above warning threshold"
+          description: "Trading engine error rate is {{ $value | humanizePercentage }}, above 0.5% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-reliability"
+
+      - alert: TradingEngineErrorRateCritical
+        expr: rate(trading_engine_errors_total[5m]) / rate(trading_engine_requests_total[5m]) * 100 > 1.0
+        for: 1m
+        labels:
+          severity: critical
+          service: execution_engine
+          alert_type: error_rate
+          sla_type: trading_reliability
+        annotations:
+          summary: "Trading engine error rate above critical threshold"
+          description: "Trading engine error rate is {{ $value | humanizePercentage }}, above 1.0% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-reliability"
+
+      # MARL Agent Error Rate SLA
+      - alert: MARLAgentErrorRateWarning
+        expr: rate(marl_agent_errors_total[5m]) / rate(marl_agent_requests_total[5m]) * 100 > 2.0
+        for: 2m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: error_rate
+          sla_type: agent_reliability
+        annotations:
+          summary: "MARL agent error rate above warning threshold"
+          description: "{{ $labels.agent_type }} agent error rate is {{ $value | humanizePercentage }}, above 2.0% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-reliability"
+
+      - alert: MARLAgentErrorRateCritical
+        expr: rate(marl_agent_errors_total[5m]) / rate(marl_agent_requests_total[5m]) * 100 > 5.0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: error_rate
+          sla_type: agent_reliability
+        annotations:
+          summary: "MARL agent error rate above critical threshold"
+          description: "{{ $labels.agent_type }} agent error rate is {{ $value | humanizePercentage }}, above 5.0% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-reliability"
+
+      # Risk Management Error Rate SLA
+      - alert: RiskManagementErrorRateWarning
+        expr: rate(risk_management_errors_total[5m]) / rate(risk_management_requests_total[5m]) * 100 > 0.1
+        for: 1m
+        labels:
+          severity: warning
+          service: risk_agent
+          alert_type: error_rate
+          sla_type: risk_reliability
+        annotations:
+          summary: "Risk management error rate above warning threshold"
+          description: "Risk management error rate is {{ $value | humanizePercentage }}, above 0.1% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/risk-reliability"
+
+      - alert: RiskManagementErrorRateCritical
+        expr: rate(risk_management_errors_total[5m]) / rate(risk_management_requests_total[5m]) * 100 > 0.5
+        for: 30s
+        labels:
+          severity: critical
+          service: risk_agent
+          alert_type: error_rate
+          sla_type: risk_reliability
+        annotations:
+          summary: "Risk management error rate above critical threshold"
+          description: "Risk management error rate is {{ $value | humanizePercentage }}, above 0.5% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/risk-reliability"
+
+  - name: sla_accuracy_alerts
+    rules:
+      # MARL Agent Accuracy SLA
+      - alert: MARLAgentAccuracyWarning
+        expr: marl_agent_accuracy_percent < 75
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: accuracy
+          sla_type: agent_accuracy
+        annotations:
+          summary: "MARL agent accuracy below warning threshold"
+          description: "{{ $labels.agent_type }} agent accuracy is {{ $value }}%, below 75% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-accuracy"
+
+      - alert: MARLAgentAccuracyCritical
+        expr: marl_agent_accuracy_percent < 70
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.agent_type }}_agent"
+          alert_type: accuracy
+          sla_type: agent_accuracy
+        annotations:
+          summary: "MARL agent accuracy below critical threshold"
+          description: "{{ $labels.agent_type }} agent accuracy is {{ $value }}%, below 70% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/agent-accuracy"
+
+      # Signal Quality SLA
+      - alert: SignalQualityWarning
+        expr: signal_quality_score < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: signal_generator
+          alert_type: quality
+          sla_type: signal_quality
+        annotations:
+          summary: "Signal quality below warning threshold"
+          description: "Signal quality score is {{ $value }}, below 0.8 warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/signal-quality"
+
+      - alert: SignalQualityCritical
+        expr: signal_quality_score < 0.6
+        for: 5m
+        labels:
+          severity: critical
+          service: signal_generator
+          alert_type: quality
+          sla_type: signal_quality
+        annotations:
+          summary: "Signal quality below critical threshold"
+          description: "Signal quality score is {{ $value }}, below 0.6 critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/signal-quality"
+
+  - name: sla_business_alerts
+    rules:
+      # Trading Performance SLA
+      - alert: TradingPerformanceWarning
+        expr: business_daily_pnl_usd < 5000
+        for: 4h
+        labels:
+          severity: warning
+          service: trading_system
+          alert_type: performance
+          sla_type: trading_performance
+        annotations:
+          summary: "Trading performance below warning threshold"
+          description: "Daily P&L is {{ $value | humanize }}USD, below 5000 USD warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-performance"
+
+      - alert: TradingPerformanceCritical
+        expr: business_daily_pnl_usd < 0
+        for: 2h
+        labels:
+          severity: critical
+          service: trading_system
+          alert_type: performance
+          sla_type: trading_performance
+        annotations:
+          summary: "Trading performance below critical threshold"
+          description: "Daily P&L is {{ $value | humanize }}USD, below 0 USD critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/trading-performance"
+
+      # Risk Management SLA
+      - alert: RiskManagementWarning
+        expr: business_var_95_percent > 3
+        for: 30m
+        labels:
+          severity: warning
+          service: risk_system
+          alert_type: risk
+          sla_type: risk_management
+        annotations:
+          summary: "Risk management metrics above warning threshold"
+          description: "95% VaR is {{ $value }}%, above 3% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/risk-management"
+
+      - alert: RiskManagementCritical
+        expr: business_var_95_percent > 5
+        for: 15m
+        labels:
+          severity: critical
+          service: risk_system
+          alert_type: risk
+          sla_type: risk_management
+        annotations:
+          summary: "Risk management metrics above critical threshold"
+          description: "95% VaR is {{ $value }}%, above 5% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/risk-management"
+
+  - name: sla_composite_alerts
+    rules:
+      # Composite SLA Health Score
+      - alert: CompositeSLAHealthWarning
+        expr: (
+          (up{job="grandmodel-app"} * 0.3) +
+          (up{job="execution-engine"} * 0.3) +
+          (up{job=~".*-agent"} * 0.2) +
+          (up{job="data-pipeline"} * 0.2)
+        ) * 100 < 99.0
+        for: 2m
+        labels:
+          severity: warning
+          service: grandmodel_system
+          alert_type: composite_sla
+          sla_type: overall_health
+        annotations:
+          summary: "Composite SLA health score below warning threshold"
+          description: "Composite SLA health score is {{ $value }}%, below 99.0% warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/composite-sla"
+
+      - alert: CompositeSLAHealthCritical
+        expr: (
+          (up{job="grandmodel-app"} * 0.3) +
+          (up{job="execution-engine"} * 0.3) +
+          (up{job=~".*-agent"} * 0.2) +
+          (up{job="data-pipeline"} * 0.2)
+        ) * 100 < 98.0
+        for: 1m
+        labels:
+          severity: critical
+          service: grandmodel_system
+          alert_type: composite_sla
+          sla_type: overall_health
+        annotations:
+          summary: "Composite SLA health score below critical threshold"
+          description: "Composite SLA health score is {{ $value }}%, below 98.0% critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/composite-sla"
+
+      # End-to-End Transaction SLA
+      - alert: EndToEndTransactionSLAWarning
+        expr: histogram_quantile(0.95, rate(end_to_end_transaction_duration_seconds_bucket[5m])) * 1000 > 50
+        for: 3m
+        labels:
+          severity: warning
+          service: grandmodel_system
+          alert_type: end_to_end
+          sla_type: transaction_performance
+        annotations:
+          summary: "End-to-end transaction SLA above warning threshold"
+          description: "End-to-end transaction P95 duration is {{ $value }}ms, above 50ms warning threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/end-to-end-sla"
+
+      - alert: EndToEndTransactionSLACritical
+        expr: histogram_quantile(0.95, rate(end_to_end_transaction_duration_seconds_bucket[5m])) * 1000 > 100
+        for: 1m
+        labels:
+          severity: critical
+          service: grandmodel_system
+          alert_type: end_to_end
+          sla_type: transaction_performance
+        annotations:
+          summary: "End-to-end transaction SLA above critical threshold"
+          description: "End-to-end transaction P95 duration is {{ $value }}ms, above 100ms critical threshold"
+          runbook_url: "https://docs.grandmodel.ai/runbooks/end-to-end-sla"

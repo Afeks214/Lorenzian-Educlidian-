@@ -1,0 +1,632 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "MARL System Performance Dashboard",
+    "description": "Comprehensive monitoring of MARL agents and system performance",
+    "tags": ["marl", "agents", "performance", "ai", "trading"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["1s", "5s", "10s", "30s", "1m", "5m", "15m"],
+      "time_options": ["15m", "1h", "3h", "6h", "12h", "24h", "2d", "7d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Agent Status Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=~\".*-agent\"}",
+            "legendFormat": "{{agent_type}} Agent",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "unit": "none",
+            "mappings": [
+              {"options": {"0": {"text": "DOWN"}}, "type": "value"},
+              {"options": {"1": {"text": "UP"}}, "type": "value"}
+            ]
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "background"
+        },
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Agent Consensus Score",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "marl_agent_consensus_score",
+            "legendFormat": "Consensus Score",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.5},
+                {"color": "green", "value": 0.7},
+                {"color": "super-light-green", "value": 0.9}
+              ]
+            },
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1
+          }
+        },
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Agent Inference Latency (P95)",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "{{agent_type}} Agent P95",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "ms",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 8},
+                {"color": "red", "value": 20}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 6}
+      },
+      {
+        "id": 4,
+        "title": "Agent Accuracy",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "marl_agent_accuracy_percent",
+            "legendFormat": "{{agent_type}} Accuracy",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 80}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14}
+      },
+      {
+        "id": 5,
+        "title": "Agent Request Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(marl_agent_requests_total[5m])",
+            "legendFormat": "{{agent_type}} Requests/sec",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14}
+      },
+      {
+        "id": 6,
+        "title": "Agent Error Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(marl_agent_errors_total[5m]) / rate(marl_agent_requests_total[5m]) * 100",
+            "legendFormat": "{{agent_type}} Error Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 2},
+                {"color": "red", "value": 5}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22}
+      },
+      {
+        "id": 7,
+        "title": "Agent Memory Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "marl_agent_memory_usage_percent",
+            "legendFormat": "{{agent_type}} Memory %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 95}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22}
+      },
+      {
+        "id": 8,
+        "title": "Agent GPU Utilization",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "marl_agent_gpu_utilization_percent",
+            "legendFormat": "{{agent_type}} GPU %",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "percent",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 95}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 30}
+      },
+      {
+        "id": 9,
+        "title": "Coordination Metrics",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(marl_coordination_failures_total[5m])",
+            "legendFormat": "Coordination Failures/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(marl_message_passing_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Message Passing P95 (ms)",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 38}
+      },
+      {
+        "id": 10,
+        "title": "Model Drift Detection",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "marl_model_drift_score",
+            "legendFormat": "{{agent_type}} Drift Score",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "none",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.15},
+                {"color": "red", "value": 0.25}
+              ]
+            }
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["current", "max", "min"]
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 38}
+      },
+      {
+        "id": 11,
+        "title": "Agent Performance Matrix",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "marl_agent_accuracy_percent",
+            "legendFormat": "{{agent_type}}",
+            "refId": "A",
+            "format": "table"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(marl_agent_inference_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "{{agent_type}}",
+            "refId": "B",
+            "format": "table"
+          },
+          {
+            "expr": "rate(marl_agent_requests_total[5m])",
+            "legendFormat": "{{agent_type}}",
+            "refId": "C",
+            "format": "table"
+          },
+          {
+            "expr": "rate(marl_agent_errors_total[5m]) / rate(marl_agent_requests_total[5m]) * 100",
+            "legendFormat": "{{agent_type}}",
+            "refId": "D",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "center",
+              "displayMode": "auto"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Accuracy"},
+              "properties": [
+                {"id": "unit", "value": "percent"},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 70},
+                    {"color": "green", "value": 80}
+                  ]
+                }}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Latency P95"},
+              "properties": [
+                {"id": "unit", "value": "ms"},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 8},
+                    {"color": "red", "value": 20}
+                  ]
+                }}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Request Rate"},
+              "properties": [
+                {"id": "unit", "value": "reqps"}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Error Rate"},
+              "properties": [
+                {"id": "unit", "value": "percent"},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 2},
+                    {"color": "red", "value": 5}
+                  ]
+                }}
+              ]
+            }
+          ]
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Accuracy"
+            }
+          ]
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 46}
+      },
+      {
+        "id": 12,
+        "title": "Byzantine Fault Detection",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "marl_byzantine_fault_detected",
+            "legendFormat": "{{agent_type}} Byzantine Fault",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "red", "value": 1}
+              ]
+            },
+            "unit": "none",
+            "mappings": [
+              {"options": {"0": {"text": "SECURE"}}, "type": "value"},
+              {"options": {"1": {"text": "FAULT DETECTED"}}, "type": "value"}
+            ]
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "background"
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 54}
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "agent_type",
+          "type": "query",
+          "query": "label_values(marl_agent_accuracy_percent, agent_type)",
+          "refresh": "on_time_range_change",
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "query": "1m,5m,10m,30m,1h",
+          "current": {
+            "selected": false,
+            "text": "5m",
+            "value": "5m"
+          }
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*Agent.*\"}",
+          "iconColor": "red",
+          "name": "Agent Alerts",
+          "showIn": 0,
+          "step": "5s",
+          "titleFormat": "{{alertname}}",
+          "type": "alert"
+        },
+        {
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*MARL.*\"}",
+          "iconColor": "orange",
+          "name": "MARL System Alerts",
+          "showIn": 0,
+          "step": "5s",
+          "titleFormat": "{{alertname}}",
+          "type": "alert"
+        }
+      ]
+    }
+  }
+}

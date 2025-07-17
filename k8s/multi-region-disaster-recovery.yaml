@@ -1,0 +1,736 @@
+# GrandModel Multi-Region Disaster Recovery Configuration - Agent 7 Implementation
+# Enterprise-grade disaster recovery with automated failover and data replication
+
+---
+# Primary Region Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: disaster-recovery-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+data:
+  primary-region: "us-east-1"
+  secondary-region: "us-west-2"
+  tertiary-region: "eu-central-1"
+  failover-threshold: "30s"
+  recovery-timeout: "300s"
+  data-replication-lag: "5s"
+  health-check-interval: "10s"
+
+---
+# Cross-Region Service for Strategic Agent
+apiVersion: v1
+kind: Service
+metadata:
+  name: strategic-service-global
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    managed-by: agent7
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+    external-dns.alpha.kubernetes.io/hostname: "strategic.grandmodel.global"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: strategic
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# External DNS Configuration for Multi-Region
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: external-dns-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+data:
+  config.yaml: |
+    provider: aws
+    aws:
+      zone-type: public
+      zone-id-filters:
+        - "Z1234567890"
+      region: us-east-1
+      batch-change-size: 1000
+      batch-change-interval: 1s
+    domain-filter:
+      - grandmodel.global
+    policy: sync
+    registry: txt
+    txt-owner-id: grandmodel-k8s
+    txt-prefix: "grandmodel-"
+    interval: 1m
+    log-level: info
+    metrics-address: "0.0.0.0:7979"
+    ignore-hostname-annotation: false
+    fqdn-template: "{{.Name}}.grandmodel.global"
+
+---
+# Disaster Recovery Deployment for Strategic Agent
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: strategic-deployment-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    deployment-type: disaster-recovery
+    managed-by: agent7
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: strategic
+      deployment-type: disaster-recovery
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: strategic
+        deployment-type: disaster-recovery
+        version: v1.0.0
+      annotations:
+        sidecar.istio.io/inject: "true"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        disaster-recovery.grandmodel.io/enabled: "true"
+    spec:
+      serviceAccountName: grandmodel-sa
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: grandmodel
+            component: strategic
+            deployment-type: disaster-recovery
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: component
+                operator: In
+                values: ["strategic"]
+              - key: deployment-type
+                operator: In
+                values: ["disaster-recovery"]
+            topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: disaster-recovery.grandmodel.io/enabled
+                operator: In
+                values: ["true"]
+              - key: kubernetes.io/arch
+                operator: In
+                values: ["amd64"]
+      containers:
+      - name: strategic-agent
+        image: grandmodel/strategic-agent:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 8080
+          name: health
+        env:
+        - name: AGENT_TYPE
+          value: "strategic"
+        - name: DEPLOYMENT_TYPE
+          value: "disaster-recovery"
+        - name: REGION
+          value: "us-west-2"
+        - name: PRIMARY_REGION
+          value: "us-east-1"
+        - name: FAILOVER_MODE
+          value: "standby"
+        - name: DATA_REPLICATION_ENDPOINT
+          value: "https://strategic.grandmodel.global"
+        - name: HEALTH_CHECK_ENDPOINT
+          value: "https://strategic-primary.grandmodel.global/health"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+            ephemeral-storage: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+            ephemeral-storage: 4Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 30
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: models-volume
+          mountPath: /app/models
+          readOnly: true
+        - name: disaster-recovery-volume
+          mountPath: /app/dr
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: cache-volume
+          mountPath: /app/cache
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grandmodel-config
+          defaultMode: 0444
+      - name: models-volume
+        persistentVolumeClaim:
+          claimName: models-pvc-dr
+      - name: disaster-recovery-volume
+        configMap:
+          name: disaster-recovery-config
+          defaultMode: 0444
+      - name: tmp-volume
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 1Gi
+
+---
+# Disaster Recovery Service for Strategic Agent
+apiVersion: v1
+kind: Service
+metadata:
+  name: strategic-service-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: strategic
+    deployment-type: disaster-recovery
+    managed-by: agent7
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "strategic-dr.grandmodel.global"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: strategic
+    deployment-type: disaster-recovery
+  sessionAffinity: ClientIP
+
+---
+# Cross-Region Data Replication Job
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: data-replication-job
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: grandmodel
+            job-type: data-replication
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: data-replicator
+            image: grandmodel/data-replicator:v1.0.0
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: SOURCE_REGION
+              value: "us-east-1"
+            - name: TARGET_REGION
+              value: "us-west-2"
+            - name: BACKUP_REGION
+              value: "eu-central-1"
+            - name: REPLICATION_TYPE
+              value: "incremental"
+            - name: MAX_LAG_SECONDS
+              value: "5"
+            - name: COMPRESSION_ENABLED
+              value: "true"
+            - name: ENCRYPTION_ENABLED
+              value: "true"
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+            volumeMounts:
+            - name: replication-config
+              mountPath: /app/config
+              readOnly: true
+          volumes:
+          - name: replication-config
+            configMap:
+              name: disaster-recovery-config
+
+---
+# Health Check Service for Disaster Recovery
+apiVersion: v1
+kind: Service
+metadata:
+  name: dr-health-check
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: disaster-recovery
+    managed-by: agent7
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: disaster-recovery
+
+---
+# Disaster Recovery Health Check Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dr-health-check-deployment
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: disaster-recovery
+    managed-by: agent7
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: disaster-recovery
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: disaster-recovery
+        version: v1.0.0
+    spec:
+      containers:
+      - name: health-checker
+        image: grandmodel/disaster-recovery-health-checker:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: PRIMARY_ENDPOINTS
+          value: "https://strategic.grandmodel.global,https://tactical.grandmodel.global,https://risk.grandmodel.global"
+        - name: SECONDARY_ENDPOINTS
+          value: "https://strategic-dr.grandmodel.global,https://tactical-dr.grandmodel.global,https://risk-dr.grandmodel.global"
+        - name: HEALTH_CHECK_INTERVAL
+          value: "10s"
+        - name: FAILOVER_THRESHOLD
+          value: "30s"
+        - name: RECOVERY_TIMEOUT
+          value: "300s"
+        - name: NOTIFICATION_WEBHOOK
+          value: "https://alerts.grandmodel.global/webhook"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Automated Failover Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: automated-failover
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: failover
+    managed-by: agent7
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: failover
+
+---
+# Automated Failover Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: automated-failover-deployment
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: failover
+    managed-by: agent7
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: failover
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: failover
+        version: v1.0.0
+    spec:
+      serviceAccountName: grandmodel-failover-sa
+      containers:
+      - name: failover-controller
+        image: grandmodel/automated-failover-controller:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: FAILOVER_STRATEGIES
+          value: "dns-switch,load-balancer-switch,pod-scaling"
+        - name: ROLLBACK_STRATEGIES
+          value: "automatic,manual-approval"
+        - name: NOTIFICATION_CHANNELS
+          value: "slack,email,webhook"
+        - name: RECOVERY_VERIFICATION_TIMEOUT
+          value: "120s"
+        - name: MAX_FAILOVER_ATTEMPTS
+          value: "3"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: failover-config
+          mountPath: /app/config
+          readOnly: true
+        - name: kubeconfig
+          mountPath: /app/kubeconfig
+          readOnly: true
+      volumes:
+      - name: failover-config
+        configMap:
+          name: disaster-recovery-config
+      - name: kubeconfig
+        secret:
+          secretName: grandmodel-kubeconfig
+
+---
+# Service Account for Failover Controller
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grandmodel-failover-sa
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+
+---
+# Cluster Role for Failover Controller
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: grandmodel-failover-role
+  labels:
+    app: grandmodel
+    managed-by: agent7
+rules:
+- apiGroups: [""]
+  resources: ["services", "endpoints", "pods"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.istio.io"]
+  resources: ["virtualservices", "destinationrules", "gateways"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+# Cluster Role Binding for Failover Controller
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grandmodel-failover-binding
+  labels:
+    app: grandmodel
+    managed-by: agent7
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grandmodel-failover-role
+subjects:
+- kind: ServiceAccount
+  name: grandmodel-failover-sa
+  namespace: grandmodel
+
+---
+# Persistent Volume for Cross-Region Backup
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: models-pvc-dr
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: gp2-encrypted
+  volumeMode: Filesystem
+
+---
+# Network Policy for Disaster Recovery
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: disaster-recovery-network-policy
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  podSelector:
+    matchLabels:
+      deployment-type: disaster-recovery
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: grandmodel
+    - podSelector:
+        matchLabels:
+          app: grandmodel
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 6379
+
+---
+# Monitoring for Disaster Recovery
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: disaster-recovery-monitor
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: disaster-recovery
+    managed-by: agent7
+spec:
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: disaster-recovery
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+    scrapeTimeout: 10s
+
+---
+# Alert Rules for Disaster Recovery
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: disaster-recovery-alerts
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  groups:
+  - name: disaster-recovery
+    rules:
+    - alert: DisasterRecoveryHealthCheckFailed
+      expr: up{job="dr-health-check"} == 0
+      for: 30s
+      labels:
+        severity: critical
+      annotations:
+        summary: "Disaster recovery health check failed"
+        description: "Disaster recovery health check has been failing for {{ $value }}s"
+    
+    - alert: DataReplicationLagHigh
+      expr: data_replication_lag_seconds > 10
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Data replication lag is high"
+        description: "Data replication lag is {{ $value }}s, exceeding threshold"
+    
+    - alert: FailoverTriggered
+      expr: increase(failover_events_total[5m]) > 0
+      for: 0s
+      labels:
+        severity: critical
+      annotations:
+        summary: "Automatic failover triggered"
+        description: "Automatic failover has been triggered {{ $value }} times in the last 5 minutes"

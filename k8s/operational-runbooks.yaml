@@ -1,0 +1,703 @@
+# GrandModel Operational Runbooks and Incident Response - Agent 7 Implementation
+# Production-ready operational procedures and automated incident response
+
+---
+# Incident Response ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: incident-response-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+data:
+  incident-response.yaml: |
+    severity_levels:
+      critical:
+        response_time: "5m"
+        escalation_time: "15m"
+        notification_channels: ["pagerduty", "slack-critical", "email-oncall"]
+        auto_actions: ["scale-up", "failover", "circuit-breaker"]
+      high:
+        response_time: "15m"
+        escalation_time: "30m"
+        notification_channels: ["slack-alerts", "email-team"]
+        auto_actions: ["scale-up", "log-analysis"]
+      medium:
+        response_time: "30m"
+        escalation_time: "60m"
+        notification_channels: ["slack-alerts"]
+        auto_actions: ["log-analysis"]
+      low:
+        response_time: "60m"
+        escalation_time: "120m"
+        notification_channels: ["slack-general"]
+        auto_actions: ["none"]
+    
+    incident_types:
+      service_down:
+        severity: critical
+        runbook: "service-down-runbook"
+        auto_remediation: true
+      high_latency:
+        severity: high
+        runbook: "high-latency-runbook"
+        auto_remediation: true
+      resource_exhaustion:
+        severity: high
+        runbook: "resource-exhaustion-runbook"
+        auto_remediation: true
+      data_quality:
+        severity: medium
+        runbook: "data-quality-runbook"
+        auto_remediation: false
+      security_breach:
+        severity: critical
+        runbook: "security-breach-runbook"
+        auto_remediation: false
+    
+    escalation_matrix:
+      level_1: ["sre-team", "platform-team"]
+      level_2: ["engineering-leads", "product-manager"]
+      level_3: ["cto", "vp-engineering"]
+    
+    communication_templates:
+      incident_start: |
+        🚨 **INCIDENT ALERT** 🚨
+        **Type**: {{.incident_type}}
+        **Severity**: {{.severity}}
+        **Service**: {{.service}}
+        **Description**: {{.description}}
+        **Started**: {{.start_time}}
+        **Runbook**: {{.runbook_link}}
+        **War Room**: {{.war_room_link}}
+      
+      incident_update: |
+        📊 **INCIDENT UPDATE** 📊
+        **Incident ID**: {{.incident_id}}
+        **Status**: {{.status}}
+        **Actions Taken**: {{.actions_taken}}
+        **Next Steps**: {{.next_steps}}
+        **ETA**: {{.eta}}
+      
+      incident_resolved: |
+        ✅ **INCIDENT RESOLVED** ✅
+        **Incident ID**: {{.incident_id}}
+        **Resolution**: {{.resolution}}
+        **Duration**: {{.duration}}
+        **Root Cause**: {{.root_cause}}
+        **Post-Mortem**: {{.post_mortem_link}}
+
+  service-down-runbook.md: |
+    # Service Down Runbook
+    
+    ## Immediate Actions (0-5 minutes)
+    1. **Verify the alert is accurate**
+       - Check service health endpoints
+       - Verify monitoring dashboard
+       - Confirm service is actually down
+    
+    2. **Assess impact**
+       - Identify affected services
+       - Determine customer impact
+       - Check if this is a partial or complete outage
+    
+    3. **Immediate mitigation**
+       - Restart unhealthy pods: `kubectl delete pods -l app=grandmodel,component=<service>`
+       - Check resource limits: `kubectl describe pods -l app=grandmodel,component=<service>`
+       - Scale up replicas: `kubectl scale deployment <service>-deployment --replicas=<count>`
+    
+    ## Investigation (5-15 minutes)
+    1. **Check logs**
+       ```bash
+       kubectl logs -l app=grandmodel,component=<service> --tail=100
+       kubectl logs -l app=grandmodel,component=<service> --previous
+       ```
+    
+    2. **Check resource utilization**
+       ```bash
+       kubectl top pods -l app=grandmodel,component=<service>
+       kubectl top nodes
+       ```
+    
+    3. **Check network connectivity**
+       ```bash
+       kubectl exec -it <pod> -- curl -I http://<service>:8000/health
+       ```
+    
+    ## Recovery Actions
+    1. **If application issue**: Rollback to previous version
+    2. **If resource issue**: Scale up or adjust resource limits
+    3. **If infrastructure issue**: Trigger disaster recovery
+    4. **If data issue**: Restore from backup
+    
+    ## Post-Incident
+    1. Update incident status
+    2. Document root cause
+    3. Schedule post-mortem
+    4. Implement preventive measures
+
+  high-latency-runbook.md: |
+    # High Latency Runbook
+    
+    ## Immediate Actions (0-5 minutes)
+    1. **Identify the source**
+       - Check service latency metrics
+       - Identify which component is slow
+       - Check if it's affecting all requests or specific patterns
+    
+    2. **Quick wins**
+       - Scale up affected services
+       - Check circuit breaker status
+       - Verify cache hit rates
+    
+    ## Investigation (5-15 minutes)
+    1. **Check service dependencies**
+       - Database connection pool
+       - External API response times
+       - Cache performance
+    
+    2. **Resource analysis**
+       - CPU and memory utilization
+       - Network bandwidth
+       - Disk I/O
+    
+    3. **Code analysis**
+       - Recent deployments
+       - Configuration changes
+       - Database query performance
+    
+    ## Recovery Actions
+    1. **Scale resources**: Increase replicas or resource limits
+    2. **Optimize queries**: Index missing columns, optimize slow queries
+    3. **Cache optimization**: Increase cache size, adjust TTL
+    4. **Circuit breaker**: Adjust thresholds, enable fail-fast
+    
+    ## Monitoring Commands
+    ```bash
+    # Check latency metrics
+    kubectl exec -it prometheus-pod -- promtool query 'histogram_quantile(0.95, strategic_latency_seconds_bucket)'
+    
+    # Check resource usage
+    kubectl top pods -l app=grandmodel --sort-by=cpu
+    
+    # Check service mesh metrics
+    istioctl analyze
+    istioctl proxy-status
+    ```
+
+  resource-exhaustion-runbook.md: |
+    # Resource Exhaustion Runbook
+    
+    ## Immediate Actions (0-5 minutes)
+    1. **Identify exhausted resource**
+       - CPU: Check if pods are CPU throttled
+       - Memory: Check for OOMKilled pods
+       - Storage: Check disk usage
+       - Network: Check bandwidth utilization
+    
+    2. **Immediate relief**
+       - Scale up replicas
+       - Increase resource limits
+       - Clear unnecessary data
+    
+    ## Investigation (5-15 minutes)
+    1. **Resource analysis**
+       ```bash
+       kubectl describe nodes
+       kubectl top nodes
+       kubectl top pods --sort-by=cpu
+       kubectl top pods --sort-by=memory
+       ```
+    
+    2. **Check for resource leaks**
+       - Memory leaks in application
+       - Unclosed connections
+       - Temporary file accumulation
+    
+    3. **Historical analysis**
+       - Check resource usage trends
+       - Identify growth patterns
+       - Correlate with traffic patterns
+    
+    ## Recovery Actions
+    1. **Scale resources**: Increase node capacity or pod resources
+    2. **Optimize code**: Fix memory leaks, optimize algorithms
+    3. **Cleanup**: Remove unused resources, clear caches
+    4. **Adjust limits**: Update resource requests and limits
+    
+    ## Prevention
+    1. Implement resource monitoring
+    2. Set up predictive scaling
+    3. Regular capacity planning
+    4. Code optimization reviews
+
+  data-quality-runbook.md: |
+    # Data Quality Runbook
+    
+    ## Immediate Actions (0-15 minutes)
+    1. **Assess data quality issue**
+       - Identify affected data sources
+       - Determine scope of corruption
+       - Check data validation failures
+    
+    2. **Contain the issue**
+       - Stop ingesting bad data
+       - Quarantine affected datasets
+       - Alert downstream consumers
+    
+    ## Investigation (15-30 minutes)
+    1. **Root cause analysis**
+       - Check data pipeline logs
+       - Verify data source integrity
+       - Check transformation logic
+    
+    2. **Impact assessment**
+       - Identify affected trading decisions
+       - Check risk calculations
+       - Verify compliance implications
+    
+    ## Recovery Actions
+    1. **Data restoration**
+       - Restore from last known good backup
+       - Reprocess data from source
+       - Validate restored data quality
+    
+    2. **Pipeline fixes**
+       - Fix data validation rules
+       - Update transformation logic
+       - Improve error handling
+    
+    ## Validation
+    1. Run data quality checks
+    2. Verify downstream systems
+    3. Monitor for recurring issues
+    4. Update quality metrics
+
+  security-breach-runbook.md: |
+    # Security Breach Runbook
+    
+    ## Immediate Actions (0-5 minutes)
+    1. **Isolate the breach**
+       - Identify compromised systems
+       - Isolate affected pods/services
+       - Block suspicious IP addresses
+    
+    2. **Preserve evidence**
+       - Capture logs and metrics
+       - Take system snapshots
+       - Document timeline
+    
+    ## Investigation (5-30 minutes)
+    1. **Analyze the breach**
+       - Review security logs
+       - Check access patterns
+       - Identify attack vectors
+    
+    2. **Assess impact**
+       - Determine data accessed
+       - Check for data exfiltration
+       - Verify system integrity
+    
+    ## Containment
+    1. **Revoke access**
+       - Rotate compromised credentials
+       - Disable affected accounts
+       - Update security policies
+    
+    2. **Patch vulnerabilities**
+       - Apply security patches
+       - Update configurations
+       - Strengthen access controls
+    
+    ## Recovery
+    1. **Restore systems**
+       - Rebuild compromised systems
+       - Restore from clean backups
+       - Verify system integrity
+    
+    2. **Monitor for persistence**
+       - Check for backdoors
+       - Monitor for anomalies
+       - Validate security controls
+
+---
+# Incident Response Automation Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: incident-response-controller
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: incident-response
+    managed-by: agent7
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grandmodel
+      component: incident-response
+  template:
+    metadata:
+      labels:
+        app: grandmodel
+        component: incident-response
+        version: v1.0.0
+    spec:
+      serviceAccountName: incident-response-sa
+      containers:
+      - name: incident-controller
+        image: grandmodel/incident-response-controller:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: incident-response-secrets
+              key: slack-webhook-url
+        - name: PAGERDUTY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: incident-response-secrets
+              key: pagerduty-api-key
+        - name: EMAIL_SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: incident-response-secrets
+              key: email-smtp-host
+        - name: EMAIL_SMTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: incident-response-secrets
+              key: email-smtp-username
+        - name: EMAIL_SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: incident-response-secrets
+              key: email-smtp-password
+        - name: WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: incident-response-secrets
+              key: webhook-secret
+        - name: AUTO_REMEDIATION_ENABLED
+          value: "true"
+        - name: MAX_AUTO_SCALE_REPLICAS
+          value: "20"
+        - name: MAX_RESOURCE_INCREASE_PERCENT
+          value: "200"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: runbooks
+          mountPath: /app/runbooks
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: incident-response-config
+      - name: runbooks
+        configMap:
+          name: incident-response-config
+
+---
+# Service Account for Incident Response
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: incident-response-sa
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+
+---
+# Cluster Role for Incident Response
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: incident-response-role
+  labels:
+    app: grandmodel
+    managed-by: agent7
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints", "events"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["networking.istio.io"]
+  resources: ["virtualservices", "destinationrules"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: ["monitoring.coreos.com"]
+  resources: ["prometheusrules"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+# Cluster Role Binding for Incident Response
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: incident-response-binding
+  labels:
+    app: grandmodel
+    managed-by: agent7
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: incident-response-role
+subjects:
+- kind: ServiceAccount
+  name: incident-response-sa
+  namespace: grandmodel
+
+---
+# Incident Response Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: incident-response-service
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    component: incident-response
+    managed-by: agent7
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  selector:
+    app: grandmodel
+    component: incident-response
+
+---
+# Alertmanager Configuration for Incident Response
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      slack_api_url: '$SLACK_WEBHOOK_URL'
+    
+    route:
+      group_by: ['alertname', 'instance']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'incident-response-webhook'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'pagerduty-critical'
+        group_wait: 5s
+        repeat_interval: 5m
+      - match:
+          severity: warning
+        receiver: 'slack-alerts'
+        group_wait: 30s
+        repeat_interval: 15m
+    
+    receivers:
+    - name: 'incident-response-webhook'
+      webhook_configs:
+      - url: 'http://incident-response-service:8080/webhook'
+        send_resolved: true
+        http_config:
+          bearer_token: '$WEBHOOK_SECRET'
+    
+    - name: 'pagerduty-critical'
+      pagerduty_configs:
+      - routing_key: '$PAGERDUTY_API_KEY'
+        description: 'GrandModel Critical Alert: {{ .GroupLabels.alertname }}'
+        severity: 'critical'
+        client: 'GrandModel Kubernetes'
+        client_url: 'https://grandmodel.production.local'
+    
+    - name: 'slack-alerts'
+      slack_configs:
+      - channel: '#grandmodel-alerts'
+        username: 'GrandModel Alertmanager'
+        icon_emoji: ':warning:'
+        title: 'GrandModel Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+        actions:
+        - type: button
+          text: 'View Dashboard'
+          url: 'https://grafana.grandmodel.local/d/grandmodel-overview'
+        - type: button
+          text: 'View Runbook'
+          url: 'https://runbooks.grandmodel.local/{{ .GroupLabels.alertname }}'
+
+---
+# Prometheus Rules for Operational Metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: operational-metrics-rules
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+spec:
+  groups:
+  - name: operational-metrics
+    rules:
+    - record: grandmodel:incident_response_time_seconds
+      expr: histogram_quantile(0.95, sum(rate(incident_response_duration_seconds_bucket[5m])) by (le))
+    
+    - record: grandmodel:mean_time_to_recovery_seconds
+      expr: avg(incident_recovery_duration_seconds)
+    
+    - record: grandmodel:availability_percentage
+      expr: (sum(up{job=~"strategic-service|tactical-service|risk-service"}) / count(up{job=~"strategic-service|tactical-service|risk-service"})) * 100
+    
+    - record: grandmodel:error_budget_remaining
+      expr: (1 - (sum(rate(http_requests_total{status=~"5.."}[7d])) / sum(rate(http_requests_total[7d])))) * 100
+    
+    - alert: OperationalMetricsDegraded
+      expr: grandmodel:availability_percentage < 99.5
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "System availability below SLA"
+        description: "System availability is {{ $value }}%, below 99.5% SLA"
+    
+    - alert: ErrorBudgetExhausted
+      expr: grandmodel:error_budget_remaining < 10
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Error budget critically low"
+        description: "Error budget remaining is {{ $value }}%, immediate action required"
+
+---
+# Operational Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: operational-dashboard
+  namespace: grandmodel
+  labels:
+    app: grandmodel
+    managed-by: agent7
+    grafana_dashboard: "1"
+data:
+  operational-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "GrandModel Operational Dashboard",
+        "tags": ["grandmodel", "operations", "sre"],
+        "refresh": "30s",
+        "panels": [
+          {
+            "id": 1,
+            "title": "System Availability",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "grandmodel:availability_percentage",
+                "legendFormat": "Availability %"
+              }
+            ],
+            "thresholds": [
+              {"color": "red", "value": 99.0},
+              {"color": "yellow", "value": 99.5},
+              {"color": "green", "value": 99.9}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Mean Time to Recovery",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "grandmodel:mean_time_to_recovery_seconds / 60",
+                "legendFormat": "MTTR (minutes)"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Error Budget Remaining",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "grandmodel:error_budget_remaining",
+                "legendFormat": "Error Budget %"
+              }
+            ],
+            "thresholds": [
+              {"color": "red", "value": 10},
+              {"color": "yellow", "value": 25},
+              {"color": "green", "value": 50}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Incident Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "grandmodel:incident_response_time_seconds",
+                "legendFormat": "P95 Response Time"
+              }
+            ]
+          }
+        ]
+      }
+    }
