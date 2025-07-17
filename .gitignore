@@ -51,3 +51,10 @@ htmlcov/
 # Claude specific
 .claude/
 sast_env/
+# Large Data Files - Git LFS Required
+colab/data/.cache/
+colab/data/*_processed.csv
+colab/data/*_train.csv
+colab/data/*_test.csv
+*.pkl
+*.csv
