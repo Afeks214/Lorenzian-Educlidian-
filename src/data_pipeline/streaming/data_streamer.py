@@ -31,7 +31,6 @@ from threading import RLock, Event, Timer
 from enum import Enum
 from abc import ABC, abstractmethod
 import heapq
-import math
 import statistics
 
 from ..core.config import DataPipelineConfig
@@ -1959,30 +1958,108 @@ class DataStreamer:
         self._memory_cleanup_timer.start()
     
     def _handle_memory_pressure(self):
-        """Handle memory pressure situations"""
-        logger.warning("Memory pressure detected, initiating cleanup")
+        """Handle memory pressure situations with enhanced cleanup"""
+        logger.warning("Memory pressure detected, initiating comprehensive cleanup")
         
-        # Force garbage collection
-        gc.collect()
+        # Get initial memory usage
+        initial_memory = self._memory_monitor.get_current_usage()
         
-        # Clear caches if available
+        # 1. Force garbage collection multiple times for better cleanup
+        for generation in range(3):
+            collected = gc.collect(generation)
+            logger.debug(f"GC generation {generation}: collected {collected} objects")
+        
+        # 2. Clear caches if available
         if hasattr(self.data_loader, 'clear_cache'):
             self.data_loader.clear_cache()
         
-        # Reduce queue sizes temporarily
-        if self._stream_queue.qsize() > self.stream_config.max_queue_size // 2:
+        # 3. Reduce queue sizes more aggressively
+        if self._stream_queue.qsize() > self.stream_config.max_queue_size // 4:
             logger.info("Reducing queue size due to memory pressure")
-            # Process some items from queue
-            items_to_process = min(10, self._stream_queue.qsize())
+            # Process more items from queue based on memory pressure level
+            target_queue_size = self.stream_config.max_queue_size // 4
+            items_to_process = min(
+                self._stream_queue.qsize() - target_queue_size,
+                self._stream_queue.qsize()
+            )
+            
             for _ in range(items_to_process):
                 try:
-                    self._stream_queue.get_nowait()
+                    item = self._stream_queue.get_nowait()
+                    # Explicitly delete the item to free memory
+                    del item
                 except queue.Empty:
                     break
         
-        # Log memory usage after cleanup
-        current_usage = self._memory_monitor.get_current_usage()
-        logger.info(f"Memory usage after cleanup: {current_usage:.2f} MB")
+        # 4. Clear any internal caches in monitoring components
+        if hasattr(self._memory_monitor, 'force_cleanup'):
+            self._memory_monitor.force_cleanup()
+        
+        # 5. Optimize pandas memory usage
+        try:
+            # Clear pandas internal caches
+            pd.set_option('mode.copy_on_write', True)
+        except Exception as e:
+            logger.debug(f"Error optimizing pandas memory: {e}")
+        
+        # 6. Final garbage collection
+        final_collected = gc.collect()
+        
+        # Log cleanup results
+        final_memory = self._memory_monitor.get_current_usage()
+        memory_freed = initial_memory - final_memory
+        logger.info(f"Memory cleanup completed: freed {memory_freed:.2f} MB "
+                   f"(from {initial_memory:.2f} MB to {final_memory:.2f} MB)")
+        
+        # 7. Temporarily reduce buffer sizes if memory is still critical
+        if final_memory > self.stream_config.max_memory_mb * 0.9:
+            logger.warning("Memory still critical after cleanup, reducing buffer sizes")
+            self._reduce_buffer_sizes()
+    
+    def _reduce_buffer_sizes(self):
+        """Temporarily reduce buffer sizes to cope with memory pressure"""
+        logger.info("Reducing buffer sizes due to critical memory pressure")
+        
+        # Reduce queue size temporarily
+        original_queue_size = self.stream_config.max_queue_size
+        reduced_queue_size = max(10, original_queue_size // 4)
+        
+        # Create new queue with reduced size
+        old_queue = self._stream_queue
+        self._stream_queue = queue.Queue(maxsize=reduced_queue_size)
+        
+        # Transfer remaining items to new queue
+        items_transferred = 0
+        while not old_queue.empty() and items_transferred < reduced_queue_size:
+            try:
+                item = old_queue.get_nowait()
+                self._stream_queue.put_nowait(item)
+                items_transferred += 1
+            except (queue.Empty, queue.Full):
+                break
+        
+        # Clear old queue
+        while not old_queue.empty():
+            try:
+                item = old_queue.get_nowait()
+                del item
+            except queue.Empty:
+                break
+        
+        logger.info(f"Buffer size reduced from {original_queue_size} to {reduced_queue_size}, "
+                   f"transferred {items_transferred} items")
+        
+        # Schedule buffer size restoration after memory pressure subsides
+        def restore_buffer_size():
+            if self._memory_monitor.get_current_usage() < self.stream_config.memory_threshold_mb:
+                logger.info("Memory pressure subsided, restoring buffer sizes")
+                self._stream_queue = queue.Queue(maxsize=original_queue_size)
+            else:
+                # Check again in 30 seconds
+                Timer(30.0, restore_buffer_size).start()
+        
+        # Check for buffer restoration in 30 seconds
+        Timer(30.0, restore_buffer_size).start()
     
     def __enter__(self):
         """Context manager entry"""
@@ -2017,28 +2094,72 @@ class DataStreamer:
             # Stop streaming
             self.stop_streaming()
             
-            # Stop all timers
-            if self._metrics_timer:
-                self._metrics_timer.cancel()
-            if self._health_check_timer:
-                self._health_check_timer.cancel()
-            if self._memory_cleanup_timer:
-                self._memory_cleanup_timer.cancel()
+            # Stop all timers with timeout
+            timers_to_cancel = [
+                ('metrics_timer', self._metrics_timer),
+                ('health_check_timer', self._health_check_timer),
+                ('memory_cleanup_timer', self._memory_cleanup_timer)
+            ]
             
-            # Close connection pool
-            self._connection_pool.close_all()
+            for timer_name, timer in timers_to_cancel:
+                if timer:
+                    try:
+                        timer.cancel()
+                        logger.debug(f"Cancelled {timer_name}")
+                    except Exception as e:
+                        logger.warning(f"Error cancelling {timer_name}: {e}")
+            
+            # Close connection pool with timeout
+            if hasattr(self, '_connection_pool'):
+                try:
+                    self._connection_pool.close_all()
+                    logger.debug("Connection pool closed")
+                except Exception as e:
+                    logger.warning(f"Error closing connection pool: {e}")
             
             # Clear queues
             self._clear_queues()
             
-            # Final garbage collection
-            gc.collect()
+            # Cleanup component resources
+            components_to_cleanup = [
+                ('resource_tracker', self._resource_tracker),
+                ('memory_monitor', self._memory_monitor),
+                ('metrics_collector', self._metrics_collector),
+                ('health_monitor', self._health_monitor)
+            ]
+            
+            for comp_name, component in components_to_cleanup:
+                if component and hasattr(component, 'cleanup'):
+                    try:
+                        component.cleanup()
+                        logger.debug(f"Cleaned up {comp_name}")
+                    except Exception as e:
+                        logger.warning(f"Error cleaning up {comp_name}: {e}")
+            
+            # Clear internal references
+            self._stats = None
+            self._error_queue = None
+            self._stream_queue = None
+            
+            # Multiple garbage collection passes for thorough cleanup
+            for gen in range(3):
+                collected = gc.collect(gen)
+                logger.debug(f"GC generation {gen}: collected {collected} objects")
             
             logger.info("DataStreamer cleanup completed successfully")
             
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
             # Continue with cleanup even if there are errors
+            
+        finally:
+            # Ensure critical resources are cleaned up even if errors occur
+            try:
+                if hasattr(self, '_shutdown_event'):
+                    self._shutdown_event.set()
+                self._is_streaming = False
+            except:
+                pass
     
     def _clear_queues(self):
         """Clear all queues safely"""
@@ -2059,29 +2180,27 @@ class DataStreamer:
                     break
         except Exception as e:
             logger.warning(f"Error clearing error queue: {e}")
-        self._rate_limiter = RateLimiter(self.stream_config.rate_limit_config)
-        self._flow_controller = FlowController(self.stream_config.flow_control_config)
-        self._system_metrics = SystemMetricsCollector()
         
-        # Backward compatibility - keep old memory monitor interface
-        self._legacy_memory_monitor = MemoryMonitor(self.stream_config.memory_threshold_mb)
+        # Clear any remaining references in existing components
+        if hasattr(self, '_rate_limiter'):
+            try:
+                self._rate_limiter.reset()
+            except Exception as e:
+                logger.warning(f"Error resetting rate limiter: {e}")
         
-        # Start system metrics collection
-        self._system_metrics.start_collection()
+        if hasattr(self, '_flow_controller'):
+            try:
+                if hasattr(self._flow_controller, 'reset'):
+                    self._flow_controller.reset()
+            except Exception as e:
+                logger.warning(f"Error resetting flow controller: {e}")
         
-        # Cleanup on exit
-        self._setup_cleanup()
+        if hasattr(self, '_system_metrics'):
+            try:
+                self._system_metrics.stop_collection()
+            except Exception as e:
+                logger.warning(f"Error stopping system metrics: {e}")
     
-    def _setup_cleanup(self):
-        """Setup cleanup on exit"""
-        import atexit
-        atexit.register(self._cleanup)
-    
-    def _cleanup(self):
-        """Cleanup resources"""
-        self.stop_streaming()
-        self._system_metrics.stop_collection()
-        logger.info("DataStreamer cleanup completed")
     
     def stream_file(self, file_path: str, 
                    transform_func: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None,
@@ -2338,8 +2457,14 @@ class DataStreamer:
                 logger.warning("Received null chunk for processing")
                 return None
             
-            data = chunk.data.copy()  # Create copy to avoid modifying original
+            # Use view instead of copy when possible to reduce memory usage
+            data = chunk.data
             original_memory = data.memory_usage(deep=True).sum()
+            
+            # Only create copy if we need to modify data
+            needs_copy = transform_func is not None
+            if needs_copy:
+                data = chunk.data.copy()
             
             # Apply filter first (to reduce data size early)
             if filter_func:

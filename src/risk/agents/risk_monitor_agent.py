@@ -3,6 +3,7 @@ Risk Monitor Agent (π₃) for Risk Management MARL System
 
 Specialized risk agent for continuous risk monitoring and emergency response.
 Acts as the primary risk oversight agent with authority to trigger emergency stops.
+Enhanced with comprehensive error handling, recovery, and degradation mechanisms.
 
 Action Space: Discrete(4) - [no_action, alert, reduce_risk, emergency_stop]
 Focuses on: Global risk assessment, emergency detection, and system protection
@@ -16,6 +17,19 @@ from collections import deque
 
 from src.risk.agents.base_risk_agent import BaseRiskAgent, RiskState, RiskAction, RiskMetrics
 from src.core.events import EventBus, Event, EventType
+from src.core.errors.agent_error_decorators import (
+    risk_agent_decorator, AgentType, AgentErrorConfig
+)
+from src.core.errors.agent_recovery_strategies import (
+    create_risk_recovery_manager, RecoveryConfig
+)
+from src.core.errors.graceful_degradation import (
+    create_risk_degradation, DegradationConfig
+)
+from src.core.errors.error_monitoring import record_error
+from src.core.errors.base_exceptions import (
+    ValidationError, DataError, SystemError, ErrorContext, CriticalError
+)
 
 logger = structlog.get_logger()
 
@@ -41,7 +55,7 @@ class RiskMonitorAgent(BaseRiskAgent):
     """
     
     def __init__(self, config: Dict[str, Any], event_bus: Optional[EventBus] = None):
-        """Initialize Risk Monitor Agent"""
+        """Initialize Risk Monitor Agent with enhanced error handling"""
         config['name'] = config.get('name', 'risk_monitor_agent')
         config['action_dim'] = 4  # Discrete action space
         
@@ -75,24 +89,84 @@ class RiskMonitorAgent(BaseRiskAgent):
         self.alert_history = deque(maxlen=50)
         self.last_emergency_time = None
         
-        logger.info("Risk Monitor Agent initialized",
+        # Enhanced error handling setup
+        self._setup_error_handling()
+        self._setup_recovery_system()
+        self._setup_degradation_system()
+        
+        logger.info("Risk Monitor Agent initialized with enhanced error handling",
                    alert_threshold=self.alert_threshold,
                    emergency_threshold=self.emergency_threshold)
     
+    def _setup_error_handling(self):
+        """Setup risk agent specific error handling"""
+        error_config = AgentErrorConfig(
+            agent_type=AgentType.RISK,
+            max_retries=self.config.get('max_retries', 2),  # Risk agents should be conservative
+            retry_delay=self.config.get('retry_delay', 0.5),
+            circuit_breaker_threshold=self.config.get('circuit_breaker_threshold', 3),
+            graceful_degradation=self.config.get('graceful_degradation', False)  # Risk agents should fail fast
+        )
+        
+        self.error_decorator = risk_agent_decorator(error_config)
+    
+    def _setup_recovery_system(self):
+        """Setup recovery management system for risk agent"""
+        recovery_config = RecoveryConfig(
+            max_recovery_attempts=self.config.get('max_recovery_attempts', 2),
+            recovery_timeout=self.config.get('recovery_timeout', 10.0),  # Quick recovery for risk
+            gradual_recovery_steps=self.config.get('gradual_recovery_steps', 2)
+        )
+        
+        self.recovery_manager = create_risk_recovery_manager(recovery_config)
+    
+    def _setup_degradation_system(self):
+        """Setup graceful degradation system for risk agent"""
+        degradation_config = DegradationConfig(
+            agent_type=AgentType.RISK,
+            essential_features=['risk_assessment', 'emergency_detection'],
+            fallback_values={
+                'risk_score': 1.0,  # Maximum risk in fallback
+                'recommendation': 'emergency_stop',
+                'confidence': 0.0
+            }
+        )
+        
+        self.degradation_system = create_risk_degradation(degradation_config)
+    
+    def _create_error_context(self, operation: str, **kwargs) -> ErrorContext:
+        """Create error context for risk monitoring"""
+        return ErrorContext(
+            service_name=self.config['name'],
+            additional_data={
+                'operation': operation,
+                'agent_type': 'risk_monitor',
+                'alerts_generated': self.alerts_generated,
+                'emergency_stops': self.emergency_stops_executed,
+                **kwargs
+            }
+        )
+    
     def calculate_risk_action(self, risk_state: RiskState) -> Tuple[int, float]:
-        """Calculate risk monitoring action"""
+        """Calculate risk monitoring action with comprehensive error handling"""
+        context = self._create_error_context('calculate_risk_action', risk_state=risk_state)
+        
         try:
-            # Calculate comprehensive risk score
-            risk_score = self._calculate_comprehensive_risk_score(risk_state)
+            # Validate risk state
+            if not self._validate_risk_state(risk_state):
+                raise ValidationError("Invalid risk state", field="risk_state")
             
-            # Detect specific risk patterns
-            risk_patterns = self._detect_risk_patterns(risk_state)
+            # Calculate comprehensive risk score with error handling
+            risk_score = self._calculate_risk_score_with_error_handling(risk_state)
+            
+            # Detect specific risk patterns with error handling
+            risk_patterns = self._detect_risk_patterns_with_error_handling(risk_state)
             
             # Determine action based on risk level and patterns
-            action = self._determine_monitor_action(risk_score, risk_patterns, risk_state)
+            action = self._determine_monitor_action_with_error_handling(risk_score, risk_patterns, risk_state)
             
-            # Calculate confidence
-            confidence = self._calculate_confidence(risk_score, risk_patterns, action)
+            # Calculate confidence with error handling
+            confidence = self._calculate_confidence_with_error_handling(risk_score, risk_patterns, action)
             
             # Update monitoring state
             self._update_monitoring_state(risk_score, action, risk_state)
@@ -103,8 +177,112 @@ class RiskMonitorAgent(BaseRiskAgent):
             return action, confidence
             
         except Exception as e:
-            logger.error("Error in risk monitoring", error=str(e))
-            return RiskMonitorAction.EMERGENCY_STOP, 1.0  # Fail-safe
+            # Record error for monitoring
+            record_error(e, context, AgentType.RISK, self.config['name'])
+            
+            # For risk agents, any error is critical
+            if isinstance(e, CriticalError):
+                logger.critical("Critical error in risk monitoring", error=str(e))
+                return RiskMonitorAction.EMERGENCY_STOP, 1.0
+            
+            # Attempt recovery
+            recovery_result = self.recovery_manager.recover(e, context, self.__dict__)
+            
+            if recovery_result.get('success', False):
+                # Retry with recovered state
+                try:
+                    return self.calculate_risk_action(risk_state)
+                except Exception as retry_error:
+                    logger.error("Retry failed after recovery", error=str(retry_error))
+            
+            # Use conservative fallback - emergency stop
+            return self._get_emergency_fallback_action(e, context)
+    
+    def _validate_risk_state(self, risk_state: RiskState) -> bool:
+        """Validate risk state input"""
+        if risk_state is None:
+            return False
+        
+        # Check for required fields
+        required_fields = ['current_drawdown_pct', 'var_estimate_5pct', 'correlation_risk']
+        for field in required_fields:
+            if not hasattr(risk_state, field):
+                return False
+            
+            value = getattr(risk_state, field)
+            if value is None or (isinstance(value, (int, float)) and (np.isnan(value) or np.isinf(value))):
+                return False
+        
+        return True
+    
+    def _calculate_risk_score_with_error_handling(self, risk_state: RiskState) -> float:
+        """Calculate risk score with error handling"""
+        try:
+            return self.degradation_system.execute_feature(
+                'risk_score_calculation',
+                risk_state
+            )
+        except Exception as e:
+            logger.warning("Risk score calculation failed, using fallback", error=str(e))
+            # Conservative fallback - assume high risk
+            return 0.9
+    
+    def _detect_risk_patterns_with_error_handling(self, risk_state: RiskState) -> Dict[str, bool]:
+        """Detect risk patterns with error handling"""
+        try:
+            return self.degradation_system.execute_feature(
+                'risk_pattern_detection',
+                risk_state
+            )
+        except Exception as e:
+            logger.warning("Risk pattern detection failed, using fallback", error=str(e))
+            # Conservative fallback - assume multiple risks
+            return {
+                'rapid_drawdown': True,
+                'correlation_spike': True,
+                'multiple_risk_convergence': True
+            }
+    
+    def _determine_monitor_action_with_error_handling(self, risk_score: float, 
+                                                    risk_patterns: Dict[str, bool], 
+                                                    risk_state: RiskState) -> int:
+        """Determine monitoring action with error handling"""
+        try:
+            return self.degradation_system.execute_feature(
+                'action_determination',
+                risk_score, risk_patterns, risk_state
+            )
+        except Exception as e:
+            logger.warning("Action determination failed, using emergency fallback", error=str(e))
+            # Conservative fallback - emergency stop
+            return RiskMonitorAction.EMERGENCY_STOP
+    
+    def _calculate_confidence_with_error_handling(self, risk_score: float, 
+                                                risk_patterns: Dict[str, bool], 
+                                                action: int) -> float:
+        """Calculate confidence with error handling"""
+        try:
+            return self.degradation_system.execute_feature(
+                'confidence_calculation',
+                risk_score, risk_patterns, action
+            )
+        except Exception as e:
+            logger.warning("Confidence calculation failed, using fallback", error=str(e))
+            # Conservative fallback - high confidence in emergency actions
+            if action == RiskMonitorAction.EMERGENCY_STOP:
+                return 1.0
+            else:
+                return 0.5
+    
+    def _get_emergency_fallback_action(self, error: Exception, context: ErrorContext) -> Tuple[int, float]:
+        """Get emergency fallback action when all else fails"""
+        logger.critical("Using emergency fallback due to error", error=str(error))
+        
+        # Ultimate fallback - emergency stop with full confidence
+        self.emergency_stops_executed += 1
+        self.last_emergency_time = datetime.now()
+        
+        return RiskMonitorAction.EMERGENCY_STOP, 1.0
     
     def _calculate_comprehensive_risk_score(self, risk_state: RiskState) -> float:
         """Calculate comprehensive risk score across all dimensions"""

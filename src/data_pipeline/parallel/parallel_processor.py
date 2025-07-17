@@ -5,6 +5,7 @@ Parallel data processing implementation for high-performance data pipeline
 import time
 import threading
 import multiprocessing as mp
+import math
 from multiprocessing import Pool, Queue, Process, Manager
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
@@ -1800,6 +1801,41 @@ class WorkStealingQueue:
         """Get queue utilization ratio"""
         with self._lock:
             return (len(self._tasks) + len(self._priority_tasks)) / self.max_size
+    
+    def get_by_pattern(self, pattern: str) -> Optional[WorkStealingTask]:
+        """Get task that matches a specific execution pattern (hot path optimization)"""
+        with self._lock:
+            # First check priority tasks
+            for i, task in enumerate(self._priority_tasks):
+                if self._task_matches_pattern(task, pattern):
+                    return self._priority_tasks.pop(i)
+            
+            # Then check normal tasks (search from end for LIFO behavior)
+            for i in range(len(self._tasks) - 1, -1, -1):
+                task = self._tasks[i]
+                if self._task_matches_pattern(task, pattern):
+                    # Remove task from deque at index i
+                    task_copy = self._tasks[i]
+                    del self._tasks[i]
+                    return task_copy
+            
+            return None
+    
+    def _task_matches_pattern(self, task: WorkStealingTask, pattern: str) -> bool:
+        """Check if a task matches the given execution pattern"""
+        # Get task execution pattern
+        task_pattern_parts = []
+        
+        if hasattr(task.func, '__name__'):
+            task_pattern_parts.append(task.func.__name__)
+        
+        if hasattr(task.metadata, 'execution_pattern'):
+            task_pattern_parts.append(task.metadata.execution_pattern)
+        
+        task_pattern = '_'.join(task_pattern_parts) if task_pattern_parts else 'generic'
+        
+        # Check for exact match or prefix match
+        return task_pattern == pattern or task_pattern.startswith(pattern.split('_')[0])
 
 class WorkerPerformanceMetrics:
     """Performance metrics for individual workers"""
@@ -1881,6 +1917,18 @@ class LoadBalancingScheduler:
         self.task_patterns: Dict[str, List[float]] = defaultdict(list)
         self.worker_performance_history: Dict[str, List[float]] = defaultdict(list)
         
+        # NUMA-aware cache locality support
+        self.numa_topology = self._detect_numa_topology()
+        self.worker_numa_mapping: Dict[str, int] = {}  # worker_id -> numa_node
+        self.numa_cache_localities: Dict[int, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        
+        # Cache-aware scheduling structures
+        self.worker_cache_history: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        self.worker_hot_paths: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        self.last_cache_cleanup = time.time()
+        self.last_hot_path_cleanup = time.time()
+        self.last_hot_path_update = time.time()
+        
         # Start monitoring thread
         self._start_monitoring()
     
@@ -1910,13 +1958,87 @@ class LoadBalancingScheduler:
             except Exception as e:
                 logger.error(f"Error in resource monitoring: {e}")
     
-    def register_worker(self, worker_id: str, queue_size: int = 100):
+    def _detect_numa_topology(self) -> Dict[int, Dict[str, Any]]:
+        """Detect NUMA topology for cache-aware scheduling"""
+        numa_topology = {}
+        
+        try:
+            # Try to get NUMA info from system
+            import subprocess
+            result = subprocess.run(['numactl', '--hardware'], 
+                                  capture_output=True, text=True, timeout=5)
+            
+            if result.returncode == 0:
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if line.startswith('node'):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            node_id = int(parts[1])
+                            numa_topology[node_id] = {
+                                'cpus': [],
+                                'memory_gb': 0,
+                                'cache_levels': {}
+                            }
+                            
+                            # Parse CPU list
+                            if 'cpus:' in line:
+                                cpu_part = line.split('cpus:')[1].strip()
+                                if cpu_part and cpu_part != '':
+                                    # Handle CPU ranges like "0-3,8-11"
+                                    cpu_ranges = cpu_part.split(',')
+                                    for cpu_range in cpu_ranges:
+                                        if '-' in cpu_range:
+                                            start, end = map(int, cpu_range.split('-'))
+                                            numa_topology[node_id]['cpus'].extend(range(start, end + 1))
+                                        else:
+                                            numa_topology[node_id]['cpus'].append(int(cpu_range))
+                                            
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
+            # Fallback to psutil-based detection
+            try:
+                cpu_count = psutil.cpu_count(logical=False)
+                if cpu_count > 1:
+                    # Assume 2 NUMA nodes for multi-core systems
+                    numa_topology[0] = {
+                        'cpus': list(range(0, cpu_count // 2)),
+                        'memory_gb': psutil.virtual_memory().total // (1024**3) // 2,
+                        'cache_levels': {'L1': 32, 'L2': 256, 'L3': 8192}  # KB estimates
+                    }
+                    numa_topology[1] = {
+                        'cpus': list(range(cpu_count // 2, cpu_count)),
+                        'memory_gb': psutil.virtual_memory().total // (1024**3) // 2,
+                        'cache_levels': {'L1': 32, 'L2': 256, 'L3': 8192}  # KB estimates
+                    }
+            except:
+                pass
+        
+        # Add cache hierarchy information
+        for node_id, node_info in numa_topology.items():
+            if 'cache_levels' not in node_info:
+                node_info['cache_levels'] = {
+                    'L1': 32,   # KB
+                    'L2': 256,  # KB  
+                    'L3': 8192  # KB
+                }
+        
+        return numa_topology
+    
+    def register_worker(self, worker_id: str, queue_size: int = 100, numa_node: int = 0):
         """Register a new worker with the scheduler"""
         with self._lock:
             if worker_id not in self.worker_queues:
                 self.worker_queues[worker_id] = WorkStealingQueue(worker_id, queue_size)
                 self.worker_metrics[worker_id] = WorkerPerformanceMetrics(worker_id)
-                logger.info(f"Registered worker {worker_id}")
+                
+                # NUMA-aware worker registration
+                if self.numa_topology and numa_node in self.numa_topology:
+                    self.worker_numa_mapping[worker_id] = numa_node
+                    logger.info(f"Registered worker {worker_id} on NUMA node {numa_node}")
+                else:
+                    # Assign to default NUMA node
+                    self.worker_numa_mapping[worker_id] = 0
+                    logger.info(f"Registered worker {worker_id} on default NUMA node 0")
     
     def unregister_worker(self, worker_id: str):
         """Unregister a worker from the scheduler"""
@@ -1944,7 +2066,9 @@ class LoadBalancingScheduler:
                 return False
             
             # Choose scheduling strategy based on configuration
-            if self.config.enable_resource_awareness:
+            if self.config.enable_cache_awareness:
+                return self._schedule_cache_aware(task)
+            elif self.config.enable_resource_awareness:
                 return self._schedule_resource_aware(task)
             elif self.config.enable_predictive_scheduling:
                 return self._schedule_predictive(task)
@@ -1952,10 +2076,13 @@ class LoadBalancingScheduler:
                 return self._schedule_round_robin(task)
     
     def _schedule_resource_aware(self, task: WorkStealingTask) -> bool:
-        """Schedule task with resource awareness"""
+        """Schedule task with enhanced resource awareness including cache considerations"""
         # Find worker with best resource availability
         best_worker = None
         best_score = float('-inf')
+        
+        # Get task data signature for cache-aware resource scheduling
+        task_data_signature = self._get_task_data_signature(task)
         
         for worker_id, queue in self.worker_queues.items():
             metrics = self.worker_metrics[worker_id]
@@ -1969,10 +2096,38 @@ class LoadBalancingScheduler:
             queue_utilization = queue.utilization()
             utilization_score = 1.0 - queue_utilization
             
-            # Combined score with weights
-            combined_score = (cpu_availability * 0.4 + 
-                            memory_availability * 0.3 + 
-                            utilization_score * 0.3)
+            # Enhanced resource scoring with cache considerations
+            cache_affinity_score = self._calculate_cache_affinity(worker_id, task_data_signature)
+            numa_locality_score = self._calculate_numa_locality(worker_id, task)
+            
+            # Memory pressure adjustment - penalize workers with high memory usage
+            memory_pressure_penalty = 0.0
+            if metrics.memory_usage_history:
+                avg_memory = statistics.mean(metrics.memory_usage_history)
+                if avg_memory > 80:  # High memory pressure
+                    memory_pressure_penalty = (avg_memory - 80) / 20.0 * 0.3
+            
+            # CPU thermal throttling consideration
+            cpu_thermal_penalty = 0.0
+            if metrics.cpu_usage_history:
+                recent_cpu = list(metrics.cpu_usage_history)[-5:]  # Last 5 readings
+                if len(recent_cpu) >= 3 and all(cpu > 90 for cpu in recent_cpu):
+                    cpu_thermal_penalty = 0.2  # Likely thermal throttling
+            
+            # Combined score with enhanced weights for resource-aware scheduling
+            combined_score = (
+                cpu_availability * 0.30 +
+                memory_availability * 0.25 +
+                utilization_score * 0.25 +
+                cache_affinity_score * 0.15 +
+                numa_locality_score * 0.05 -
+                memory_pressure_penalty -
+                cpu_thermal_penalty
+            )
+            
+            # Boost score for workers with good performance history
+            if metrics.performance_score > 1.0:
+                combined_score *= metrics.performance_score
             
             if combined_score > best_score:
                 best_score = combined_score
@@ -1981,6 +2136,8 @@ class LoadBalancingScheduler:
         if best_worker:
             try:
                 self.worker_queues[best_worker].put(task, block=False)
+                # Update cache affinity tracking
+                self._update_cache_affinity_tracking(best_worker, task_data_signature)
                 return True
             except queue.Full:
                 return self._schedule_round_robin(task)
@@ -2039,6 +2196,193 @@ class LoadBalancingScheduler:
         
         return False
     
+    def _schedule_cache_aware(self, task: WorkStealingTask) -> bool:
+        """Schedule task with cache-aware data locality optimization"""
+        # Calculate cache affinity scores for each worker
+        best_worker = None
+        best_score = float('-inf')
+        
+        # Get task data signature for cache locality analysis
+        task_data_signature = self._get_task_data_signature(task)
+        
+        for worker_id, queue in self.worker_queues.items():
+            metrics = self.worker_metrics[worker_id]
+            
+            # Base resource availability score
+            cpu_availability = 1.0 - (statistics.mean(metrics.cpu_usage_history) / 100.0 
+                                     if metrics.cpu_usage_history else 0.5)
+            memory_availability = 1.0 - (statistics.mean(metrics.memory_usage_history) / 100.0 
+                                        if metrics.memory_usage_history else 0.5)
+            queue_utilization = queue.utilization()
+            utilization_score = 1.0 - queue_utilization
+            
+            # Cache affinity score based on recent task history
+            cache_affinity_score = self._calculate_cache_affinity(worker_id, task_data_signature)
+            
+            # Data locality score based on NUMA topology
+            numa_locality_score = self._calculate_numa_locality(worker_id, task)
+            
+            # Hot path optimization - prioritize workers with recent similar tasks
+            hot_path_score = self._calculate_hot_path_score(worker_id, task)
+            
+            # Combined score with enhanced weights for cache-aware scheduling
+            combined_score = (
+                cpu_availability * 0.25 +
+                memory_availability * 0.20 +
+                utilization_score * 0.20 +
+                cache_affinity_score * self.config.cache_affinity_weight +
+                numa_locality_score * 0.15 +
+                hot_path_score * 0.10
+            )
+            
+            if combined_score > best_score:
+                best_score = combined_score
+                best_worker = worker_id
+        
+        if best_worker:
+            try:
+                self.worker_queues[best_worker].put(task, block=False)
+                # Update cache affinity tracking
+                self._update_cache_affinity_tracking(best_worker, task_data_signature)
+                return True
+            except queue.Full:
+                return self._schedule_round_robin(task)
+        
+        return False
+    
+    def _get_task_data_signature(self, task: WorkStealingTask) -> str:
+        """Generate a signature for task data to track cache locality"""
+        # Create hash from task arguments and data patterns
+        task_signature = []
+        
+        # Include function name
+        if hasattr(task.func, '__name__'):
+            task_signature.append(task.func.__name__)
+        
+        # Include data size hints if available
+        if hasattr(task.metadata, 'data_size') and task.metadata.data_size:
+            task_signature.append(f"size_{task.metadata.data_size}")
+        
+        # Include data type hints if available
+        if hasattr(task.metadata, 'data_type') and task.metadata.data_type:
+            task_signature.append(f"type_{task.metadata.data_type}")
+        
+        # Include input data hash for cache locality
+        if hasattr(task.metadata, 'input_hash') and task.metadata.input_hash:
+            task_signature.append(f"hash_{task.metadata.input_hash}")
+        
+        return '_'.join(task_signature) if task_signature else 'unknown'
+    
+    def _calculate_cache_affinity(self, worker_id: str, task_data_signature: str) -> float:
+        """Calculate cache affinity score based on recent task history"""
+        if not hasattr(self, 'worker_cache_history'):
+            self.worker_cache_history = defaultdict(lambda: defaultdict(float))
+        
+        # Get recent cache history for this worker
+        cache_history = self.worker_cache_history[worker_id]
+        
+        # Calculate affinity based on recent similar tasks
+        if task_data_signature in cache_history:
+            # Recent task with same signature - high cache affinity
+            return min(1.0, cache_history[task_data_signature] / 10.0)
+        
+        # Check for similar signatures (prefix matching)
+        for signature, count in cache_history.items():
+            if signature.startswith(task_data_signature.split('_')[0]):
+                return min(0.7, count / 15.0)
+        
+        # No cache affinity
+        return 0.0
+    
+    def _calculate_numa_locality(self, worker_id: str, task: WorkStealingTask) -> float:
+        """Calculate NUMA locality score"""
+        if not hasattr(self, 'numa_topology') or not self.numa_topology:
+            return 0.5  # Neutral score if NUMA info not available
+        
+        # Get worker's NUMA node
+        worker_numa_node = self._get_worker_numa_node(worker_id)
+        
+        # Get task's preferred NUMA node (if specified)
+        task_numa_preference = getattr(task.metadata, 'numa_preference', None)
+        
+        if worker_numa_node is not None and task_numa_preference is not None:
+            if worker_numa_node == task_numa_preference:
+                return 1.0  # Same NUMA node - excellent locality
+            else:
+                return 0.3  # Different NUMA node - poor locality
+        
+        return 0.5  # Neutral score
+    
+    def _get_worker_numa_node(self, worker_id: str) -> Optional[int]:
+        """Get NUMA node for a worker"""
+        if hasattr(self, 'worker_numa_mapping'):
+            return self.worker_numa_mapping.get(worker_id)
+        return None
+    
+    def _calculate_hot_path_score(self, worker_id: str, task: WorkStealingTask) -> float:
+        """Calculate hot path score for frequently accessed execution paths"""
+        if not hasattr(self, 'worker_hot_paths'):
+            self.worker_hot_paths = defaultdict(lambda: defaultdict(float))
+        
+        # Get task execution pattern
+        task_pattern = self._get_task_execution_pattern(task)
+        
+        # Check if this is a hot path for this worker
+        hot_paths = self.worker_hot_paths[worker_id]
+        
+        if task_pattern in hot_paths:
+            # Apply exponential decay to hot path scores
+            current_time = time.time()
+            if hasattr(self, 'last_hot_path_update'):
+                time_delta = current_time - self.last_hot_path_update
+                decay_factor = math.exp(-time_delta / 60.0)  # 1-minute half-life
+                hot_paths[task_pattern] *= decay_factor
+            
+            return min(1.0, hot_paths[task_pattern] / 5.0)
+        
+        return 0.0
+    
+    def _get_task_execution_pattern(self, task: WorkStealingTask) -> str:
+        """Get execution pattern for hot path optimization"""
+        # Combine function name and key metadata
+        pattern_parts = []
+        
+        if hasattr(task.func, '__name__'):
+            pattern_parts.append(task.func.__name__)
+        
+        if hasattr(task.metadata, 'execution_pattern'):
+            pattern_parts.append(task.metadata.execution_pattern)
+        
+        return '_'.join(pattern_parts) if pattern_parts else 'generic'
+    
+    def _update_cache_affinity_tracking(self, worker_id: str, task_data_signature: str):
+        """Update cache affinity tracking after task assignment"""
+        if not hasattr(self, 'worker_cache_history'):
+            self.worker_cache_history = defaultdict(lambda: defaultdict(float))
+        
+        # Increment cache affinity counter
+        self.worker_cache_history[worker_id][task_data_signature] += 1.0
+        
+        # Apply decay to old entries
+        current_time = time.time()
+        if not hasattr(self, 'last_cache_cleanup') or (current_time - self.last_cache_cleanup) > 300:
+            self._cleanup_cache_history()
+            self.last_cache_cleanup = current_time
+    
+    def _cleanup_cache_history(self):
+        """Clean up old cache history entries"""
+        if hasattr(self, 'worker_cache_history'):
+            for worker_id in self.worker_cache_history:
+                cache_history = self.worker_cache_history[worker_id]
+                
+                # Decay all entries
+                for signature in list(cache_history.keys()):
+                    cache_history[signature] *= 0.9
+                    
+                    # Remove entries that have decayed too much
+                    if cache_history[signature] < 0.1:
+                        del cache_history[signature]
+    
     def _predict_task_duration(self, task: WorkStealingTask) -> float:
         """Predict task execution duration based on historical data"""
         # Use estimated duration if available
@@ -2084,14 +2428,19 @@ class LoadBalancingScheduler:
         return None
     
     def get_task_for_worker(self, worker_id: str) -> Optional[WorkStealingTask]:
-        """Get next task for a specific worker"""
+        """Get next task for a specific worker with hot path optimization"""
         with self._lock:
             if worker_id not in self.worker_queues:
                 return None
             
             queue = self.worker_queues[worker_id]
             
-            # First try to get from own queue
+            # Hot path optimization: Try to get task that matches worker's hot paths
+            task = self._get_hot_path_task(worker_id, queue)
+            if task:
+                return task
+            
+            # Fallback: Regular task from own queue
             task = queue.get(block=False)
             if task:
                 return task
@@ -2101,6 +2450,27 @@ class LoadBalancingScheduler:
                 stolen_task = self.attempt_work_stealing(worker_id)
                 if stolen_task:
                     return stolen_task
+        
+        return None
+    
+    def _get_hot_path_task(self, worker_id: str, queue) -> Optional[WorkStealingTask]:
+        """Try to get a task that matches the worker's hot paths"""
+        if not hasattr(self, 'worker_hot_paths') or worker_id not in self.worker_hot_paths:
+            return None
+        
+        hot_paths = self.worker_hot_paths[worker_id]
+        if not hot_paths:
+            return None
+        
+        # Get hot path patterns sorted by score
+        sorted_hot_paths = sorted(hot_paths.items(), key=lambda x: x[1], reverse=True)
+        
+        # Try to find a task that matches hot paths
+        for pattern, score in sorted_hot_paths:
+            if score > 2.0:  # Only consider significant hot paths
+                task = queue.get_by_pattern(pattern)
+                if task:
+                    return task
         
         return None
     
@@ -2120,6 +2490,12 @@ class LoadBalancingScheduler:
                 if len(self.task_patterns[task_type]) > self.config.performance_history_size:
                     self.task_patterns[task_type] = self.task_patterns[task_type][-self.config.performance_history_size:]
             
+            # Hot path optimization: Update hot path tracking
+            self._update_hot_path_tracking(worker_id, task)
+            
+            # NUMA cache locality tracking
+            self._update_numa_cache_locality(worker_id, task)
+            
             # Store task in history
             self.task_history[task.task_id] = task
             
@@ -2128,6 +2504,59 @@ class LoadBalancingScheduler:
                 oldest_tasks = sorted(self.task_history.items(), key=lambda x: getattr(x[1].metadata, 'submit_time', 0))
                 for task_id, _ in oldest_tasks[:len(self.task_history) - self.config.performance_history_size]:
                     del self.task_history[task_id]
+    
+    def _update_hot_path_tracking(self, worker_id: str, task: WorkStealingTask):
+        """Update hot path tracking for completed tasks"""
+        if not hasattr(self, 'worker_hot_paths'):
+            self.worker_hot_paths = defaultdict(lambda: defaultdict(float))
+        
+        # Get task execution pattern
+        task_pattern = self._get_task_execution_pattern(task)
+        
+        # Update hot path score for this worker-pattern combination
+        self.worker_hot_paths[worker_id][task_pattern] += 1.0
+        
+        # Update global hot path timestamp
+        self.last_hot_path_update = time.time()
+        
+        # Periodically clean up hot paths
+        if not hasattr(self, 'last_hot_path_cleanup') or \
+           (time.time() - self.last_hot_path_cleanup) > 600:  # 10 minutes
+            self._cleanup_hot_paths()
+            self.last_hot_path_cleanup = time.time()
+    
+    def _cleanup_hot_paths(self):
+        """Clean up old hot path entries"""
+        if hasattr(self, 'worker_hot_paths'):
+            for worker_id in self.worker_hot_paths:
+                hot_paths = self.worker_hot_paths[worker_id]
+                
+                # Apply decay to all hot paths
+                for pattern in list(hot_paths.keys()):
+                    hot_paths[pattern] *= 0.95
+                    
+                    # Remove patterns that have decayed too much
+                    if hot_paths[pattern] < 0.1:
+                        del hot_paths[pattern]
+    
+    def _update_numa_cache_locality(self, worker_id: str, task: WorkStealingTask):
+        """Update NUMA cache locality tracking"""
+        if not self.numa_topology or worker_id not in self.worker_numa_mapping:
+            return
+        
+        numa_node = self.worker_numa_mapping[worker_id]
+        task_data_signature = self._get_task_data_signature(task)
+        
+        # Update cache locality for this NUMA node
+        if hasattr(self, 'numa_cache_localities'):
+            self.numa_cache_localities[numa_node][task_data_signature] += 1.0
+            
+            # Apply decay to prevent unbounded growth
+            if len(self.numa_cache_localities[numa_node]) > 1000:
+                for signature in list(self.numa_cache_localities[numa_node].keys()):
+                    self.numa_cache_localities[numa_node][signature] *= 0.95
+                    if self.numa_cache_localities[numa_node][signature] < 0.1:
+                        del self.numa_cache_localities[numa_node][signature]
     
     def get_load_balancing_stats(self) -> Dict[str, Any]:
         """Get comprehensive load balancing statistics"""
@@ -2141,13 +2570,27 @@ class LoadBalancingScheduler:
                     'work_stealing_enabled': self.config.enable_work_stealing,
                     'adaptive_scaling_enabled': self.config.enable_adaptive_scaling,
                     'predictive_scheduling_enabled': self.config.enable_predictive_scheduling,
-                    'resource_awareness_enabled': self.config.enable_resource_awareness
+                    'resource_awareness_enabled': self.config.enable_resource_awareness,
+                    'cache_awareness_enabled': self.config.enable_cache_awareness,
+                    'cache_affinity_weight': self.config.cache_affinity_weight
+                },
+                'load_balancing_metrics': {
+                    'cache_hit_rate': self._calculate_cache_hit_rate(),
+                    'hot_path_efficiency': self._calculate_hot_path_efficiency(),
+                    'numa_locality_score': self._calculate_numa_locality_score(),
+                    'work_stealing_efficiency': self._calculate_work_stealing_efficiency(),
+                    'load_distribution_variance': self._calculate_load_distribution_variance()
                 }
             }
             
             # Worker-specific stats
             for worker_id, queue in self.worker_queues.items():
                 metrics = self.worker_metrics[worker_id]
+                
+                # Get cache and hot-path stats for this worker
+                cache_affinity_stats = self._get_worker_cache_affinity_stats(worker_id)
+                hot_path_stats = self._get_worker_hot_path_stats(worker_id)
+                
                 stats['worker_stats'][worker_id] = {
                     'queue_size': queue.size(),
                     'queue_utilization': queue.utilization(),
@@ -2158,10 +2601,184 @@ class LoadBalancingScheduler:
                     'throughput': metrics.get_throughput(),
                     'performance_score': metrics.performance_score,
                     'avg_execution_time': metrics.get_average_execution_time(),
-                    'is_idle': metrics.is_idle()
+                    'is_idle': metrics.is_idle(),
+                    'cache_affinity_stats': cache_affinity_stats,
+                    'hot_path_stats': hot_path_stats,
+                    'numa_node': self._get_worker_numa_node(worker_id)
                 }
             
             return stats
+    
+    def _calculate_cache_hit_rate(self) -> float:
+        """Calculate overall cache hit rate for cache-aware scheduling"""
+        if not hasattr(self, 'worker_cache_history'):
+            return 0.0
+        
+        total_cache_hits = 0
+        total_cache_accesses = 0
+        
+        for worker_id, cache_history in self.worker_cache_history.items():
+            for signature, count in cache_history.items():
+                total_cache_accesses += count
+                if count > 1:  # Multiple accesses indicate cache hits
+                    total_cache_hits += count - 1
+        
+        return total_cache_hits / total_cache_accesses if total_cache_accesses > 0 else 0.0
+    
+    def _calculate_hot_path_efficiency(self) -> float:
+        """Calculate hot path efficiency across all workers"""
+        if not hasattr(self, 'worker_hot_paths'):
+            return 0.0
+        
+        total_hot_path_score = 0
+        total_workers = len(self.worker_queues)
+        
+        for worker_id, hot_paths in self.worker_hot_paths.items():
+            worker_score = sum(hot_paths.values())
+            total_hot_path_score += worker_score
+        
+        return total_hot_path_score / total_workers if total_workers > 0 else 0.0
+    
+    def _calculate_numa_locality_score(self) -> float:
+        """Calculate NUMA locality score"""
+        if not self.numa_topology:
+            return 0.0
+        
+        # Calculate NUMA locality based on worker distribution and cache affinity
+        numa_scores = []
+        
+        for numa_node, node_info in self.numa_topology.items():
+            # Count workers on this NUMA node
+            workers_on_node = sum(1 for worker_id, node in self.worker_numa_mapping.items() 
+                                if node == numa_node)
+            
+            # Calculate cache locality score for this node
+            node_cache_score = 0.0
+            if hasattr(self, 'numa_cache_localities') and numa_node in self.numa_cache_localities:
+                node_cache_score = sum(self.numa_cache_localities[numa_node].values())
+            
+            # Combine worker distribution and cache locality
+            if workers_on_node > 0:
+                node_score = node_cache_score / workers_on_node
+                numa_scores.append(node_score)
+        
+        return statistics.mean(numa_scores) if numa_scores else 0.0
+    
+    def _calculate_work_stealing_efficiency(self) -> float:
+        """Calculate work stealing efficiency"""
+        total_stolen = 0
+        total_given = 0
+        
+        for worker_id, metrics in self.worker_metrics.items():
+            total_stolen += metrics.tasks_stolen
+            total_given += metrics.tasks_given
+        
+        total_work_stealing = total_stolen + total_given
+        if total_work_stealing == 0:
+            return 1.0  # No work stealing needed
+        
+        # Efficiency is based on balanced stealing/giving
+        balance_score = 1.0 - abs(total_stolen - total_given) / total_work_stealing
+        return balance_score
+    
+    def _calculate_load_distribution_variance(self) -> float:
+        """Calculate variance in load distribution across workers"""
+        if not self.worker_queues:
+            return 0.0
+        
+        queue_sizes = [queue.size() for queue in self.worker_queues.values()]
+        if not queue_sizes:
+            return 0.0
+        
+        mean_size = sum(queue_sizes) / len(queue_sizes)
+        variance = sum((size - mean_size) ** 2 for size in queue_sizes) / len(queue_sizes)
+        
+        return variance
+    
+    def _get_worker_cache_affinity_stats(self, worker_id: str) -> Dict[str, Any]:
+        """Get cache affinity statistics for a specific worker"""
+        if not hasattr(self, 'worker_cache_history') or worker_id not in self.worker_cache_history:
+            return {
+                'total_signatures': 0,
+                'top_signatures': [],
+                'cache_diversity': 0.0
+            }
+        
+        cache_history = self.worker_cache_history[worker_id]
+        
+        # Get top cache signatures
+        top_signatures = sorted(cache_history.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        # Calculate cache diversity (entropy-like measure)
+        total_accesses = sum(cache_history.values())
+        cache_diversity = 0.0
+        if total_accesses > 0:
+            for count in cache_history.values():
+                probability = count / total_accesses
+                if probability > 0:
+                    cache_diversity -= probability * math.log2(probability)
+        
+        return {
+            'total_signatures': len(cache_history),
+            'top_signatures': [{'signature': sig, 'count': count} for sig, count in top_signatures],
+            'cache_diversity': cache_diversity
+        }
+    
+    def _get_worker_hot_path_stats(self, worker_id: str) -> Dict[str, Any]:
+        """Get hot path statistics for a specific worker"""
+        if not hasattr(self, 'worker_hot_paths') or worker_id not in self.worker_hot_paths:
+            return {
+                'total_hot_paths': 0,
+                'top_hot_paths': [],
+                'hot_path_efficiency': 0.0
+            }
+        
+        hot_paths = self.worker_hot_paths[worker_id]
+        
+        # Get top hot paths
+        top_hot_paths = sorted(hot_paths.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        # Calculate hot path efficiency
+        total_score = sum(hot_paths.values())
+        significant_paths = sum(1 for score in hot_paths.values() if score > 2.0)
+        hot_path_efficiency = significant_paths / len(hot_paths) if hot_paths else 0.0
+        
+        return {
+            'total_hot_paths': len(hot_paths),
+            'top_hot_paths': [{'pattern': pattern, 'score': score} for pattern, score in top_hot_paths],
+            'hot_path_efficiency': hot_path_efficiency,
+            'total_score': total_score
+        }
+    
+    def get_numa_topology_info(self) -> Dict[str, Any]:
+        """Get detailed NUMA topology information"""
+        if not self.numa_topology:
+            return {'numa_available': False, 'nodes': {}}
+        
+        numa_info = {
+            'numa_available': True,
+            'total_nodes': len(self.numa_topology),
+            'nodes': {}
+        }
+        
+        for node_id, node_info in self.numa_topology.items():
+            workers_on_node = [worker_id for worker_id, node in self.worker_numa_mapping.items() 
+                             if node == node_id]
+            
+            cache_locality_count = 0
+            if hasattr(self, 'numa_cache_localities') and node_id in self.numa_cache_localities:
+                cache_locality_count = len(self.numa_cache_localities[node_id])
+            
+            numa_info['nodes'][node_id] = {
+                'cpus': node_info.get('cpus', []),
+                'memory_gb': node_info.get('memory_gb', 0),
+                'cache_levels': node_info.get('cache_levels', {}),
+                'workers': workers_on_node,
+                'worker_count': len(workers_on_node),
+                'cache_locality_entries': cache_locality_count
+            }
+        
+        return numa_info
     
     def shutdown(self):
         """Shutdown the scheduler"""

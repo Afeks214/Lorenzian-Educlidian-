@@ -15,3 +15,135 @@
 --- Phase 3: Component Initialization ---
 2025-07-17 09:57:32,348 - core.kernel - INFO - 
 === AlgoSpace Initialization Complete. System is READY. ===
+2025-07-17 17:02:40,722 - src.core.kernel - INFO - AlgoSpace Kernel initialized with config path: config/settings.yaml
+2025-07-17 17:02:40,722 - src.core.kernel - INFO - === AlgoSpace System Initialization Starting ===
+2025-07-17 17:02:40,763 - src.core.minimal_config - INFO - Configuration loaded from config/settings.yaml
+2025-07-17 17:02:40,763 - src.core.kernel - INFO - Configuration loaded successfully
+2025-07-17 17:02:40,763 - src.core.kernel - INFO - 
+--- Phase 1: Component Instantiation ---
+2025-07-17 17:02:40,763 - src.core.kernel - INFO - Instantiating components for data handler type: backtest
+2025-07-17 17:02:40,763 - src.core.kernel - WARNING - BacktestDataHandler not available
+2025-07-17 17:02:40,763 - src.core.kernel - ERROR - Kernel initialization failed: BarGeneratorConfig.__init__() got an unexpected keyword argument 'environment'
+Traceback (most recent call last):
+  File "/home/QuantNova/GrandModel/src/core/kernel.py", line 141, in initialize
+    self._instantiate_components()
+  File "/home/QuantNova/GrandModel/src/core/kernel.py", line 183, in _instantiate_components
+    self.components["bar_generator"] = BarGenerator(self.config, self.event_bus)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/QuantNova/GrandModel/src/components/bar_generator.py", line 723, in __init__
+    self.config = BarGeneratorConfig(**config)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: BarGeneratorConfig.__init__() got an unexpected keyword argument 'environment'
+2025-07-17 17:03:53,905 - src.core.kernel - INFO - AlgoSpace Kernel initialized with config path: config/settings.yaml
+2025-07-17 17:03:53,906 - src.core.kernel - INFO - === AlgoSpace System Initialization Starting ===
+2025-07-17 17:03:53,962 - src.core.minimal_config - INFO - Configuration loaded from config/settings.yaml
+2025-07-17 17:03:53,962 - src.core.kernel - INFO - Configuration loaded successfully
+2025-07-17 17:03:53,962 - src.core.kernel - INFO - 
+--- Phase 1: Component Instantiation ---
+2025-07-17 17:03:53,962 - src.core.kernel - INFO - Instantiating components for data handler type: backtest
+2025-07-17 17:03:53,962 - src.core.kernel - WARNING - BacktestDataHandler not available
+2025-07-17 17:03:53,968 - src.components.bar_generator - INFO - Enhanced BarGenerator initialized with timezone: America/New_York
+2025-07-17 17:03:53,969 - src.core.kernel - INFO - BarGenerator instantiated
+2025-07-17 17:03:53,969 - src.core.kernel - INFO - MatrixAssembler30m instantiated
+2025-07-17 17:03:53,970 - src.core.kernel - INFO - MatrixAssembler5m instantiated
+2025-07-17 17:03:53,971 - src.core.kernel - INFO - MatrixAssemblerRegime instantiated
+2025-07-17 17:03:54,112 - src.agents.main_core.regime_embedder - INFO - Initialized RegimeEmbedder with output_dim=16
+2025-07-17 17:03:54,329 - src.agents.main_core.shared_policy - INFO - Initialized SharedPolicy with input_dim=136
+2025-07-17 17:03:54,337 - src.agents.main_core.engine - INFO - Main MARL Core initialized with unified_dim=136, device=cpu
+2025-07-17 17:03:54,338 - src.core.kernel - INFO - MainMARLCoreComponent instantiated
+2025-07-17 17:03:54,338 - src.core.kernel - INFO - Total components instantiated: 5
+2025-07-17 17:03:54,338 - src.core.kernel - INFO - 
+--- Phase 2: Event Wiring ---
+2025-07-17 17:03:54,338 - src.core.kernel - INFO - Wired: NEW_TICK -> BarGenerator
+2025-07-17 17:03:54,339 - src.core.kernel - ERROR - Kernel initialization failed: 'MatrixAssembler30m' object has no attribute 'on_indicators_ready'
+Traceback (most recent call last):
+  File "/home/QuantNova/GrandModel/src/core/kernel.py", line 145, in initialize
+    self._wire_events()
+  File "/home/QuantNova/GrandModel/src/core/kernel.py", line 364, in _wire_events
+    EventType.INDICATORS_READY, self.components[matrix_name].on_indicators_ready
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MatrixAssembler30m' object has no attribute 'on_indicators_ready'. Did you mean: '_on_indicators_ready'?
+2025-07-17 17:06:12,899 - src.core.kernel - INFO - AlgoSpace Kernel initialized with config path: config/settings.yaml
+2025-07-17 17:06:12,900 - src.core.kernel - INFO - === AlgoSpace System Initialization Starting ===
+2025-07-17 17:06:12,926 - src.core.minimal_config - INFO - Configuration loaded from config/settings.yaml
+2025-07-17 17:06:12,927 - src.core.kernel - INFO - Configuration loaded successfully
+2025-07-17 17:06:12,927 - src.core.kernel - INFO - 
+--- Phase 1: Component Instantiation ---
+2025-07-17 17:06:12,927 - src.core.kernel - INFO - Instantiating components for data handler type: backtest
+2025-07-17 17:06:12,927 - src.core.kernel - WARNING - BacktestDataHandler not available
+2025-07-17 17:06:12,929 - src.components.bar_generator - INFO - Enhanced BarGenerator initialized with timezone: America/New_York
+2025-07-17 17:06:12,930 - src.core.kernel - INFO - BarGenerator instantiated
+2025-07-17 17:06:12,930 - src.core.kernel - INFO - MatrixAssembler30m instantiated
+2025-07-17 17:06:12,931 - src.core.kernel - INFO - MatrixAssembler5m instantiated
+2025-07-17 17:06:12,931 - src.core.kernel - ERROR - Kernel initialization failed: [Errno 32] Broken pipe
+Traceback (most recent call last):
+  File "/home/QuantNova/GrandModel/src/core/kernel.py", line 141, in initialize
+    self._instantiate_components()
+  File "/home/QuantNova/GrandModel/src/core/kernel.py", line 261, in _instantiate_components
+    self.components["matrix_regime"] = MatrixAssemblerRegime(config_regime)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/QuantNova/GrandModel/src/matrix/assembler_regime.py", line 42, in __init__
+    super().__init__(config)
+  File "/home/QuantNova/GrandModel/src/matrix/base.py", line 104, in __init__
+    self._subscribe_to_events()
+  File "/home/QuantNova/GrandModel/src/matrix/base.py", line 129, in _subscribe_to_events
+    event_bus.subscribe(EventType.INDICATORS_READY, self._on_indicators_ready)
+  File "/home/QuantNova/GrandModel/src/core/events.py", line 157, in subscribe
+    self._logger.debug("Subscriber registered", event_type=event_type.value)
+  File "/home/QuantNova/.local/lib/python3.12/site-packages/structlog/_native.py", line 144, in meth
+    return self._proxy_to_logger(name, event, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/QuantNova/.local/lib/python3.12/site-packages/structlog/_base.py", line 223, in _proxy_to_logger
+    return getattr(self._logger, method_name)(*args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/QuantNova/.local/lib/python3.12/site-packages/structlog/_output.py", line 110, in msg
+    print(message, file=f, flush=True)
+BrokenPipeError: [Errno 32] Broken pipe
+2025-07-17 17:08:25,160 - src.core.kernel - INFO - AlgoSpace Kernel initialized with config path: config/settings.yaml
+2025-07-17 17:08:25,160 - src.core.kernel - INFO - === AlgoSpace System Initialization Starting ===
+2025-07-17 17:08:25,198 - src.core.minimal_config - INFO - Configuration loaded from config/settings.yaml
+2025-07-17 17:08:25,198 - src.core.kernel - INFO - Configuration loaded successfully
+2025-07-17 17:08:25,198 - src.core.kernel - INFO - 
+--- Phase 1: Component Instantiation ---
+2025-07-17 17:08:25,198 - src.core.kernel - INFO - Instantiating components for data handler type: backtest
+2025-07-17 17:08:25,198 - src.core.kernel - WARNING - BacktestDataHandler not available
+2025-07-17 17:08:25,200 - src.components.bar_generator - INFO - Enhanced BarGenerator initialized with timezone: America/New_York
+2025-07-17 17:08:25,201 - src.core.kernel - INFO - BarGenerator instantiated
+2025-07-17 17:08:25,202 - src.core.kernel - INFO - MatrixAssembler30m instantiated
+2025-07-17 17:08:25,202 - src.core.kernel - INFO - MatrixAssembler5m instantiated
+2025-07-17 17:08:25,203 - src.core.kernel - INFO - MatrixAssemblerRegime instantiated
+2025-07-17 17:08:25,307 - src.agents.main_core.regime_embedder - INFO - Initialized RegimeEmbedder with output_dim=16
+2025-07-17 17:08:25,393 - src.agents.main_core.shared_policy - INFO - Initialized SharedPolicy with input_dim=136
+2025-07-17 17:08:25,403 - src.agents.main_core.engine - INFO - Main MARL Core initialized with unified_dim=136, device=cpu
+2025-07-17 17:08:25,404 - src.core.kernel - INFO - MainMARLCoreComponent instantiated
+2025-07-17 17:08:25,404 - src.core.kernel - INFO - Total components instantiated: 5
+2025-07-17 17:08:25,404 - src.core.kernel - INFO - 
+--- Phase 2: Event Wiring ---
+2025-07-17 17:08:25,405 - src.core.kernel - INFO - Wired: NEW_TICK -> BarGenerator
+2025-07-17 17:08:25,405 - src.core.kernel - INFO - Wired: INDICATORS_READY -> matrix_30m
+2025-07-17 17:08:25,405 - src.core.kernel - INFO - Wired: INDICATORS_READY -> matrix_5m
+2025-07-17 17:08:25,406 - src.core.kernel - INFO - Wired: INDICATORS_READY -> matrix_regime
+2025-07-17 17:08:25,406 - src.core.kernel - INFO - Wired: SYNERGY_DETECTED -> MainMARLCore
+2025-07-17 17:08:25,406 - src.core.kernel - INFO - Wired: TRADE_CLOSED -> MainMARLCore
+2025-07-17 17:08:25,407 - src.core.kernel - INFO - Event wiring completed
+2025-07-17 17:08:25,407 - src.core.kernel - INFO - 
+--- Phase 3: Component Initialization ---
+2025-07-17 17:08:25,420 - src.agents.main_core.engine - ERROR - Failed to load structure_embedder: Weights only load failed. In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
+Please file an issue with the following so that we can make `weights_only=True` compatible with your use case: WeightsUnpickler error: Unsupported operand 149
+
+Check the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.
+2025-07-17 17:08:25,421 - src.agents.main_core.engine - ERROR - Failed to load tactical_embedder: Weights only load failed. In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
+Please file an issue with the following so that we can make `weights_only=True` compatible with your use case: WeightsUnpickler error: Unsupported operand 149
+
+Check the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.
+2025-07-17 17:08:25,421 - src.agents.main_core.engine - ERROR - Failed to load regime_embedder: Weights only load failed. In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
+Please file an issue with the following so that we can make `weights_only=True` compatible with your use case: WeightsUnpickler error: Unsupported operand 149
+
+Check the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.
+2025-07-17 17:08:25,422 - src.agents.main_core.engine - ERROR - Failed to load lvn_embedder: Weights only load failed. In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
+Please file an issue with the following so that we can make `weights_only=True` compatible with your use case: WeightsUnpickler error: Unsupported operand 149
+
+Check the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.
+2025-07-17 17:08:25,422 - src.core.kernel - ERROR - Failed to load MARL models: 'MainMARLCoreComponent' object has no attribute 'rde_communication'
+2025-07-17 17:08:25,422 - src.core.kernel - INFO - 
+=== AlgoSpace Initialization Complete. System is READY. ===

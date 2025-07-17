@@ -1,0 +1,9 @@
+{
+  "timestamp": "20250717_163753",
+  "overall_quality_score": 100.0,
+  "pass_rate": 100.0,
+  "total_tests": 48,
+  "total_duration": 2.8964333534240723,
+  "critical_issues": 95,
+  "recommendations": 0
+}

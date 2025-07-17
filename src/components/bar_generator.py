@@ -720,7 +720,13 @@ class BarGenerator:
         """
         # Handle different config types
         if isinstance(config, dict):
-            self.config = BarGeneratorConfig(**config)
+            # Extract only BarGeneratorConfig fields from the full config
+            bar_config_fields = set(BarGeneratorConfig.__dataclass_fields__.keys())
+            filtered_config = {
+                k: v for k, v in config.items() 
+                if k in bar_config_fields
+            }
+            self.config = BarGeneratorConfig(**filtered_config)
         else:
             self.config = config
         

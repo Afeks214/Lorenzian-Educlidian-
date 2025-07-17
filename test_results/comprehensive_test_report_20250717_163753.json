@@ -1,0 +1,742 @@
+{
+  "test_execution_summary": {
+    "overall_summary": {
+      "total_tests": 48,
+      "passed": 48,
+      "failed": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "pass_rate": 100.0,
+      "total_duration": 2.8964333534240723,
+      "average_duration": 0.22436185677846274
+    },
+    "category_summaries": {
+      "unit_tests": {
+        "total_tests": 7,
+        "passed": 7,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 0.99639892578125,
+        "average_duration": 0.14234270368303573
+      },
+      "integration_tests": {
+        "total_tests": 6,
+        "passed": 6,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 1.2104690074920654,
+        "average_duration": 0.2017448345820109
+      },
+      "performance_tests": {
+        "total_tests": 6,
+        "passed": 6,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 0.8670635223388672,
+        "average_duration": 0.14451058705647787
+      },
+      "security_tests": {
+        "total_tests": 7,
+        "passed": 7,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 0.7117514610290527,
+        "average_duration": 0.10167878014700753
+      },
+      "regression_tests": {
+        "total_tests": 5,
+        "passed": 5,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 0.7556028366088867,
+        "average_duration": 0.15112056732177734
+      },
+      "market_simulation_tests": {
+        "total_tests": 6,
+        "passed": 6,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 1.809434413909912,
+        "average_duration": 0.30157240231831867
+      },
+      "failure_recovery_tests": {
+        "total_tests": 6,
+        "passed": 6,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 1.6090238094329834,
+        "average_duration": 0.26817063490549725
+      },
+      "stress_tests": {
+        "total_tests": 5,
+        "passed": 5,
+        "failed": 0,
+        "errors": 0,
+        "timeouts": 0,
+        "pass_rate": 100.0,
+        "total_duration": 2.8096251487731934,
+        "average_duration": 0.5619250297546386
+      }
+    },
+    "all_results": [
+      "TestResult(test_name='_test_kernel_functionality', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.1866145133972168, error_message=None, performance_metrics={'duration_ms': 186.2633228302002, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 186.2633228302002, 'throughput_ops': 5.368743479958272}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3043.171875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 546655))",
+      "TestResult(test_name='_test_event_bus', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.10126113891601562, error_message=None, performance_metrics={'duration_ms': 101.01485252380371, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.01485252380371, 'throughput_ops': 9.899534326047295}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3038.9609375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 647926))",
+      "TestResult(test_name='_test_config_manager', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.10131192207336426, error_message=None, performance_metrics={'duration_ms': 101.05276107788086, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.05276107788086, 'throughput_ops': 9.895820651840527}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3035.734375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 749248))",
+      "TestResult(test_name='_test_data_pipeline', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.20369791984558105, error_message=None, performance_metrics={'duration_ms': 203.39608192443848, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 203.39608192443848, 'throughput_ops': 4.916515552012941}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.98828125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 952957))",
+      "TestResult(test_name='_test_risk_components', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.1509382724761963, error_message=None, performance_metrics={'duration_ms': 150.67410469055176, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 150.67410469055176, 'throughput_ops': 6.636840497932665}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.359375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 103907))",
+      "TestResult(test_name='_test_execution_components', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.15117216110229492, error_message=None, performance_metrics={'duration_ms': 150.88534355163574, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 150.88534355163574, 'throughput_ops': 6.627548948501957}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.11328125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 255091))",
+      "TestResult(test_name='_test_monitoring_components', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.10140299797058105, error_message=None, performance_metrics={'duration_ms': 101.1056900024414, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.1056900024414, 'throughput_ops': 9.890640180348434}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.9375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 356506))",
+      "TestResult(test_name='_test_agent_coordination', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.3027515411376953, error_message=None, performance_metrics={'duration_ms': 302.4609088897705, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 302.4609088897705, 'throughput_ops': 3.306212375247613}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3035.734375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 748491))",
+      "TestResult(test_name='_test_data_flow_integration', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.2514355182647705, error_message=None, performance_metrics={'duration_ms': 251.0669231414795, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 251.0669231414795, 'throughput_ops': 3.9830017729435707}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.98828125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 999940))",
+      "TestResult(test_name='_test_risk_execution_integration', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.2014448642730713, error_message=None, performance_metrics={'duration_ms': 201.0962963104248, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 201.0962963104248, 'throughput_ops': 4.972742006428291}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.11328125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 201400))",
+      "TestResult(test_name='_test_strategic_tactical_bridge', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.20051026344299316, error_message=None, performance_metrics={'duration_ms': 200.225830078125, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 200.225830078125, 'throughput_ops': 4.994360615759793}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.9375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 401923))",
+      "TestResult(test_name='_test_monitoring_integration', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.15180659294128418, error_message=None, performance_metrics={'duration_ms': 151.56030654907227, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 151.56030654907227, 'throughput_ops': 6.598033632745521}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.6953125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 553739))",
+      "TestResult(test_name='_test_api_integration', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.MEDIUM: 'medium'>, duration=0.10252022743225098, error_message=None, performance_metrics={'duration_ms': 102.24294662475586, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 102.24294662475586, 'throughput_ops': 9.780625784095626}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.55859375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 656271))",
+      "TestResult(test_name='_test_latency_performance', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.0531003475189209, error_message=None, performance_metrics={'duration_ms': 52.754878997802734, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 52.754878997802734, 'throughput_ops': 18.955592714782846}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3043.171875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 499023))",
+      "TestResult(test_name='_test_throughput_performance', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.1014871597290039, error_message=None, performance_metrics={'duration_ms': 101.18746757507324, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.18746757507324, 'throughput_ops': 9.882646773999731}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3040.18359375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 600525))",
+      "TestResult(test_name='_test_memory_performance', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.MEDIUM: 'medium'>, duration=0.1019291877746582, error_message=None, performance_metrics={'duration_ms': 101.64952278137207, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.64952278137207, 'throughput_ops': 9.837724493314163}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3038.734375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 702466))",
+      "TestResult(test_name='_test_scalability_limits', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.3009636402130127, error_message=None, performance_metrics={'duration_ms': 300.69446563720703, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 300.69446563720703, 'throughput_ops': 3.3256348695373625}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.98828125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 3440))",
+      "TestResult(test_name='_test_inference_speed', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.10397052764892578, error_message=None, performance_metrics={'duration_ms': 103.70469093322754, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 103.70469093322754, 'throughput_ops': 9.642765346495958}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.359375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 107421))",
+      "TestResult(test_name='_test_concurrent_performance', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.2056126594543457, error_message=None, performance_metrics={'duration_ms': 205.3537368774414, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 205.3537368774414, 'throughput_ops': 4.869645983587905}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.9375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 313044))",
+      "TestResult(test_name='_test_authentication_security', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.10094809532165527, error_message=None, performance_metrics={'duration_ms': 100.72541236877441, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 100.72541236877441, 'throughput_ops': 9.927981196431489}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3043.171875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 546998))",
+      "TestResult(test_name='_test_authorization_controls', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.10129618644714355, error_message=None, performance_metrics={'duration_ms': 101.03917121887207, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.03917121887207, 'throughput_ops': 9.897151648579836}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3038.9609375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 648304))",
+      "TestResult(test_name='_test_data_encryption', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.10333800315856934, error_message=None, performance_metrics={'duration_ms': 101.06110572814941, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.06110572814941, 'throughput_ops': 9.895003550524793}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3035.734375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 751652))",
+      "TestResult(test_name='_test_input_validation', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.1011042594909668, error_message=None, performance_metrics={'duration_ms': 100.83889961242676, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 100.83889961242676, 'throughput_ops': 9.916807936654301}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.94140625}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 852766))",
+      "TestResult(test_name='_test_injection_protection', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.10055923461914062, error_message=None, performance_metrics={'duration_ms': 100.31723976135254, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 100.31723976135254, 'throughput_ops': 9.96837634666711}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.98828125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 953334))",
+      "TestResult(test_name='_test_secret_management', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.10118293762207031, error_message=None, performance_metrics={'duration_ms': 100.9521484375, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 100.9521484375, 'throughput_ops': 9.905683192261185}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3017.0546875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 54530))",
+      "TestResult(test_name='_test_api_security', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.10332274436950684, error_message=None, performance_metrics={'duration_ms': 103.08599472045898, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 103.08599472045898, 'throughput_ops': 9.70063879881769}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.11328125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 157865))",
+      "TestResult(test_name='_test_backward_compatibility', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.2009580135345459, error_message=None, performance_metrics={'duration_ms': 200.61969757080078, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 200.61969757080078, 'throughput_ops': 4.984555415587193}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3038.9609375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 647154))",
+      "TestResult(test_name='_test_performance_regression', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.15118908882141113, error_message=None, performance_metrics={'duration_ms': 150.7101058959961, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 150.7101058959961, 'throughput_ops': 6.635255108174978}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3032.6796875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 798357))",
+      "TestResult(test_name='_test_api_compatibility', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.MEDIUM: 'medium'>, duration=0.10088229179382324, error_message=None, performance_metrics={'duration_ms': 100.65889358520508, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 100.65889358520508, 'throughput_ops': 9.934541940434967}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.94140625}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 899249))",
+      "TestResult(test_name='_test_model_output_consistency', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.20105934143066406, error_message=None, performance_metrics={'duration_ms': 200.8953094482422, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 200.8953094482422, 'throughput_ops': 4.977717014630627}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.359375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 100315))",
+      "TestResult(test_name='_test_configuration_changes', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.MEDIUM: 'medium'>, duration=0.10151410102844238, error_message=None, performance_metrics={'duration_ms': 101.21488571166992, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 101.21488571166992, 'throughput_ops': 9.879969660279937}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.11328125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 201837))",
+      "TestResult(test_name='_test_bull_market_scenarios', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.30256032943725586, error_message=None, performance_metrics={'duration_ms': 302.31213569641113, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 302.31213569641113, 'throughput_ops': 3.307839421319901}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3035.734375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 748879))",
+      "TestResult(test_name='_test_bear_market_scenarios', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.30120062828063965, error_message=None, performance_metrics={'duration_ms': 300.89306831359863, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 300.89306831359863, 'throughput_ops': 3.323439804062797}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3017.0546875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 50093))",
+      "TestResult(test_name='_test_high_volatility_scenarios', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.2514970302581787, error_message=None, performance_metrics={'duration_ms': 250.26965141296387, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 250.26965141296387, 'throughput_ops': 3.995690225939238}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.9375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 301602))",
+      "TestResult(test_name='_test_low_liquidity_scenarios', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.25176453590393066, error_message=None, performance_metrics={'duration_ms': 251.53231620788574, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 251.53231620788574, 'throughput_ops': 3.9756322967801987}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.6953125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 553377))",
+      "TestResult(test_name='_test_regime_transitions', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.3015711307525635, error_message=None, performance_metrics={'duration_ms': 301.23329162597656, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 301.23329162597656, 'throughput_ops': 3.3196861960451582}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.3515625}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 854961))",
+      "TestResult(test_name='_test_extreme_market_events', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.40084075927734375, error_message=None, performance_metrics={'duration_ms': 400.57849884033203, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 400.57849884033203, 'throughput_ops': 2.496389603773001}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3013.26171875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 52, 255819))",
+      "TestResult(test_name='_test_component_failure_recovery', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.2010941505432129, error_message=None, performance_metrics={'duration_ms': 200.84404945373535, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 200.84404945373535, 'throughput_ops': 4.978987441847766}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3038.9609375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 647535))",
+      "TestResult(test_name='_test_network_failure_recovery', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.2513711452484131, error_message=None, performance_metrics={'duration_ms': 251.08909606933594, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 251.08909606933594, 'throughput_ops': 3.982650045957628}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.94140625}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 898917))",
+      "TestResult(test_name='_test_data_corruption_recovery', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.20113110542297363, error_message=None, performance_metrics={'duration_ms': 200.86956024169922, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 200.86956024169922, 'throughput_ops': 4.978355101672625}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.359375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 100061))",
+      "TestResult(test_name='_test_memory_exhaustion_recovery', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.15128493309020996, error_message=None, performance_metrics={'duration_ms': 150.95067024230957, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 150.95067024230957, 'throughput_ops': 6.624680754280696}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.11328125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 251359))",
+      "TestResult(test_name='_test_cascading_failure_prevention', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.30164670944213867, error_message=None, performance_metrics={'duration_ms': 301.3038635253906, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 301.3038635253906, 'throughput_ops': 3.3189086535418117}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.6953125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 553021))",
+      "TestResult(test_name='_test_disaster_recovery', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.CRITICAL: 'critical'>, duration=0.5024957656860352, error_message=None, performance_metrics={'duration_ms': 502.1505355834961, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 502.1505355834961, 'throughput_ops': 1.9914346976410284}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3013.77734375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 52, 55533))",
+      "TestResult(test_name='_test_load_stress', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.401714563369751, error_message=None, performance_metrics={'duration_ms': 401.40533447265625, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 401.40533447265625, 'throughput_ops': 2.4912474103358484}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.94140625}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 50, 848284))",
+      "TestResult(test_name='_test_memory_stress', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.3008415699005127, error_message=None, performance_metrics={'duration_ms': 300.48561096191406, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 300.48561096191406, 'throughput_ops': 3.3279463758640606}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3016.11328125}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 149140))",
+      "TestResult(test_name='_test_concurrent_user_stress', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.MEDIUM: 'medium'>, duration=0.5028519630432129, error_message=None, performance_metrics={'duration_ms': 502.5310516357422, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 502.5310516357422, 'throughput_ops': 1.989926785111075}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3015.55859375}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 51, 652009))",
+      "TestResult(test_name='_test_data_volume_stress', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=0.6012823581695557, error_message=None, performance_metrics={'duration_ms': 600.8977890014648, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 600.8977890014648, 'throughput_ops': 1.6641765343516055}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3013.26171875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 52, 253311))",
+      "TestResult(test_name='_test_sustained_load_stress', status=<TestStatus.PASSED: 'passed'>, severity=<TestSeverity.HIGH: 'high'>, duration=1.0029346942901611, error_message=None, performance_metrics={'duration_ms': 1002.5918483734131, 'memory_mb': 241.39453125, 'memory_delta_mb': 0.0, 'latency_ms': 1002.5918483734131, 'throughput_ops': 0.9974148519383854}, memory_usage={'total_mb': 241.39453125, 'available_mb': 3005.4296875}, security_findings=None, timestamp=datetime.datetime(2025, 7, 17, 16, 37, 53, 256264))"
+    ],
+    "timestamp": "2025-07-17T16:37:53.256375"
+  },
+  "performance_analysis": {
+    "performance_issues": [
+      {
+        "test": "_test_kernel_functionality",
+        "issue": "High latency",
+        "value": 186.2633228302002,
+        "threshold": 100
+      },
+      {
+        "test": "_test_kernel_functionality",
+        "issue": "Low throughput",
+        "value": 5.368743479958272,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_event_bus",
+        "issue": "High latency",
+        "value": 101.01485252380371,
+        "threshold": 100
+      },
+      {
+        "test": "_test_event_bus",
+        "issue": "Low throughput",
+        "value": 9.899534326047295,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_config_manager",
+        "issue": "High latency",
+        "value": 101.05276107788086,
+        "threshold": 100
+      },
+      {
+        "test": "_test_config_manager",
+        "issue": "Low throughput",
+        "value": 9.895820651840527,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_data_pipeline",
+        "issue": "High latency",
+        "value": 203.39608192443848,
+        "threshold": 100
+      },
+      {
+        "test": "_test_data_pipeline",
+        "issue": "Low throughput",
+        "value": 4.916515552012941,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_risk_components",
+        "issue": "High latency",
+        "value": 150.67410469055176,
+        "threshold": 100
+      },
+      {
+        "test": "_test_risk_components",
+        "issue": "Low throughput",
+        "value": 6.636840497932665,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_execution_components",
+        "issue": "High latency",
+        "value": 150.88534355163574,
+        "threshold": 100
+      },
+      {
+        "test": "_test_execution_components",
+        "issue": "Low throughput",
+        "value": 6.627548948501957,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_monitoring_components",
+        "issue": "High latency",
+        "value": 101.1056900024414,
+        "threshold": 100
+      },
+      {
+        "test": "_test_monitoring_components",
+        "issue": "Low throughput",
+        "value": 9.890640180348434,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_agent_coordination",
+        "issue": "High latency",
+        "value": 302.4609088897705,
+        "threshold": 100
+      },
+      {
+        "test": "_test_agent_coordination",
+        "issue": "Low throughput",
+        "value": 3.306212375247613,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_data_flow_integration",
+        "issue": "High latency",
+        "value": 251.0669231414795,
+        "threshold": 100
+      },
+      {
+        "test": "_test_data_flow_integration",
+        "issue": "Low throughput",
+        "value": 3.9830017729435707,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_risk_execution_integration",
+        "issue": "High latency",
+        "value": 201.0962963104248,
+        "threshold": 100
+      },
+      {
+        "test": "_test_risk_execution_integration",
+        "issue": "Low throughput",
+        "value": 4.972742006428291,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_strategic_tactical_bridge",
+        "issue": "High latency",
+        "value": 200.225830078125,
+        "threshold": 100
+      },
+      {
+        "test": "_test_strategic_tactical_bridge",
+        "issue": "Low throughput",
+        "value": 4.994360615759793,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_monitoring_integration",
+        "issue": "High latency",
+        "value": 151.56030654907227,
+        "threshold": 100
+      },
+      {
+        "test": "_test_monitoring_integration",
+        "issue": "Low throughput",
+        "value": 6.598033632745521,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_api_integration",
+        "issue": "High latency",
+        "value": 102.24294662475586,
+        "threshold": 100
+      },
+      {
+        "test": "_test_api_integration",
+        "issue": "Low throughput",
+        "value": 9.780625784095626,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_latency_performance",
+        "issue": "Low throughput",
+        "value": 18.955592714782846,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_throughput_performance",
+        "issue": "High latency",
+        "value": 101.18746757507324,
+        "threshold": 100
+      },
+      {
+        "test": "_test_throughput_performance",
+        "issue": "Low throughput",
+        "value": 9.882646773999731,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_memory_performance",
+        "issue": "High latency",
+        "value": 101.64952278137207,
+        "threshold": 100
+      },
+      {
+        "test": "_test_memory_performance",
+        "issue": "Low throughput",
+        "value": 9.837724493314163,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_scalability_limits",
+        "issue": "High latency",
+        "value": 300.69446563720703,
+        "threshold": 100
+      },
+      {
+        "test": "_test_scalability_limits",
+        "issue": "Low throughput",
+        "value": 3.3256348695373625,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_inference_speed",
+        "issue": "High latency",
+        "value": 103.70469093322754,
+        "threshold": 100
+      },
+      {
+        "test": "_test_inference_speed",
+        "issue": "Low throughput",
+        "value": 9.642765346495958,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_concurrent_performance",
+        "issue": "High latency",
+        "value": 205.3537368774414,
+        "threshold": 100
+      },
+      {
+        "test": "_test_concurrent_performance",
+        "issue": "Low throughput",
+        "value": 4.869645983587905,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_authentication_security",
+        "issue": "High latency",
+        "value": 100.72541236877441,
+        "threshold": 100
+      },
+      {
+        "test": "_test_authentication_security",
+        "issue": "Low throughput",
+        "value": 9.927981196431489,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_authorization_controls",
+        "issue": "High latency",
+        "value": 101.03917121887207,
+        "threshold": 100
+      },
+      {
+        "test": "_test_authorization_controls",
+        "issue": "Low throughput",
+        "value": 9.897151648579836,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_data_encryption",
+        "issue": "High latency",
+        "value": 101.06110572814941,
+        "threshold": 100
+      },
+      {
+        "test": "_test_data_encryption",
+        "issue": "Low throughput",
+        "value": 9.895003550524793,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_input_validation",
+        "issue": "High latency",
+        "value": 100.83889961242676,
+        "threshold": 100
+      },
+      {
+        "test": "_test_input_validation",
+        "issue": "Low throughput",
+        "value": 9.916807936654301,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_injection_protection",
+        "issue": "High latency",
+        "value": 100.31723976135254,
+        "threshold": 100
+      },
+      {
+        "test": "_test_injection_protection",
+        "issue": "Low throughput",
+        "value": 9.96837634666711,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_secret_management",
+        "issue": "High latency",
+        "value": 100.9521484375,
+        "threshold": 100
+      },
+      {
+        "test": "_test_secret_management",
+        "issue": "Low throughput",
+        "value": 9.905683192261185,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_api_security",
+        "issue": "High latency",
+        "value": 103.08599472045898,
+        "threshold": 100
+      },
+      {
+        "test": "_test_api_security",
+        "issue": "Low throughput",
+        "value": 9.70063879881769,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_backward_compatibility",
+        "issue": "High latency",
+        "value": 200.61969757080078,
+        "threshold": 100
+      },
+      {
+        "test": "_test_backward_compatibility",
+        "issue": "Low throughput",
+        "value": 4.984555415587193,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_performance_regression",
+        "issue": "High latency",
+        "value": 150.7101058959961,
+        "threshold": 100
+      },
+      {
+        "test": "_test_performance_regression",
+        "issue": "Low throughput",
+        "value": 6.635255108174978,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_api_compatibility",
+        "issue": "High latency",
+        "value": 100.65889358520508,
+        "threshold": 100
+      },
+      {
+        "test": "_test_api_compatibility",
+        "issue": "Low throughput",
+        "value": 9.934541940434967,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_model_output_consistency",
+        "issue": "High latency",
+        "value": 200.8953094482422,
+        "threshold": 100
+      },
+      {
+        "test": "_test_model_output_consistency",
+        "issue": "Low throughput",
+        "value": 4.977717014630627,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_configuration_changes",
+        "issue": "High latency",
+        "value": 101.21488571166992,
+        "threshold": 100
+      },
+      {
+        "test": "_test_configuration_changes",
+        "issue": "Low throughput",
+        "value": 9.879969660279937,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_bull_market_scenarios",
+        "issue": "High latency",
+        "value": 302.31213569641113,
+        "threshold": 100
+      },
+      {
+        "test": "_test_bull_market_scenarios",
+        "issue": "Low throughput",
+        "value": 3.307839421319901,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_bear_market_scenarios",
+        "issue": "High latency",
+        "value": 300.89306831359863,
+        "threshold": 100
+      },
+      {
+        "test": "_test_bear_market_scenarios",
+        "issue": "Low throughput",
+        "value": 3.323439804062797,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_high_volatility_scenarios",
+        "issue": "High latency",
+        "value": 250.26965141296387,
+        "threshold": 100
+      },
+      {
+        "test": "_test_high_volatility_scenarios",
+        "issue": "Low throughput",
+        "value": 3.995690225939238,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_low_liquidity_scenarios",
+        "issue": "High latency",
+        "value": 251.53231620788574,
+        "threshold": 100
+      },
+      {
+        "test": "_test_low_liquidity_scenarios",
+        "issue": "Low throughput",
+        "value": 3.9756322967801987,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_regime_transitions",
+        "issue": "High latency",
+        "value": 301.23329162597656,
+        "threshold": 100
+      },
+      {
+        "test": "_test_regime_transitions",
+        "issue": "Low throughput",
+        "value": 3.3196861960451582,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_extreme_market_events",
+        "issue": "High latency",
+        "value": 400.57849884033203,
+        "threshold": 100
+      },
+      {
+        "test": "_test_extreme_market_events",
+        "issue": "Low throughput",
+        "value": 2.496389603773001,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_component_failure_recovery",
+        "issue": "High latency",
+        "value": 200.84404945373535,
+        "threshold": 100
+      },
+      {
+        "test": "_test_component_failure_recovery",
+        "issue": "Low throughput",
+        "value": 4.978987441847766,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_network_failure_recovery",
+        "issue": "High latency",
+        "value": 251.08909606933594,
+        "threshold": 100
+      },
+      {
+        "test": "_test_network_failure_recovery",
+        "issue": "Low throughput",
+        "value": 3.982650045957628,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_data_corruption_recovery",
+        "issue": "High latency",
+        "value": 200.86956024169922,
+        "threshold": 100
+      },
+      {
+        "test": "_test_data_corruption_recovery",
+        "issue": "Low throughput",
+        "value": 4.978355101672625,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_memory_exhaustion_recovery",
+        "issue": "High latency",
+        "value": 150.95067024230957,
+        "threshold": 100
+      },
+      {
+        "test": "_test_memory_exhaustion_recovery",
+        "issue": "Low throughput",
+        "value": 6.624680754280696,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_cascading_failure_prevention",
+        "issue": "High latency",
+        "value": 301.3038635253906,
+        "threshold": 100
+      },
+      {
+        "test": "_test_cascading_failure_prevention",
+        "issue": "Low throughput",
+        "value": 3.3189086535418117,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_disaster_recovery",
+        "issue": "High latency",
+        "value": 502.1505355834961,
+        "threshold": 100
+      },
+      {
+        "test": "_test_disaster_recovery",
+        "issue": "Low throughput",
+        "value": 1.9914346976410284,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_load_stress",
+        "issue": "High latency",
+        "value": 401.40533447265625,
+        "threshold": 100
+      },
+      {
+        "test": "_test_load_stress",
+        "issue": "Low throughput",
+        "value": 2.4912474103358484,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_memory_stress",
+        "issue": "High latency",
+        "value": 300.48561096191406,
+        "threshold": 100
+      },
+      {
+        "test": "_test_memory_stress",
+        "issue": "Low throughput",
+        "value": 3.3279463758640606,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_concurrent_user_stress",
+        "issue": "High latency",
+        "value": 502.5310516357422,
+        "threshold": 100
+      },
+      {
+        "test": "_test_concurrent_user_stress",
+        "issue": "Low throughput",
+        "value": 1.989926785111075,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_data_volume_stress",
+        "issue": "High latency",
+        "value": 600.8977890014648,
+        "threshold": 100
+      },
+      {
+        "test": "_test_data_volume_stress",
+        "issue": "Low throughput",
+        "value": 1.6641765343516055,
+        "threshold": 1000
+      },
+      {
+        "test": "_test_sustained_load_stress",
+        "issue": "High latency",
+        "value": 1002.5918483734131,
+        "threshold": 100
+      },
+      {
+        "test": "_test_sustained_load_stress",
+        "issue": "Low throughput",
+        "value": 0.9974148519383854,
+        "threshold": 1000
+      }
+    ],
+    "performance_achievements": [],
+    "overall_performance_score": 0
+  },
+  "security_analysis": {
+    "security_vulnerabilities": [],
+    "security_compliance": [],
+    "overall_security_score": 100.0
+  },
+  "regression_analysis": {
+    "regressions_detected": [],
+    "regression_risk_score": 0
+  },
+  "recommendations": [],
+  "quality_metrics": {
+    "overall_quality_score": 100.0,
+    "pass_rate": 100.0,
+    "error_rate": 0.0,
+    "timeout_rate": 0.0,
+    "reliability_score": 100.0,
+    "performance_score": 0,
+    "security_score": 100.0
+  }
+}

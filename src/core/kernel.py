@@ -361,7 +361,7 @@ class AlgoSpaceKernel:
         for matrix_name in ["matrix_30m", "matrix_5m", "matrix_regime"]:
             if matrix_name in self.components:
                 self.event_bus.subscribe(
-                    EventType.INDICATORS_READY, self.components[matrix_name].on_indicators_ready
+                    EventType.INDICATORS_READY, self.components[matrix_name]._on_indicators_ready
                 )
                 logger.info(f"Wired: INDICATORS_READY -> {matrix_name}")
 
