@@ -65,7 +65,7 @@ jobs:
         name: unit-tests
     
     - name: Archive unit test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: unit-test-results
@@ -146,7 +146,7 @@ jobs:
         name: integration-tests
     
     - name: Archive integration test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: integration-test-results
@@ -193,7 +193,7 @@ jobs:
                --junit-xml=junit-performance.xml
     
     - name: Archive performance test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: performance-test-results
@@ -236,7 +236,7 @@ jobs:
                --junit-xml=junit-load.xml
     
     - name: Archive load test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: load-test-results
@@ -285,7 +285,7 @@ jobs:
         safety check --output safety-report.txt || true
     
     - name: Archive security test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-test-results
@@ -329,7 +329,7 @@ jobs:
                --junit-xml=junit-regression.xml
     
     - name: Archive regression test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: regression-test-results
@@ -383,7 +383,7 @@ jobs:
         name: comprehensive-coverage
     
     - name: Archive comprehensive coverage results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: comprehensive-coverage-results
@@ -434,7 +434,7 @@ jobs:
       run: pylint src/ --output-format=json > pylint-report.json || true
     
     - name: Archive quality check results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: quality-check-results
@@ -468,7 +468,7 @@ jobs:
           --output comprehensive-test-report.html
     
     - name: Upload comprehensive test report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: comprehensive-test-report
         path: comprehensive-test-report.html
