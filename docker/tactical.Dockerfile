@@ -2,7 +2,7 @@
 # Optimized for sub-100ms latency with TorchScript JIT compilation
 
 # Build stage - Contains build tools and dependencies
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -41,7 +41,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
         mkl-include
 
 # Production stage - Minimal runtime image
-FROM ubuntu:22.04 AS production
+FROM ubuntu:24.04 AS production
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
