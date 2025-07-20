@@ -1,0 +1,21 @@
+{
+  "demo_info": {
+    "timestamp": "2025-07-20T08:45:59.629637",
+    "data_path": "/home/QuantNova/GrandModel/colab/data/NQ - 30 min - ETH.csv",
+    "results_directory": "/home/QuantNova/GrandModel/results/vectorbt_demo_20250720_084559"
+  },
+  "basic_backtest": {
+    "metrics": {},
+    "signals_count": 0
+  },
+  "optimization": {
+    "best_score": null,
+    "best_params": {},
+    "optimization_time": 0
+  },
+  "performance_validation": {},
+  "file_locations": {
+    "reports": {},
+    "visualizations": {}
+  }
+}

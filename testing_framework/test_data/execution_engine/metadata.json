@@ -1,0 +1,11 @@
+{
+  "generation_time": "2025-07-20T07:17:04.794519",
+  "order_flow_samples": 1000,
+  "latency_samples": 10000,
+  "market_scenarios": [
+    "normal",
+    "volatile",
+    "trending",
+    "choppy"
+  ]
+}

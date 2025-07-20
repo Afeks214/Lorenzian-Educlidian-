@@ -1,0 +1,155 @@
+# Development Environment Configuration
+# GrandModel MARL Trading System - Development Settings
+
+environment:
+  name: "development"
+  debug: true
+  log_level: "DEBUG"
+  performance_monitoring: true
+
+# Data Sources (Development)
+data:
+  market_data:
+    primary_source: "/home/QuantNova/GrandModel/colab/data/"
+    backup_source: "/home/QuantNova/GrandModel/development/data/"
+    cache_enabled: true
+    cache_ttl: 300  # 5 minutes for development
+  
+  databases:
+    host: "localhost"
+    port: 5432
+    database: "grandmodel_dev"
+    username: "${DB_USER}"
+    password: "${DB_PASSWORD}"
+    pool_size: 5
+
+# Strategic MAPPO Configuration (Development)
+strategic:
+  agents:
+    count: 4
+    names: ["MLMI", "NWRQK", "Regime", "Coordinator"]
+    action_space: 5
+    observation_space: 624  # 48x13 matrix flattened
+  
+  training:
+    batch_size: 64
+    learning_rate: 0.0003
+    episodes: 1000
+    max_steps: 500
+    save_interval: 100
+  
+  performance:
+    target_latency_ms: 50
+    memory_limit_mb: 1000
+    cpu_cores: 2
+
+# Tactical MAPPO Configuration (Development)
+tactical:
+  agents:
+    count: 3
+    names: ["Tactical", "Risk", "Execution"]
+    action_space: 5
+    observation_space: 7
+  
+  training:
+    batch_size: 32
+    learning_rate: 0.0005
+    episodes: 500
+    max_steps: 200
+    save_interval: 50
+  
+  performance:
+    target_latency_ms: 100
+    memory_limit_mb: 500
+    gpu_enabled: false  # CPU-only for development
+
+# Risk Management (Development Settings)
+risk:
+  var_calculation:
+    confidence_level: 0.95
+    lookback_days: 30
+    calculation_method: "monte_carlo"
+    mc_iterations: 100  # Reduced for development
+  
+  correlation:
+    ewma_lambda: 0.94
+    shock_threshold: 0.5
+    alert_enabled: true
+    circuit_breaker: false  # Disabled in dev
+  
+  limits:
+    max_position_size: 10000  # Reduced for development
+    max_leverage: 2.0
+    max_concentration: 0.1
+
+# Monitoring & Logging (Development)
+monitoring:
+  metrics:
+    enabled: true
+    export_port: 8080
+    export_path: "/metrics"
+  
+  logging:
+    level: "DEBUG"
+    format: "json"
+    file_path: "/home/QuantNova/GrandModel/development/logs/"
+    max_file_size_mb: 100
+    retention_days: 7
+  
+  alerts:
+    enabled: false  # Disabled in development
+    webhook_url: ""
+
+# Development Tools
+tools:
+  jupyter:
+    enabled: true
+    port: 8888
+    token: "${JUPYTER_TOKEN}"
+  
+  tensorboard:
+    enabled: true
+    port: 6006
+    log_dir: "/home/QuantNova/GrandModel/development/logs/tensorboard"
+  
+  profiling:
+    enabled: true
+    memory_profiler: true
+    line_profiler: true
+
+# Testing Configuration
+testing:
+  unit_tests:
+    coverage_threshold: 80
+    parallel_workers: 2
+  
+  integration_tests:
+    timeout_seconds: 300
+    test_data_size: 1000
+  
+  performance_tests:
+    load_test_duration: 60
+    max_acceptable_latency_ms: 100
+
+# Security (Development)
+security:
+  encryption:
+    enabled: false  # Simplified for development
+    algorithm: "AES-256"
+  
+  authentication:
+    required: false  # Simplified for development
+    token_expiry: 3600
+  
+  rate_limiting:
+    enabled: false
+    requests_per_minute: 1000
+
+# Feature Flags (Development)
+features:
+  quantum_superposition: true
+  mc_dropout_uncertainty: true
+  pettingzoo_integration: true
+  real_time_risk: false  # Simplified for development
+  multi_region: false
+  advanced_analytics: true

@@ -174,6 +174,11 @@ class MatrixAssembler30m(BaseMatrixAssembler):
                     else:
                         processed[i] = hour_cos
                         
+                elif feature_name in ['mmd_pc1', 'mmd_pc2', 'mmd_pc3']:
+                    # MMD components are already normalized by PCA/t-SNE
+                    # Just ensure they're in reasonable range
+                    processed[i] = np.clip(value, -3.0, 3.0)
+                        
                 else:
                     # Default processing for unknown features
                     # Try to use normalizer if available

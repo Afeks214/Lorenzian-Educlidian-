@@ -1,0 +1,22 @@
+{
+  "expected_shape": [
+    500,
+    60,
+    7
+  ],
+  "price_range": [
+    95,
+    105
+  ],
+  "volume_positive": true,
+  "no_nan_values": true,
+  "price_change_range": [
+    -0.1,
+    0.1
+  ],
+  "label_distribution": {
+    "0": 0.35,
+    "1": 0.3,
+    "2": 0.35
+  }
+}

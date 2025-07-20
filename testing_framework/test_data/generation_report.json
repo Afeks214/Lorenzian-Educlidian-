@@ -1,0 +1,175 @@
+{
+  "generation_time": "2025-07-20T07:17:04.981076",
+  "datasets": {
+    "strategic": {
+      "samples": 100,
+      "shape": [
+        48,
+        13
+      ],
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "rsi",
+        "ema",
+        "macd",
+        "bollinger_upper",
+        "bollinger_lower",
+        "atr",
+        "vwap",
+        "momentum"
+      ],
+      "validation": {
+        "data_type": "strategic",
+        "validation_time": "2025-07-20T07:17:04.794539",
+        "passed": false,
+        "checks": {
+          "shape_check": {
+            "expected": [
+              100,
+              48,
+              13
+            ],
+            "actual": [
+              100,
+              48,
+              13
+            ],
+            "passed": true
+          },
+          "nan_check": {
+            "has_nan": false,
+            "passed": true
+          },
+          "price_range_check": {
+            "range": [
+              50,
+              200
+            ],
+            "in_range": false,
+            "passed": false
+          }
+        },
+        "summary": {
+          "total_checks": 3,
+          "passed_checks": 2,
+          "overall_passed": false
+        }
+      }
+    },
+    "tactical": {
+      "samples": 500,
+      "shape": [
+        60,
+        7
+      ],
+      "features": [
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "price_change",
+        "volume_change"
+      ],
+      "validation": {
+        "data_type": "tactical",
+        "validation_time": "2025-07-20T07:17:04.795289",
+        "passed": true,
+        "checks": {
+          "shape_check": {
+            "expected": [
+              500,
+              60,
+              7
+            ],
+            "actual": [
+              500,
+              60,
+              7
+            ],
+            "passed": true
+          },
+          "price_change_check": {
+            "range": [
+              -0.1,
+              0.1
+            ],
+            "in_range": true,
+            "passed": true
+          }
+        },
+        "summary": {
+          "total_checks": 2,
+          "passed_checks": 2,
+          "overall_passed": true
+        }
+      }
+    },
+    "risk_management": {
+      "portfolio_scenarios": 50,
+      "stress_tests": 20,
+      "correlation_matrices": 20,
+      "validation": {
+        "data_type": "risk",
+        "validation_time": "2025-07-20T07:17:04.796684",
+        "passed": true,
+        "checks": {
+          "portfolio_count_check": {
+            "expected": 50,
+            "actual": 50,
+            "passed": true
+          },
+          "var_positive_check": {
+            "all_positive": true,
+            "passed": true
+          }
+        },
+        "summary": {
+          "total_checks": 2,
+          "passed_checks": 2,
+          "overall_passed": true
+        }
+      }
+    },
+    "execution_engine": {
+      "order_flow_samples": 1000,
+      "latency_samples": 10000,
+      "market_scenarios": 100,
+      "validation": {
+        "data_type": "execution",
+        "validation_time": "2025-07-20T07:17:04.796727",
+        "passed": true,
+        "checks": {
+          "order_count_check": {
+            "expected": 1000,
+            "actual": 1000,
+            "passed": true
+          },
+          "latency_check": {
+            "target_microseconds": 500,
+            "within_target_percentage": 0.9179,
+            "passed": true
+          }
+        },
+        "summary": {
+          "total_checks": 2,
+          "passed_checks": 2,
+          "overall_passed": true
+        }
+      }
+    }
+  },
+  "file_locations": {
+    "strategic": "/home/QuantNova/GrandModel/testing_framework/test_data/strategic",
+    "tactical": "/home/QuantNova/GrandModel/testing_framework/test_data/tactical",
+    "risk_management": "/home/QuantNova/GrandModel/testing_framework/test_data/risk_management",
+    "execution_engine": "/home/QuantNova/GrandModel/testing_framework/test_data/execution_engine"
+  },
+  "overall_validation": {
+    "all_passed": false
+  }
+}

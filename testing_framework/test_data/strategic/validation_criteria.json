@@ -1,0 +1,22 @@
+{
+  "expected_shape": [
+    100,
+    48,
+    13
+  ],
+  "price_range": [
+    50,
+    200
+  ],
+  "volume_positive": true,
+  "rsi_range": [
+    0,
+    100
+  ],
+  "no_nan_values": true,
+  "label_distribution": {
+    "0": 0.3,
+    "1": 0.4,
+    "2": 0.3
+  }
+}

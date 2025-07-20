@@ -1,0 +1,149 @@
+{
+  "timestamp": "2025-07-20T07:10:39.274774+00:00",
+  "test_suite": "integration_tests",
+  "tests": {
+    "notebook_execution": {
+      "test_type": "notebook_execution",
+      "timestamp": "2025-07-20T07:10:39.274793+00:00",
+      "terminal_1_results": {
+        "colab/notebooks/risk_management_mappo_training.ipynb": {
+          "status": "success",
+          "cells_count": 25,
+          "code_cells_count": 14
+        },
+        "colab/notebooks/execution_engine_mappo_training.ipynb": {
+          "status": "success",
+          "cells_count": 24,
+          "code_cells_count": 11
+        },
+        "colab/notebooks/xai_trading_explanations_training.ipynb": {
+          "status": "success",
+          "cells_count": 26,
+          "code_cells_count": 12
+        }
+      },
+      "terminal_2_results": {
+        "colab/notebooks/strategic_mappo_training.ipynb": {
+          "status": "success",
+          "cells_count": 12,
+          "code_cells_count": 6
+        },
+        "colab/notebooks/tactical_mappo_training.ipynb": {
+          "status": "success",
+          "cells_count": 32,
+          "code_cells_count": 19
+        }
+      },
+      "overall_status": "success"
+    },
+    "checkpoint_sharing": {
+      "test_type": "checkpoint_sharing",
+      "timestamp": "2025-07-20T07:10:39.283628+00:00",
+      "tests": {
+        "strategic_models": {
+          "directory_exists": true,
+          "is_writable": true,
+          "file_count": 0,
+          "read_write_test": "success"
+        },
+        "tactical_models": {
+          "directory_exists": true,
+          "is_writable": true,
+          "file_count": 0,
+          "read_write_test": "success"
+        },
+        "risk_models": {
+          "directory_exists": true,
+          "is_writable": true,
+          "file_count": 0,
+          "read_write_test": "success"
+        },
+        "execution_models": {
+          "directory_exists": true,
+          "is_writable": true,
+          "file_count": 0,
+          "read_write_test": "success"
+        }
+      },
+      "overall_status": "success"
+    },
+    "configuration_consistency": {
+      "test_type": "configuration_consistency",
+      "timestamp": "2025-07-20T07:10:39.284431+00:00",
+      "tests": {
+        "shared_configs/marl_config.yaml": {
+          "file_exists": true,
+          "readable": true,
+          "valid_yaml": true,
+          "has_required_sections": true,
+          "missing_sections": []
+        },
+        "shared_configs/colab_config.yaml": {
+          "file_exists": true,
+          "readable": true,
+          "valid_yaml": true,
+          "has_required_sections": true,
+          "missing_sections": []
+        },
+        "shared_configs/training_params.yaml": {
+          "file_exists": true,
+          "readable": true,
+          "valid_yaml": true,
+          "has_required_sections": true,
+          "missing_sections": []
+        }
+      },
+      "overall_status": "success"
+    },
+    "terminal_communication": {
+      "test_type": "terminal_communication",
+      "timestamp": "2025-07-20T07:10:39.336565+00:00",
+      "tests": {
+        "terminal_progress/terminal1_status.json": {
+          "file_exists": true,
+          "readable": true,
+          "valid_json": true,
+          "has_required_fields": true,
+          "missing_fields": []
+        },
+        "terminal_progress/terminal2_status.json": {
+          "file_exists": true,
+          "readable": true,
+          "valid_json": true,
+          "has_required_fields": true,
+          "missing_fields": []
+        },
+        "terminal_progress/shared_milestones.json": {
+          "file_exists": true,
+          "readable": true,
+          "valid_json": true,
+          "has_required_fields": true,
+          "missing_fields": []
+        },
+        "script_scripts/update_terminal1_status.py": {
+          "file_exists": true,
+          "executable": true,
+          "syntax_valid": true
+        },
+        "script_scripts/update_terminal2_status.py": {
+          "file_exists": true,
+          "executable": true,
+          "syntax_valid": true
+        },
+        "script_scripts/sync_milestones.py": {
+          "file_exists": true,
+          "executable": false,
+          "syntax_valid": true
+        },
+        "script_scripts/check_dependencies.py": {
+          "file_exists": true,
+          "executable": false,
+          "syntax_valid": true
+        }
+      },
+      "overall_status": "success"
+    }
+  },
+  "overall_status": "success",
+  "success_rate": 1.0
+}

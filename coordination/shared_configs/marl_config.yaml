@@ -1,0 +1,156 @@
+# SHARED MARL CONFIGURATION FOR TERMINAL COORDINATION
+# Version: 1.0
+# Last Updated: 2025-07-20
+
+# Global MARL System Configuration
+global_config:
+  project_name: "GrandModel_MARL_System"
+  version: "1.0.0"
+  environment: "development"
+  coordination_mode: "dual_terminal"
+  
+# Agent Configuration
+agents:
+  strategic_agent:
+    terminal_owner: "terminal_2"
+    model_type: "MAPPO"
+    observation_space: 512
+    action_space: 64
+    hidden_dims: [512, 256, 128]
+    learning_rate: 3e-4
+    batch_size: 256
+    buffer_size: 100000
+    training_frequency: 10
+    checkpoint_frequency: 1000
+    
+  tactical_agent:
+    terminal_owner: "terminal_2"
+    model_type: "MAPPO"
+    observation_space: 256
+    action_space: 32
+    hidden_dims: [256, 128, 64]
+    learning_rate: 5e-4
+    batch_size: 128
+    buffer_size: 50000
+    training_frequency: 5
+    checkpoint_frequency: 500
+    
+  risk_management_agent:
+    terminal_owner: "terminal_1"
+    model_type: "MAPPO"
+    observation_space: 128
+    action_space: 16
+    hidden_dims: [128, 64, 32]
+    learning_rate: 1e-3
+    batch_size: 64
+    buffer_size: 25000
+    training_frequency: 2
+    checkpoint_frequency: 250
+    
+  execution_engine_agent:
+    terminal_owner: "terminal_1"
+    model_type: "MAPPO"
+    observation_space: 64
+    action_space: 8
+    hidden_dims: [64, 32, 16]
+    learning_rate: 1e-3
+    batch_size: 32
+    buffer_size: 10000
+    training_frequency: 1
+    checkpoint_frequency: 100
+    
+  xai_explanations_agent:
+    terminal_owner: "terminal_1"
+    model_type: "MAPPO"
+    observation_space: 256
+    action_space: 128
+    hidden_dims: [256, 128, 64]
+    learning_rate: 5e-4
+    batch_size: 128
+    buffer_size: 50000
+    training_frequency: 5
+    checkpoint_frequency: 500
+
+# Centralized Critic Configuration
+centralized_critic:
+  observation_space: 1216  # Sum of all agent observation spaces
+  hidden_dims: [1024, 512, 256]
+  learning_rate: 3e-4
+  target_update_frequency: 100
+  polyak_averaging_factor: 0.005
+
+# Training Configuration
+training:
+  max_episodes: 10000
+  max_steps_per_episode: 1000
+  evaluation_frequency: 500
+  early_stopping_patience: 1000
+  convergence_threshold: 0.001
+  
+  # Shared training schedules
+  terminal_1_schedule:
+    start_time: "2025-07-20T08:00:00Z"
+    duration_hours: 8
+    agents: ["risk_management_agent", "execution_engine_agent", "xai_explanations_agent"]
+    
+  terminal_2_schedule:
+    start_time: "2025-07-20T08:00:00Z" 
+    duration_hours: 8
+    agents: ["strategic_agent", "tactical_agent"]
+
+# Coordination Protocol
+coordination:
+  communication_protocol: "file_based"
+  sync_frequency_minutes: 30
+  checkpoint_sharing: true
+  dependency_resolution: "blocking_wait"
+  conflict_resolution: "first_writer_wins"
+  
+  # Shared checkpoint paths
+  checkpoint_paths:
+    strategic_models: "/home/QuantNova/GrandModel/coordination/shared_checkpoints/strategic_models"
+    tactical_models: "/home/QuantNova/GrandModel/coordination/shared_checkpoints/tactical_models"
+    risk_models: "/home/QuantNova/GrandModel/coordination/shared_checkpoints/risk_models"
+    execution_models: "/home/QuantNova/GrandModel/coordination/shared_checkpoints/execution_models"
+
+# Environment Configuration
+environment:
+  market_data_path: "/home/QuantNova/GrandModel/data/prepared"
+  observation_window: 100
+  prediction_horizon: 10
+  trading_frequency: "5min"
+  
+# Resource Management
+resources:
+  gpu_memory_limit_gb: 15
+  cpu_cores: 8
+  disk_space_gb: 100
+  network_bandwidth_mbps: 1000
+  
+  # Resource allocation by terminal
+  terminal_1_allocation:
+    gpu_memory_gb: 8
+    cpu_cores: 4
+    priority: "high"
+    
+  terminal_2_allocation:
+    gpu_memory_gb: 7
+    cpu_cores: 4
+    priority: "high"
+
+# Logging and Monitoring
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_path: "/home/QuantNova/GrandModel/coordination/documentation/progress_logs"
+  rotation_size_mb: 100
+  backup_count: 5
+  
+monitoring:
+  metrics_collection: true
+  performance_tracking: true
+  resource_monitoring: true
+  alert_thresholds:
+    gpu_memory_usage: 0.9
+    cpu_usage: 0.8
+    training_loss_threshold: 10.0

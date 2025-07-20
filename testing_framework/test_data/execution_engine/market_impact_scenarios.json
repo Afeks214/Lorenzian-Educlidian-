@@ -1,0 +1,1002 @@
+[
+  {
+    "scenario_id": "normal_impact_00",
+    "market_scenario": "normal",
+    "order_size": 2665.3055970395544,
+    "market_depth": 71276.33116148095,
+    "volatility": 0.3582701115056838,
+    "expected_impact": 0.008576967098346669,
+    "actual_impact": 0.00622651628372361,
+    "execution_shortfall": -0.0025595822168721738
+  },
+  {
+    "scenario_id": "normal_impact_01",
+    "market_scenario": "normal",
+    "order_size": 2761.3542043174452,
+    "market_depth": 74140.58282298293,
+    "volatility": 0.23195407068379673,
+    "expected_impact": 0.009632637272422855,
+    "actual_impact": 0.007592871180995893,
+    "execution_shortfall": -0.0014937587777412468
+  },
+  {
+    "scenario_id": "normal_impact_02",
+    "market_scenario": "normal",
+    "order_size": 3644.5929195527056,
+    "market_depth": 66304.3413309177,
+    "volatility": 0.3684931126378672,
+    "expected_impact": 0.0013183761861115704,
+    "actual_impact": 0.0010465889511587817,
+    "execution_shortfall": -0.002140084793943474
+  },
+  {
+    "scenario_id": "normal_impact_03",
+    "market_scenario": "normal",
+    "order_size": 449.0967682977847,
+    "market_depth": 42241.2457121148,
+    "volatility": 0.4081796695261165,
+    "expected_impact": 0.00777437802101681,
+    "actual_impact": 0.004012767032264675,
+    "execution_shortfall": 0.0002926060776691582
+  },
+  {
+    "scenario_id": "normal_impact_04",
+    "market_scenario": "normal",
+    "order_size": 8652.137510639259,
+    "market_depth": 46529.59241842143,
+    "volatility": 0.41973281825915676,
+    "expected_impact": 0.005779168607233901,
+    "actual_impact": 0.008272782741130417,
+    "execution_shortfall": -0.0009117764130194767
+  },
+  {
+    "scenario_id": "normal_impact_05",
+    "market_scenario": "normal",
+    "order_size": 7090.761608984379,
+    "market_depth": 64965.142255736566,
+    "volatility": 0.43086303240689927,
+    "expected_impact": 0.009639094218134425,
+    "actual_impact": 0.001607158412963099,
+    "execution_shortfall": 0.0025192198034506294
+  },
+  {
+    "scenario_id": "normal_impact_06",
+    "market_scenario": "normal",
+    "order_size": 6219.72196862965,
+    "market_depth": 87215.79521595314,
+    "volatility": 0.2528286126563758,
+    "expected_impact": 0.008736634480559363,
+    "actual_impact": 0.0023108026984762628,
+    "execution_shortfall": -0.0014064088906519385
+  },
+  {
+    "scenario_id": "normal_impact_07",
+    "market_scenario": "normal",
+    "order_size": 8255.792846294062,
+    "market_depth": 76742.96592275614,
+    "volatility": 0.4292144557341535,
+    "expected_impact": 0.008910953750944146,
+    "actual_impact": 0.0027441437230546293,
+    "execution_shortfall": 0.0011611214188519826
+  },
+  {
+    "scenario_id": "normal_impact_08",
+    "market_scenario": "normal",
+    "order_size": 6051.073160910676,
+    "market_depth": 45472.24187366758,
+    "volatility": 0.152994230240579,
+    "expected_impact": 0.008541566506967118,
+    "actual_impact": 0.00950142271357499,
+    "execution_shortfall": -0.0007574913962160089
+  },
+  {
+    "scenario_id": "normal_impact_09",
+    "market_scenario": "normal",
+    "order_size": 6915.803048305938,
+    "market_depth": 86127.66679103194,
+    "volatility": 0.3047644301362545,
+    "expected_impact": 0.0073816878947874,
+    "actual_impact": 0.002146795684866809,
+    "execution_shortfall": 0.00026758942808481796
+  },
+  {
+    "scenario_id": "normal_impact_10",
+    "market_scenario": "normal",
+    "order_size": 2781.5559772162133,
+    "market_depth": 10731.877243407827,
+    "volatility": 0.46289538675692266,
+    "expected_impact": 0.006338035903482945,
+    "actual_impact": 0.005364089415280592,
+    "execution_shortfall": -0.004999849333534415
+  },
+  {
+    "scenario_id": "normal_impact_11",
+    "market_scenario": "normal",
+    "order_size": 6345.398606769191,
+    "market_depth": 59873.307042077824,
+    "volatility": 0.40026041416472646,
+    "expected_impact": 0.0023945408096723007,
+    "actual_impact": 0.008314344869237659,
+    "execution_shortfall": 0.0005699394474156574
+  },
+  {
+    "scenario_id": "normal_impact_12",
+    "market_scenario": "normal",
+    "order_size": 3878.174549835881,
+    "market_depth": 73889.12654527271,
+    "volatility": 0.1893169691468232,
+    "expected_impact": 0.00955881870712776,
+    "actual_impact": 0.005359020009662059,
+    "execution_shortfall": 0.0023159568426531336
+  },
+  {
+    "scenario_id": "normal_impact_13",
+    "market_scenario": "normal",
+    "order_size": 3173.3672585613454,
+    "market_depth": 50433.71814965605,
+    "volatility": 0.1273822165474889,
+    "expected_impact": 0.003337900802438836,
+    "actual_impact": 0.008695075070306037,
+    "execution_shortfall": 0.002072974427876585
+  },
+  {
+    "scenario_id": "normal_impact_14",
+    "market_scenario": "normal",
+    "order_size": 700.5241581762496,
+    "market_depth": 46790.179754610544,
+    "volatility": 0.24913675519290623,
+    "expected_impact": 0.004072187262831131,
+    "actual_impact": 0.008707594646588422,
+    "execution_shortfall": 0.00039604750389652727
+  },
+  {
+    "scenario_id": "normal_impact_15",
+    "market_scenario": "normal",
+    "order_size": 4669.505913636715,
+    "market_depth": 86715.37927953382,
+    "volatility": 0.1626382529313382,
+    "expected_impact": 0.0036622904053597223,
+    "actual_impact": 0.006750834997698041,
+    "execution_shortfall": -0.0020660562801683726
+  },
+  {
+    "scenario_id": "normal_impact_16",
+    "market_scenario": "normal",
+    "order_size": 1378.069066174388,
+    "market_depth": 29717.268501895353,
+    "volatility": 0.39860187809782965,
+    "expected_impact": 0.006303927308127207,
+    "actual_impact": 0.009441279917253548,
+    "execution_shortfall": 0.004051190163572989
+  },
+  {
+    "scenario_id": "normal_impact_17",
+    "market_scenario": "normal",
+    "order_size": 2513.903971723084,
+    "market_depth": 48179.992689207145,
+    "volatility": 0.4503480066372122,
+    "expected_impact": 0.006002536625791363,
+    "actual_impact": 0.007792873915765366,
+    "execution_shortfall": -0.000303185610664794
+  },
+  {
+    "scenario_id": "normal_impact_18",
+    "market_scenario": "normal",
+    "order_size": 3449.7028455747986,
+    "market_depth": 38070.98998619311,
+    "volatility": 0.4533387539165702,
+    "expected_impact": 0.005245903400647191,
+    "actual_impact": 0.009604072176066628,
+    "execution_shortfall": 0.0026868088462685315
+  },
+  {
+    "scenario_id": "normal_impact_19",
+    "market_scenario": "normal",
+    "order_size": 109.11013831140785,
+    "market_depth": 81664.20197875172,
+    "volatility": 0.2053237882044243,
+    "expected_impact": 0.0077102783342179425,
+    "actual_impact": 0.009183321390918452,
+    "execution_shortfall": 0.003193954632889532
+  },
+  {
+    "scenario_id": "normal_impact_20",
+    "market_scenario": "normal",
+    "order_size": 2094.6562363688263,
+    "market_depth": 47082.88824160257,
+    "volatility": 0.3076891581324411,
+    "expected_impact": 0.009553521316113773,
+    "actual_impact": 0.005637969607408106,
+    "execution_shortfall": -7.997608243906466e-05
+  },
+  {
+    "scenario_id": "normal_impact_21",
+    "market_scenario": "normal",
+    "order_size": 2128.1373918896297,
+    "market_depth": 27508.908342793253,
+    "volatility": 0.23259561828919623,
+    "expected_impact": 0.004884264867324555,
+    "actual_impact": 0.007769272399335158,
+    "execution_shortfall": 0.0018613264852594723
+  },
+  {
+    "scenario_id": "normal_impact_22",
+    "market_scenario": "normal",
+    "order_size": 7623.676561345187,
+    "market_depth": 79465.31472699203,
+    "volatility": 0.28045902229835773,
+    "expected_impact": 0.002660674625400659,
+    "actual_impact": 0.0022208056966562233,
+    "execution_shortfall": 8.672341993005196e-05
+  },
+  {
+    "scenario_id": "normal_impact_23",
+    "market_scenario": "normal",
+    "order_size": 6860.482138093813,
+    "market_depth": 56569.01036918571,
+    "volatility": 0.13705724390805282,
+    "expected_impact": 0.0016641992947333728,
+    "actual_impact": 0.00960706501972728,
+    "execution_shortfall": 0.0005748205186969272
+  },
+  {
+    "scenario_id": "normal_impact_24",
+    "market_scenario": "normal",
+    "order_size": 320.5299754255972,
+    "market_depth": 20211.45548471687,
+    "volatility": 0.22344371819740128,
+    "expected_impact": 0.006372460909491993,
+    "actual_impact": 0.005713401961704684,
+    "execution_shortfall": 2.800629720036804e-05
+  },
+  {
+    "scenario_id": "volatile_impact_00",
+    "market_scenario": "volatile",
+    "order_size": 8856.16290985675,
+    "market_depth": 39427.03636026653,
+    "volatility": 0.44765734237377874,
+    "expected_impact": 0.005185385199508776,
+    "actual_impact": 0.009692388536664692,
+    "execution_shortfall": -0.0034172605551427426
+  },
+  {
+    "scenario_id": "volatile_impact_01",
+    "market_scenario": "volatile",
+    "order_size": 7059.165233831417,
+    "market_depth": 68935.92028405238,
+    "volatility": 0.22441434985536796,
+    "expected_impact": 0.009177735459112778,
+    "actual_impact": 0.008394876865194582,
+    "execution_shortfall": 0.0006071783454306193
+  },
+  {
+    "scenario_id": "volatile_impact_02",
+    "market_scenario": "volatile",
+    "order_size": 8398.193780084019,
+    "market_depth": 25459.620944423325,
+    "volatility": 0.2455217363489109,
+    "expected_impact": 0.0036302120082463123,
+    "actual_impact": 0.0073722050992596514,
+    "execution_shortfall": 0.0007194500229900079
+  },
+  {
+    "scenario_id": "volatile_impact_03",
+    "market_scenario": "volatile",
+    "order_size": 6663.7698388436465,
+    "market_depth": 67598.00148698094,
+    "volatility": 0.2302760144895356,
+    "expected_impact": 0.00932297894351863,
+    "actual_impact": 0.008528912172946733,
+    "execution_shortfall": 0.001292407633187496
+  },
+  {
+    "scenario_id": "volatile_impact_04",
+    "market_scenario": "volatile",
+    "order_size": 3242.4973736257093,
+    "market_depth": 48098.14868521182,
+    "volatility": 0.47777927868202086,
+    "expected_impact": 0.004136071254951187,
+    "actual_impact": 0.004600789370313999,
+    "execution_shortfall": 6.765427533809785e-05
+  },
+  {
+    "scenario_id": "volatile_impact_05",
+    "market_scenario": "volatile",
+    "order_size": 2745.7008627141245,
+    "market_depth": 95285.13940295226,
+    "volatility": 0.41323926736093175,
+    "expected_impact": 0.003090772416396346,
+    "actual_impact": 0.00644858173594807,
+    "execution_shortfall": -0.0005509023305648453
+  },
+  {
+    "scenario_id": "volatile_impact_06",
+    "market_scenario": "volatile",
+    "order_size": 9519.398236783307,
+    "market_depth": 58671.65738185544,
+    "volatility": 0.43558939026823573,
+    "expected_impact": 0.00777290398170077,
+    "actual_impact": 0.007759310068319918,
+    "execution_shortfall": -0.004080219817104769
+  },
+  {
+    "scenario_id": "volatile_impact_07",
+    "market_scenario": "volatile",
+    "order_size": 7654.828980531293,
+    "market_depth": 83140.74488266658,
+    "volatility": 0.15405947264223996,
+    "expected_impact": 0.001008681291821072,
+    "actual_impact": 0.0021901609201132616,
+    "execution_shortfall": 0.0010484595555933355
+  },
+  {
+    "scenario_id": "volatile_impact_08",
+    "market_scenario": "volatile",
+    "order_size": 1175.7412907769083,
+    "market_depth": 60069.86467283653,
+    "volatility": 0.3422419346036263,
+    "expected_impact": 0.005837334603589167,
+    "actual_impact": 0.005152206533732748,
+    "execution_shortfall": -0.00021182281193287488
+  },
+  {
+    "scenario_id": "volatile_impact_09",
+    "market_scenario": "volatile",
+    "order_size": 4907.823771761696,
+    "market_depth": 44938.60409530058,
+    "volatility": 0.2597349952340112,
+    "expected_impact": 0.00460816109556853,
+    "actual_impact": 0.007213298912528431,
+    "execution_shortfall": 0.002217555497354562
+  },
+  {
+    "scenario_id": "volatile_impact_10",
+    "market_scenario": "volatile",
+    "order_size": 8335.831085468153,
+    "market_depth": 91094.72230310323,
+    "volatility": 0.37059410740493415,
+    "expected_impact": 0.006160748564212101,
+    "actual_impact": 0.006848318324916961,
+    "execution_shortfall": -0.0011458748712575983
+  },
+  {
+    "scenario_id": "volatile_impact_11",
+    "market_scenario": "volatile",
+    "order_size": 2676.541210585442,
+    "market_depth": 64346.688759770615,
+    "volatility": 0.4956771486194663,
+    "expected_impact": 0.006685781108819995,
+    "actual_impact": 0.005467357739828461,
+    "execution_shortfall": 0.0020326300954431648
+  },
+  {
+    "scenario_id": "volatile_impact_12",
+    "market_scenario": "volatile",
+    "order_size": 6524.382750446542,
+    "market_depth": 80971.64401383017,
+    "volatility": 0.3359288787753779,
+    "expected_impact": 0.008486614643405561,
+    "actual_impact": 0.009682485285954393,
+    "execution_shortfall": -0.0034058976508721827
+  },
+  {
+    "scenario_id": "volatile_impact_13",
+    "market_scenario": "volatile",
+    "order_size": 3621.9378816398616,
+    "market_depth": 29235.36515872796,
+    "volatility": 0.45634363934957145,
+    "expected_impact": 0.0038031978210555065,
+    "actual_impact": 0.001414627584900662,
+    "execution_shortfall": -0.0035394410189568096
+  },
+  {
+    "scenario_id": "volatile_impact_14",
+    "market_scenario": "volatile",
+    "order_size": 6846.717935711567,
+    "market_depth": 69485.77588792896,
+    "volatility": 0.42078366088052677,
+    "expected_impact": 0.0010567107359566634,
+    "actual_impact": 0.0016343508694742488,
+    "execution_shortfall": -0.0026611449829332763
+  },
+  {
+    "scenario_id": "volatile_impact_15",
+    "market_scenario": "volatile",
+    "order_size": 5868.735493851783,
+    "market_depth": 60229.019660804006,
+    "volatility": 0.4251851354163485,
+    "expected_impact": 0.009019657774076373,
+    "actual_impact": 0.005218858893304057,
+    "execution_shortfall": 0.0002615435700447004
+  },
+  {
+    "scenario_id": "volatile_impact_16",
+    "market_scenario": "volatile",
+    "order_size": 3271.107855812057,
+    "market_depth": 50039.65809927852,
+    "volatility": 0.21856128140408582,
+    "expected_impact": 0.0019009951895236953,
+    "actual_impact": 0.0062463603170785816,
+    "execution_shortfall": 0.0020537047722041426
+  },
+  {
+    "scenario_id": "volatile_impact_17",
+    "market_scenario": "volatile",
+    "order_size": 8655.054815502173,
+    "market_depth": 68718.73288830888,
+    "volatility": 0.14919369284494596,
+    "expected_impact": 0.00845577146866393,
+    "actual_impact": 0.00203397016998671,
+    "execution_shortfall": 0.0022759214765833923
+  },
+  {
+    "scenario_id": "volatile_impact_18",
+    "market_scenario": "volatile",
+    "order_size": 2587.3693712031136,
+    "market_depth": 33380.14867528198,
+    "volatility": 0.23493207664827934,
+    "expected_impact": 0.006291543772295736,
+    "actual_impact": 0.007442214469686525,
+    "execution_shortfall": -0.0033438851098722337
+  },
+  {
+    "scenario_id": "volatile_impact_19",
+    "market_scenario": "volatile",
+    "order_size": 761.7311771545772,
+    "market_depth": 50169.220715959,
+    "volatility": 0.18572877239922023,
+    "expected_impact": 0.004150757184545655,
+    "actual_impact": 0.0069362226422729585,
+    "execution_shortfall": -0.001665611600610895
+  },
+  {
+    "scenario_id": "volatile_impact_20",
+    "market_scenario": "volatile",
+    "order_size": 5492.514203909863,
+    "market_depth": 85924.63354885805,
+    "volatility": 0.3031037204969389,
+    "expected_impact": 0.0024935516879611543,
+    "actual_impact": 0.004987788678025097,
+    "execution_shortfall": 0.0003464683919706501
+  },
+  {
+    "scenario_id": "volatile_impact_21",
+    "market_scenario": "volatile",
+    "order_size": 2105.8008427867703,
+    "market_depth": 98149.01661154164,
+    "volatility": 0.3582653771243788,
+    "expected_impact": 0.0012547500717473574,
+    "actual_impact": 0.0013231657550584147,
+    "execution_shortfall": 0.0017426483878973103
+  },
+  {
+    "scenario_id": "volatile_impact_22",
+    "market_scenario": "volatile",
+    "order_size": 6240.676826744922,
+    "market_depth": 40701.31834356948,
+    "volatility": 0.11781563941764835,
+    "expected_impact": 0.008533520493969191,
+    "actual_impact": 0.007791529054979678,
+    "execution_shortfall": -0.0004882448720875885
+  },
+  {
+    "scenario_id": "volatile_impact_23",
+    "market_scenario": "volatile",
+    "order_size": 9555.527980902603,
+    "market_depth": 25780.09831259855,
+    "volatility": 0.11986426689492578,
+    "expected_impact": 0.004586464614610441,
+    "actual_impact": 0.0021595202615744156,
+    "execution_shortfall": -0.0016426844213358663
+  },
+  {
+    "scenario_id": "volatile_impact_24",
+    "market_scenario": "volatile",
+    "order_size": 6533.16363531152,
+    "market_depth": 56363.0644507794,
+    "volatility": 0.3921698091414033,
+    "expected_impact": 0.008359658854320703,
+    "actual_impact": 0.006108165411303849,
+    "execution_shortfall": 0.0012565361782802772
+  },
+  {
+    "scenario_id": "trending_impact_00",
+    "market_scenario": "trending",
+    "order_size": 9508.777408792519,
+    "market_depth": 71704.88260269554,
+    "volatility": 0.40473348769638195,
+    "expected_impact": 0.0022780869169809438,
+    "actual_impact": 0.001647792102931942,
+    "execution_shortfall": 0.0015423757441623465
+  },
+  {
+    "scenario_id": "trending_impact_01",
+    "market_scenario": "trending",
+    "order_size": 3839.3313579078913,
+    "market_depth": 43382.60212478631,
+    "volatility": 0.27917358155001004,
+    "expected_impact": 0.00450101674734441,
+    "actual_impact": 0.006031159709574218,
+    "execution_shortfall": -0.0008316166952296718
+  },
+  {
+    "scenario_id": "trending_impact_02",
+    "market_scenario": "trending",
+    "order_size": 4034.826144645308,
+    "market_depth": 79709.47641669163,
+    "volatility": 0.24707137567906448,
+    "expected_impact": 0.002394761377519457,
+    "actual_impact": 0.006996404528435383,
+    "execution_shortfall": 0.0022921368368915692
+  },
+  {
+    "scenario_id": "trending_impact_03",
+    "market_scenario": "trending",
+    "order_size": 9184.178333481397,
+    "market_depth": 56286.488589014974,
+    "volatility": 0.2758265746183777,
+    "expected_impact": 0.007877553783924789,
+    "actual_impact": 0.007068703820368519,
+    "execution_shortfall": -0.0011544810156942202
+  },
+  {
+    "scenario_id": "trending_impact_04",
+    "market_scenario": "trending",
+    "order_size": 8883.121088951062,
+    "market_depth": 39679.06219417458,
+    "volatility": 0.4237150052095864,
+    "expected_impact": 0.006995449460146907,
+    "actual_impact": 0.0040735453941027795,
+    "execution_shortfall": -0.0019541885296577104
+  },
+  {
+    "scenario_id": "trending_impact_05",
+    "market_scenario": "trending",
+    "order_size": 8589.197772043683,
+    "market_depth": 24858.845850821803,
+    "volatility": 0.12003941429572151,
+    "expected_impact": 0.008777551435587064,
+    "actual_impact": 0.0029331394619618676,
+    "execution_shortfall": 0.0018387952244234564
+  },
+  {
+    "scenario_id": "trending_impact_06",
+    "market_scenario": "trending",
+    "order_size": 4004.909714304691,
+    "market_depth": 38434.894609530296,
+    "volatility": 0.22134288809955005,
+    "expected_impact": 0.009925723975760636,
+    "actual_impact": 0.004111706179217307,
+    "execution_shortfall": -0.002914963021204932
+  },
+  {
+    "scenario_id": "trending_impact_07",
+    "market_scenario": "trending",
+    "order_size": 8685.080331037903,
+    "market_depth": 29662.10654456929,
+    "volatility": 0.10664324703696618,
+    "expected_impact": 0.00857665416402374,
+    "actual_impact": 0.007442905797696211,
+    "execution_shortfall": 0.0010890794659814918
+  },
+  {
+    "scenario_id": "trending_impact_08",
+    "market_scenario": "trending",
+    "order_size": 8219.096593918955,
+    "market_depth": 73246.77716574233,
+    "volatility": 0.21170440104772942,
+    "expected_impact": 0.004414779581451771,
+    "actual_impact": 0.005490823445104008,
+    "execution_shortfall": -0.0008040392620160986
+  },
+  {
+    "scenario_id": "trending_impact_09",
+    "market_scenario": "trending",
+    "order_size": 5989.150465691902,
+    "market_depth": 19189.605384564777,
+    "volatility": 0.4746670472766772,
+    "expected_impact": 0.007576586120096972,
+    "actual_impact": 0.0015487660619714109,
+    "execution_shortfall": -0.001398895728124208
+  },
+  {
+    "scenario_id": "trending_impact_10",
+    "market_scenario": "trending",
+    "order_size": 155.36744174577967,
+    "market_depth": 33609.857693552956,
+    "volatility": 0.25258190466113584,
+    "expected_impact": 0.003114969153788635,
+    "actual_impact": 0.00827728742767734,
+    "execution_shortfall": -0.0009217586766764899
+  },
+  {
+    "scenario_id": "trending_impact_11",
+    "market_scenario": "trending",
+    "order_size": 2771.645537401379,
+    "market_depth": 82980.57855320552,
+    "volatility": 0.26081158682709227,
+    "expected_impact": 0.002627497925821495,
+    "actual_impact": 0.009613194919963174,
+    "execution_shortfall": -0.0015337917563748393
+  },
+  {
+    "scenario_id": "trending_impact_12",
+    "market_scenario": "trending",
+    "order_size": 5786.399602941738,
+    "market_depth": 73678.31097550415,
+    "volatility": 0.3273221222153602,
+    "expected_impact": 0.008232099422007186,
+    "actual_impact": 0.00593265667214708,
+    "execution_shortfall": 0.0015019330087464703
+  },
+  {
+    "scenario_id": "trending_impact_13",
+    "market_scenario": "trending",
+    "order_size": 9996.002700889814,
+    "market_depth": 99460.09796267042,
+    "volatility": 0.11254379455507016,
+    "expected_impact": 0.0019217564179334424,
+    "actual_impact": 0.003690139585250913,
+    "execution_shortfall": -0.0019918866015804413
+  },
+  {
+    "scenario_id": "trending_impact_14",
+    "market_scenario": "trending",
+    "order_size": 3006.2225228421858,
+    "market_depth": 71904.5004276126,
+    "volatility": 0.4601542109128238,
+    "expected_impact": 0.0024284257331973883,
+    "actual_impact": 0.009778036468854154,
+    "execution_shortfall": -0.0025409625034907555
+  },
+  {
+    "scenario_id": "trending_impact_15",
+    "market_scenario": "trending",
+    "order_size": 252.4241971687009,
+    "market_depth": 40574.74564095319,
+    "volatility": 0.15628671341982525,
+    "expected_impact": 0.003962968405222821,
+    "actual_impact": 0.004492784075993865,
+    "execution_shortfall": 0.0016539809307321476
+  },
+  {
+    "scenario_id": "trending_impact_16",
+    "market_scenario": "trending",
+    "order_size": 2577.9657602813613,
+    "market_depth": 91652.90340969509,
+    "volatility": 0.4647124033749115,
+    "expected_impact": 0.007103672962589541,
+    "actual_impact": 0.005683088666832522,
+    "execution_shortfall": -0.0018823726853165138
+  },
+  {
+    "scenario_id": "trending_impact_17",
+    "market_scenario": "trending",
+    "order_size": 7974.207623750628,
+    "market_depth": 86226.76848958396,
+    "volatility": 0.37284199941826435,
+    "expected_impact": 0.006579694847992657,
+    "actual_impact": 0.002141025904351572,
+    "execution_shortfall": 0.0008352115490139204
+  },
+  {
+    "scenario_id": "trending_impact_18",
+    "market_scenario": "trending",
+    "order_size": 5126.764862197665,
+    "market_depth": 47065.98447512117,
+    "volatility": 0.2559295253558437,
+    "expected_impact": 0.004296383834257136,
+    "actual_impact": 0.009809297471427975,
+    "execution_shortfall": -0.0017613044117146817
+  },
+  {
+    "scenario_id": "trending_impact_19",
+    "market_scenario": "trending",
+    "order_size": 8658.840728327126,
+    "market_depth": 85271.85019799964,
+    "volatility": 0.4207582567955711,
+    "expected_impact": 0.007470436170459183,
+    "actual_impact": 0.0015585578908744921,
+    "execution_shortfall": 0.0003556442775643644
+  },
+  {
+    "scenario_id": "trending_impact_20",
+    "market_scenario": "trending",
+    "order_size": 4540.868310843012,
+    "market_depth": 21254.237653311906,
+    "volatility": 0.42426178495304234,
+    "expected_impact": 0.002494667049394718,
+    "actual_impact": 0.0070015710849613945,
+    "execution_shortfall": -0.000943356705119127
+  },
+  {
+    "scenario_id": "trending_impact_21",
+    "market_scenario": "trending",
+    "order_size": 1812.143689892889,
+    "market_depth": 33559.322361739374,
+    "volatility": 0.12271745782842292,
+    "expected_impact": 0.005308210580269402,
+    "actual_impact": 0.006777579674364905,
+    "execution_shortfall": -0.0009405718448470172
+  },
+  {
+    "scenario_id": "trending_impact_22",
+    "market_scenario": "trending",
+    "order_size": 5239.288498109249,
+    "market_depth": 70779.41533144144,
+    "volatility": 0.33688024980468145,
+    "expected_impact": 0.003830459273093874,
+    "actual_impact": 0.0020372494544357743,
+    "execution_shortfall": 0.00036515163139728073
+  },
+  {
+    "scenario_id": "trending_impact_23",
+    "market_scenario": "trending",
+    "order_size": 2849.3244132749965,
+    "market_depth": 24228.628628352428,
+    "volatility": 0.36037973029913495,
+    "expected_impact": 0.004982870078868538,
+    "actual_impact": 0.0041553756250436195,
+    "execution_shortfall": -4.314018637415207e-05
+  },
+  {
+    "scenario_id": "trending_impact_24",
+    "market_scenario": "trending",
+    "order_size": 9250.654224276996,
+    "market_depth": 10870.629870467488,
+    "volatility": 0.2834436284703039,
+    "expected_impact": 0.001725141919730618,
+    "actual_impact": 0.008670057766682778,
+    "execution_shortfall": 0.00039719999398031916
+  },
+  {
+    "scenario_id": "choppy_impact_00",
+    "market_scenario": "choppy",
+    "order_size": 7577.170627609604,
+    "market_depth": 52567.49680757801,
+    "volatility": 0.493504634909431,
+    "expected_impact": 0.00828725357304019,
+    "actual_impact": 0.005559491654636866,
+    "execution_shortfall": -0.0019357030467514443
+  },
+  {
+    "scenario_id": "choppy_impact_01",
+    "market_scenario": "choppy",
+    "order_size": 4036.0099343879465,
+    "market_depth": 54647.970712697286,
+    "volatility": 0.4863673448949536,
+    "expected_impact": 0.0030573484134243673,
+    "actual_impact": 0.008272826197356328,
+    "execution_shortfall": 0.003095101678185586
+  },
+  {
+    "scenario_id": "choppy_impact_02",
+    "market_scenario": "choppy",
+    "order_size": 5265.180051572692,
+    "market_depth": 17042.78994113986,
+    "volatility": 0.25723058071353894,
+    "expected_impact": 0.009774934709190476,
+    "actual_impact": 0.005146939992444912,
+    "execution_shortfall": -0.0007193587257057287
+  },
+  {
+    "scenario_id": "choppy_impact_03",
+    "market_scenario": "choppy",
+    "order_size": 1870.7648982035523,
+    "market_depth": 62211.808790644514,
+    "volatility": 0.4708238998354015,
+    "expected_impact": 0.006011188509307973,
+    "actual_impact": 0.0061633133951387595,
+    "execution_shortfall": -0.0014465279048432472
+  },
+  {
+    "scenario_id": "choppy_impact_04",
+    "market_scenario": "choppy",
+    "order_size": 4595.640859369919,
+    "market_depth": 96814.32288146776,
+    "volatility": 0.49832877021577315,
+    "expected_impact": 0.005660914475746888,
+    "actual_impact": 0.00430368852321112,
+    "execution_shortfall": -0.00034908000905668865
+  },
+  {
+    "scenario_id": "choppy_impact_05",
+    "market_scenario": "choppy",
+    "order_size": 9921.225095531214,
+    "market_depth": 84114.14087579188,
+    "volatility": 0.3239033249621602,
+    "expected_impact": 0.00218472366232736,
+    "actual_impact": 0.007427989104148469,
+    "execution_shortfall": 0.0004025621872764609
+  },
+  {
+    "scenario_id": "choppy_impact_06",
+    "market_scenario": "choppy",
+    "order_size": 6868.3560680592855,
+    "market_depth": 32325.24920484759,
+    "volatility": 0.37338433930732706,
+    "expected_impact": 0.004054677206160476,
+    "actual_impact": 0.004060185120057725,
+    "execution_shortfall": 0.00019049865898664996
+  },
+  {
+    "scenario_id": "choppy_impact_07",
+    "market_scenario": "choppy",
+    "order_size": 5263.288058871978,
+    "market_depth": 70947.88061710013,
+    "volatility": 0.12100817817894192,
+    "expected_impact": 0.0011614788288055024,
+    "actual_impact": 0.008422937672199846,
+    "execution_shortfall": -0.0002228481584933083
+  },
+  {
+    "scenario_id": "choppy_impact_08",
+    "market_scenario": "choppy",
+    "order_size": 7350.019844183762,
+    "market_depth": 82757.09827686984,
+    "volatility": 0.2853359922782074,
+    "expected_impact": 0.009354992711932256,
+    "actual_impact": 0.0038760176016987033,
+    "execution_shortfall": -0.0028637895622743888
+  },
+  {
+    "scenario_id": "choppy_impact_09",
+    "market_scenario": "choppy",
+    "order_size": 381.848175608836,
+    "market_depth": 55261.56840123526,
+    "volatility": 0.29267037201452606,
+    "expected_impact": 0.005261145599249035,
+    "actual_impact": 0.006815415782043326,
+    "execution_shortfall": 0.0011763208471326778
+  },
+  {
+    "scenario_id": "choppy_impact_10",
+    "market_scenario": "choppy",
+    "order_size": 5947.879019431373,
+    "market_depth": 68940.71422989268,
+    "volatility": 0.4117779103300542,
+    "expected_impact": 0.005847836672386182,
+    "actual_impact": 0.009704690644498169,
+    "execution_shortfall": 0.0005934238739732681
+  },
+  {
+    "scenario_id": "choppy_impact_11",
+    "market_scenario": "choppy",
+    "order_size": 5902.112976463283,
+    "market_depth": 25113.781854278488,
+    "volatility": 0.4392489894569239,
+    "expected_impact": 0.003655917165298951,
+    "actual_impact": 0.005388694747471667,
+    "execution_shortfall": 0.001285151266452331
+  },
+  {
+    "scenario_id": "choppy_impact_12",
+    "market_scenario": "choppy",
+    "order_size": 5376.302803830334,
+    "market_depth": 30957.32463469714,
+    "volatility": 0.42520823723243184,
+    "expected_impact": 0.006589182058374713,
+    "actual_impact": 0.007933394223642023,
+    "execution_shortfall": -0.0012131370632187998
+  },
+  {
+    "scenario_id": "choppy_impact_13",
+    "market_scenario": "choppy",
+    "order_size": 4380.020226129622,
+    "market_depth": 53973.29970826919,
+    "volatility": 0.34483443907782535,
+    "expected_impact": 0.0020635793447736283,
+    "actual_impact": 0.006594866088516979,
+    "execution_shortfall": -0.0016103983999752132
+  },
+  {
+    "scenario_id": "choppy_impact_14",
+    "market_scenario": "choppy",
+    "order_size": 7716.597348579238,
+    "market_depth": 87962.14456214645,
+    "volatility": 0.40969365320377293,
+    "expected_impact": 0.006190104103133143,
+    "actual_impact": 0.006039050042086499,
+    "execution_shortfall": -0.0005961968219008789
+  },
+  {
+    "scenario_id": "choppy_impact_15",
+    "market_scenario": "choppy",
+    "order_size": 4063.0226949525454,
+    "market_depth": 23262.54983329172,
+    "volatility": 0.22245430205107422,
+    "expected_impact": 0.009710021684739167,
+    "actual_impact": 0.00658214097668252,
+    "execution_shortfall": 0.002063067169362395
+  },
+  {
+    "scenario_id": "choppy_impact_16",
+    "market_scenario": "choppy",
+    "order_size": 3598.189665572968,
+    "market_depth": 91846.82184166322,
+    "volatility": 0.19405530289892728,
+    "expected_impact": 0.007874961166520474,
+    "actual_impact": 0.009463499967527197,
+    "execution_shortfall": -0.0013523421158656138
+  },
+  {
+    "scenario_id": "choppy_impact_17",
+    "market_scenario": "choppy",
+    "order_size": 4344.019685807489,
+    "market_depth": 55956.81505549995,
+    "volatility": 0.19386650148956483,
+    "expected_impact": 0.009407497174747786,
+    "actual_impact": 0.009873627337268504,
+    "execution_shortfall": -0.0035159722482549505
+  },
+  {
+    "scenario_id": "choppy_impact_18",
+    "market_scenario": "choppy",
+    "order_size": 8895.740530289962,
+    "market_depth": 61551.57433149095,
+    "volatility": 0.18951661277781331,
+    "expected_impact": 0.0011288123197050026,
+    "actual_impact": 0.00844645771824475,
+    "execution_shortfall": 0.00045948173158401085
+  },
+  {
+    "scenario_id": "choppy_impact_19",
+    "market_scenario": "choppy",
+    "order_size": 7710.321830899018,
+    "market_depth": 83042.39763830013,
+    "volatility": 0.26578298136486034,
+    "expected_impact": 0.003788400677961847,
+    "actual_impact": 0.00595080483872784,
+    "execution_shortfall": -0.0013329771406143862
+  },
+  {
+    "scenario_id": "choppy_impact_20",
+    "market_scenario": "choppy",
+    "order_size": 4685.725046339021,
+    "market_depth": 40506.711749173686,
+    "volatility": 0.27061512534692067,
+    "expected_impact": 0.004575650844658594,
+    "actual_impact": 0.009931525747816222,
+    "execution_shortfall": 0.0018232117279331534
+  },
+  {
+    "scenario_id": "choppy_impact_21",
+    "market_scenario": "choppy",
+    "order_size": 1012.9354803720104,
+    "market_depth": 52535.893190377596,
+    "volatility": 0.3836924691914311,
+    "expected_impact": 0.001471625441158523,
+    "actual_impact": 0.0018805222982941532,
+    "execution_shortfall": -0.002585797370753371
+  },
+  {
+    "scenario_id": "choppy_impact_22",
+    "market_scenario": "choppy",
+    "order_size": 9721.262044623216,
+    "market_depth": 45723.100805011694,
+    "volatility": 0.3857525557235919,
+    "expected_impact": 0.00490423493332272,
+    "actual_impact": 0.009466880644523026,
+    "execution_shortfall": -0.0025038378473083603
+  },
+  {
+    "scenario_id": "choppy_impact_23",
+    "market_scenario": "choppy",
+    "order_size": 3588.4924640458803,
+    "market_depth": 49355.91118459636,
+    "volatility": 0.4743677757509499,
+    "expected_impact": 0.008194238056736764,
+    "actual_impact": 0.0033775157486727013,
+    "execution_shortfall": 0.0016646668452033426
+  },
+  {
+    "scenario_id": "choppy_impact_24",
+    "market_scenario": "choppy",
+    "order_size": 9078.810144606367,
+    "market_depth": 30052.358728552004,
+    "volatility": 0.33188043776343396,
+    "expected_impact": 0.006514033389467061,
+    "actual_impact": 0.004609096591846608,
+    "execution_shortfall": 0.0023245031895702843
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "generation_time": "2025-07-20T07:17:04.531526",
+  "portfolio_scenarios": 50,
+  "stress_scenarios": 20,
+  "instruments": [
+    "CL",
+    "NQ",
+    "ES",
+    "GC",
+    "EUR",
+    "GBP",
+    "JPY"
+  ]
+}

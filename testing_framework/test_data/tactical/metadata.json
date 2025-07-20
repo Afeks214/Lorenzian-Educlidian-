@@ -1,0 +1,19 @@
+{
+  "generation_time": "2025-07-20T07:17:04.525029",
+  "samples": 500,
+  "matrix_shape": [
+    60,
+    7
+  ],
+  "features": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "price_change",
+    "volume_change"
+  ],
+  "timeframe": "5min",
+  "base_price": 100.0
+}

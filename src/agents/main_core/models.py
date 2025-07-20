@@ -19,7 +19,7 @@ from .regime_embedder import RegimeEmbedder as AdvancedRegimeEmbedder
 from .regime_uncertainty import RegimeUncertaintyCalibrator
 from .regime_patterns import RegimePatternBank
 from .shared_policy import SharedPolicy as AdvancedSharedPolicy
-from .mc_dropout_policy import MCDropoutConsensus
+# MC dropout is now implemented only at execution layer by AGENT 2
 from .multi_objective_value import MultiObjectiveValueFunction
 from .tactical_bilstm_components import (
     BiLSTMGateController,
@@ -29,34 +29,7 @@ from .tactical_bilstm_components import (
     BiLSTMTemporalMasking
 )
 
-class MCDropoutMixin:
-    """Mixin to add MC Dropout support to embedders."""
-    
-    def enable_mc_dropout(self):
-        """Enable dropout for MC sampling."""
-        self.train()
-        # Keep only dropout layers active
-        for module in self.modules():
-            if not isinstance(module, nn.Dropout):
-                module.eval()
-                
-    def disable_mc_dropout(self):
-        """Disable MC dropout."""
-        self.eval()
-        
-    def get_dropout_layers(self) -> List[nn.Dropout]:
-        """Get all dropout layers for analysis."""
-        dropout_layers = []
-        for module in self.modules():
-            if isinstance(module, nn.Dropout):
-                dropout_layers.append(module)
-        return dropout_layers
-        
-    def set_dropout_rate(self, rate: float):
-        """Dynamically adjust dropout rate."""
-        for module in self.modules():
-            if isinstance(module, nn.Dropout):
-                module.p = rate
+# MCDropoutMixin removed - MC dropout is now only implemented at execution layer
 
 
 class PositionalEncoding(nn.Module):

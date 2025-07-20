@@ -1,0 +1,25 @@
+{
+  "generation_time": "2025-07-20T07:17:04.258014",
+  "samples": 100,
+  "matrix_shape": [
+    48,
+    13
+  ],
+  "features": [
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "rsi",
+    "ema",
+    "macd",
+    "bollinger_upper",
+    "bollinger_lower",
+    "atr",
+    "vwap",
+    "momentum"
+  ],
+  "timeframe": "30min",
+  "base_price": 100.0
+}

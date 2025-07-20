@@ -1,0 +1,281 @@
+# SHARED TRAINING PARAMETERS FOR TERMINAL COORDINATION
+# Version: 1.0
+# Last Updated: 2025-07-20
+
+# Global Training Configuration
+global_training:
+  framework: "PyTorch"
+  distributed_backend: "nccl"
+  random_seed: 42
+  deterministic_training: true
+  benchmark_mode: true
+
+# MAPPO Algorithm Parameters
+mappo_config:
+  # Core algorithm parameters
+  algorithm_name: "MAPPO"
+  policy_type: "multi_agent"
+  value_function_type: "centralized"
+  
+  # PPO-specific parameters
+  clip_ratio: 0.2
+  entropy_coefficient: 0.01
+  value_function_coefficient: 0.5
+  max_grad_norm: 0.5
+  
+  # Training parameters
+  num_epochs: 10
+  mini_batch_size: 64
+  buffer_size: 2048
+  gae_lambda: 0.95
+  discount_factor: 0.99
+
+# Agent-Specific Training Parameters
+agent_training_params:
+  strategic_agent:
+    # Model architecture
+    actor_hidden_dims: [512, 256, 128]
+    critic_hidden_dims: [512, 256, 128]
+    activation_function: "ReLU"
+    output_activation: "Tanh"
+    
+    # Training parameters
+    learning_rate_actor: 3e-4
+    learning_rate_critic: 3e-4
+    training_batch_size: 256
+    training_epochs: 15
+    update_frequency: 2048
+    
+    # Regularization
+    weight_decay: 1e-4
+    dropout_rate: 0.1
+    layer_norm: true
+    
+  tactical_agent:
+    # Model architecture
+    actor_hidden_dims: [256, 128, 64]
+    critic_hidden_dims: [256, 128, 64]
+    activation_function: "ReLU"
+    output_activation: "Tanh"
+    
+    # Training parameters
+    learning_rate_actor: 5e-4
+    learning_rate_critic: 5e-4
+    training_batch_size: 128
+    training_epochs: 12
+    update_frequency: 1024
+    
+    # Regularization
+    weight_decay: 1e-4
+    dropout_rate: 0.1
+    layer_norm: true
+    
+  risk_management_agent:
+    # Model architecture
+    actor_hidden_dims: [128, 64, 32]
+    critic_hidden_dims: [128, 64, 32]
+    activation_function: "ReLU"
+    output_activation: "Sigmoid"
+    
+    # Training parameters
+    learning_rate_actor: 1e-3
+    learning_rate_critic: 1e-3
+    training_batch_size: 64
+    training_epochs: 8
+    update_frequency: 512
+    
+    # Regularization
+    weight_decay: 1e-3
+    dropout_rate: 0.05
+    layer_norm: false
+    
+  execution_engine_agent:
+    # Model architecture
+    actor_hidden_dims: [64, 32, 16]
+    critic_hidden_dims: [64, 32, 16]
+    activation_function: "ReLU"
+    output_activation: "Tanh"
+    
+    # Training parameters
+    learning_rate_actor: 1e-3
+    learning_rate_critic: 1e-3
+    training_batch_size: 32
+    training_epochs: 6
+    update_frequency: 256
+    
+    # Regularization
+    weight_decay: 1e-3
+    dropout_rate: 0.05
+    layer_norm: false
+    
+  xai_explanations_agent:
+    # Model architecture
+    actor_hidden_dims: [256, 128, 64]
+    critic_hidden_dims: [256, 128, 64]
+    activation_function: "GELU"
+    output_activation: "Softmax"
+    
+    # Training parameters
+    learning_rate_actor: 5e-4
+    learning_rate_critic: 5e-4
+    training_batch_size: 128
+    training_epochs: 10
+    update_frequency: 1024
+    
+    # Regularization
+    weight_decay: 1e-4
+    dropout_rate: 0.1
+    layer_norm: true
+
+# Centralized Critic Configuration
+centralized_critic:
+  architecture: "attention_based"
+  hidden_dims: [1024, 512, 256, 128]
+  attention_heads: 8
+  attention_layers: 2
+  
+  # Training parameters
+  learning_rate: 3e-4
+  batch_size: 512
+  update_frequency: 1024
+  target_network_update_frequency: 100
+  
+  # Regularization
+  weight_decay: 1e-4
+  dropout_rate: 0.1
+  gradient_clipping: true
+
+# Learning Rate Scheduling
+learning_rate_scheduling:
+  scheduler_type: "cosine_annealing"
+  initial_lr_multiplier: 1.0
+  final_lr_multiplier: 0.1
+  warmup_steps: 1000
+  total_steps: 100000
+  
+  # Per-agent scheduling
+  strategic_agent_schedule:
+    scheduler: "linear_decay"
+    decay_rate: 0.99
+    decay_frequency: 1000
+    
+  tactical_agent_schedule:
+    scheduler: "step_decay"
+    step_size: 5000
+    gamma: 0.8
+    
+  risk_management_schedule:
+    scheduler: "exponential_decay"
+    decay_rate: 0.95
+    decay_frequency: 2000
+
+# Data Configuration
+data_configuration:
+  # Training data
+  training_data_path: "/home/QuantNova/GrandModel/data/prepared"
+  validation_split: 0.2
+  test_split: 0.1
+  
+  # Data preprocessing
+  normalization: "standard"
+  feature_scaling: true
+  outlier_removal: true
+  
+  # Data augmentation
+  augmentation_probability: 0.1
+  noise_injection: 0.01
+  temporal_shifts: true
+
+# Training Schedule and Coordination
+training_schedule:
+  total_training_time_hours: 24
+  coordination_intervals_minutes: 30
+  
+  # Terminal-specific schedules
+  terminal_1_schedule:
+    start_hour: 8
+    duration_hours: 12
+    agents: ["risk_management_agent", "execution_engine_agent", "xai_explanations_agent"]
+    priority_order: ["risk_management_agent", "execution_engine_agent", "xai_explanations_agent"]
+    
+  terminal_2_schedule:
+    start_hour: 8
+    duration_hours: 12
+    agents: ["strategic_agent", "tactical_agent"]
+    priority_order: ["strategic_agent", "tactical_agent"]
+
+# Validation and Testing
+validation_config:
+  validation_frequency: 500
+  early_stopping_patience: 2000
+  convergence_threshold: 1e-4
+  
+  # Performance metrics
+  primary_metrics: ["cumulative_reward", "policy_loss", "value_loss"]
+  secondary_metrics: ["entropy", "explained_variance", "kl_divergence"]
+  
+  # Testing protocols
+  unit_testing: true
+  integration_testing: true
+  performance_testing: true
+
+# Checkpoint and Model Saving
+model_saving:
+  save_frequency: 1000
+  save_best_only: false
+  save_optimizer_state: true
+  
+  # Checkpoint compression
+  compression_enabled: true
+  compression_level: 6
+  
+  # Version control
+  version_tracking: true
+  metadata_saving: true
+
+# Resource Management
+resource_management:
+  # GPU settings
+  gpu_memory_fraction: 0.9
+  allow_memory_growth: true
+  mixed_precision: true
+  
+  # CPU settings
+  num_cpu_threads: 8
+  cpu_affinity: true
+  
+  # Memory settings
+  buffer_memory_limit_gb: 8
+  shared_memory_enabled: true
+
+# Monitoring and Logging
+monitoring:
+  # Training monitoring
+  log_frequency: 100
+  metric_logging: true
+  model_checkpointing: true
+  
+  # Performance monitoring
+  gpu_utilization_tracking: true
+  memory_usage_tracking: true
+  training_speed_tracking: true
+  
+  # Coordination monitoring
+  cross_terminal_sync_tracking: true
+  dependency_resolution_tracking: true
+  milestone_progress_tracking: true
+
+# Error Handling and Recovery
+error_handling:
+  automatic_recovery: true
+  checkpoint_fallback: true
+  graceful_degradation: true
+  
+  # Retry logic
+  max_retries: 3
+  retry_delay_seconds: [60, 300, 900]
+  
+  # Notification system
+  error_alerting: true
+  success_notifications: true
+  milestone_notifications: true

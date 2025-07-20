@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-07-20T07:10:43.615476+00:00",
+  "terminal": "terminal_1",
+  "overall_progress": 10.966666666666667,
+  "component_status": {
+    "risk_management": {
+      "progress": 7.1,
+      "status": "in_progress",
+      "last_updated": "2025-07-20T00:00:00Z",
+      "completion_target": 100.0,
+      "dependencies": [
+        "strategic_models",
+        "tactical_signals"
+      ],
+      "issues": []
+    },
+    "execution_engine": {
+      "progress": 9.1,
+      "status": "pending",
+      "last_updated": "2025-07-20T00:00:00Z",
+      "completion_target": 100.0,
+      "dependencies": [
+        "risk_constraints",
+        "tactical_signals"
+      ],
+      "issues": []
+    },
+    "xai_explanations": {
+      "progress": 16.7,
+      "status": "pending",
+      "last_updated": "2025-07-20T00:00:00Z",
+      "completion_target": 100.0,
+      "dependencies": [
+        "strategic_models",
+        "execution_signals"
+      ],
+      "issues": []
+    }
+  },
+  "dependencies_status": {
+    "strategic_models": false,
+    "tactical_models": false,
+    "strategic_progress": 83.3,
+    "tactical_progress": 36.8
+  },
+  "blocking_issues": [],
+  "next_actions": [
+    "Continue risk_management training (progress: 7.1%)",
+    "Start execution_engine training",
+    "Wait for dependencies for xai_explanations: ['strategic_models', 'execution_signals']"
+  ]
+}
