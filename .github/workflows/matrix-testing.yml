@@ -460,7 +460,7 @@ jobs:
 
       - name: Upload coverage for unit tests
         if: matrix.test-category == 'unit'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           flags: ${{ matrix.python-version }}-${{ matrix.os }}

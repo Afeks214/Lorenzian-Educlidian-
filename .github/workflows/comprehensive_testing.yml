@@ -58,7 +58,7 @@ jobs:
                --junit-xml=junit-unit.xml
     
     - name: Upload unit test coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage-unit.xml
         flags: unit
@@ -139,7 +139,7 @@ jobs:
                --junit-xml=junit-integration.xml
     
     - name: Upload integration test coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage-integration.xml
         flags: integration
@@ -376,7 +376,7 @@ jobs:
         coverage-badge -o coverage-badge.svg
     
     - name: Upload comprehensive coverage
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage-comprehensive.xml
         flags: comprehensive
