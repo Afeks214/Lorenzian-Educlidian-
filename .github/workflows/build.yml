@@ -330,7 +330,7 @@ jobs:
           echo "- **Security**: Enable security scanning in CI/CD" >> best-optimization-recommendations.md
 
       - name: Create Pull Request with optimizations
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'feat: advanced build optimization results'
